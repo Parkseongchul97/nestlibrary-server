@@ -1,4 +1,5 @@
 -- DROP SCHEMA testProject;
+ 
 -- CREATE SCHEMA testProject;
 
 CREATE TABLE user( -- 유저 테이블

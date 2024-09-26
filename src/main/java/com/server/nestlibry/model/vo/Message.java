@@ -20,10 +20,10 @@ public class Message {
 	private int messagesCode; // 쪽지 코드
 
 	@Column(name = "messages_from_user")
-	private User messagesFromUser; // 발신자
+	private String messagesFromUser; // 발신자 이메일
 
 	@Column(name = "messages_to_user")
-	private User messagesToUser; // 수신자
+	private String messagesToUser; // 수신자 이메일
 
 	@Column(name = "messages_sent_at")
 	private LocalDateTime messagesSentAt; // 보낸시간
