@@ -8,7 +8,7 @@ CREATE TABLE user( -- 유저 테이블
     user_nickname VARCHAR(30) UNIQUE, -- 유저 닉네임 중복 X
     user_img_url TEXT, -- 유저 프로필 이미지 URL(서버에 저장할)
     user_info TEXT, -- 유저 자기소개란
-    user_point INT DEFAULT 0
+    user_point INT DEFAULT 0 -- 유저 포인트 (채널 생성 등에 사용)
 --  ,user_role VARCHAR(30) -- 유저 권한 (관리자, 일반회원) ? 일단 중요도 낮음
 );
 
