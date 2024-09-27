@@ -15,6 +15,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
@@ -25,15 +28,22 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/user")
-    public ResponseEntity changeUser(UserRegisterDTO dto) throws Exception {
+    public ResponseEntity responseUser(UserRegisterDTO dto) throws Exception {
+        // 서버만 있으면 회원가입 가능
+        Path directoryPath = Paths.get("\\\\\\\\링크주소\\\\nestlibrary\\\\user\\" + dto.getUserEmail() + "\\");
+        Files.createDirectories(directoryPath);
+        // dto vo로 포장
+        System.out.println(dto);
         User vo = new User()
                 .builder()
                 .userEmail(dto.getUserEmail())
                 .userPassword(dto.getUserPassword())
                 .userNickname(dto.getUserNickname())
                 .userImgUrl(fileUpload(dto.getUserImgUrl(), dto.getUserEmail()))
+                .userInfo(dto.getUserInfo())
                 .build();
-        userService.changeUser(vo);
+        System.out.println(vo);
+        userService.responseUser(vo);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
@@ -43,16 +53,16 @@ public class UserController {
         }
         UUID uuid = UUID.randomUUID(); // 랜덤 파일명 부여
         String fileName = uuid.toString() + "_" + file.getOriginalFilename();
-        File copyFile = new File("\\\\링크주소\\nestlibrary\\user\\" + email + "\\" + fileName);
+        File copyFile = new File("\\\\대충주소\\nestlibrary\\user\\" + email + "\\" + fileName);
         file.transferTo(copyFile);
         return fileName;
     }
     
     public void fileDelete(String file, String email) throws IllegalStateException, Exception {
-        if (file != null) { // 보내준 DB저장된 파일명이 null이 아니면
+        if (file != null) {
             String decodedString = URLDecoder.decode(file, StandardCharsets.UTF_8.name()); // 한글 디코딩 처리
             File f = new File("링크주소");
-            f.delete(); // 파일 삭제
+            f.delete();
         }
     }
 }
