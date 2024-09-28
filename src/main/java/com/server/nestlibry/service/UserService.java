@@ -1,5 +1,6 @@
 package com.server.nestlibry.service;
 
+import com.server.nestlibry.model.dto.UserRegisterDTO;
 import com.server.nestlibry.model.vo.User;
 import com.server.nestlibry.repo.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,5 +25,11 @@ public class UserService {
         vo.setUserPassword(bcpe.encode(vo.getUserPassword()));
 
         dao.save(vo);
+    }
+    // 닉네임 중복체크용 닉네임으로 유저 찾기
+    public User findByNickname(String nickname){
+        User check = new User();
+//        dao.findBy()
+        return dao.findByUserNickName(nickname);
     }
 }
