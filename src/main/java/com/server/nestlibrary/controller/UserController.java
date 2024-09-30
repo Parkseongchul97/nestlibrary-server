@@ -3,6 +3,7 @@ package com.server.nestlibrary.controller;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/user/*")
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
@@ -44,10 +46,23 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
     @GetMapping("/nickname")
-    public ResponseEntity nicknameCheck(String nickname){
+    public ResponseEntity<Boolean> nicknameCheck(@RequestParam(name="nickname") String nickname){
         User user =  userService.findByNickname(nickname); // 있으면 중복 닉네임
-        return ResponseEntity.status(HttpStatus.OK).body(user);
+        if (user == null){
+            log.info("입력값 : " + nickname + ", 반환값 : " + (user == null));
+            return ResponseEntity.ok(true);
+        }
+
+//        else if(false) {  // 중복이지만 업데이트 상황 추가
+//          if(false) { // 로그인한 회원과 비교했을때 동일하면
+//              return ResponseEntity.ok(true);
+//          }
+//        }
+//         아닌 모든경우 <- 중복 그냥
+        log.info("입력값 : " + nickname + ", 반환값 : " + (user == null));
+        return  ResponseEntity.ok(false);
     }
+
 
     public String fileUpload(MultipartFile file, String email) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {
