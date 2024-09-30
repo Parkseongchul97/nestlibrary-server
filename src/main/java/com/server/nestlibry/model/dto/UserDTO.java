@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 @Data
 @Builder
-public class UserRegisterDTO {
+public class UserDTO {
 
     private String userEmail; // 유저 이메일
 

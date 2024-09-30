@@ -1,6 +1,6 @@
 package com.server.nestlibry.controller;
 
-import com.server.nestlibry.model.dto.UserRegisterDTO;
+import com.server.nestlibry.model.dto.UserDTO;
 import com.server.nestlibry.model.vo.User;
 import com.server.nestlibry.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,17 +18,17 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/*")
+@RequestMapping("/api/user/*")
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
 public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/user")
-    public ResponseEntity responseUser(UserRegisterDTO dto) throws Exception {
+    @PostMapping("/register")
+    public ResponseEntity registerUser(UserDTO dto) throws Exception {
         // 서버만 있으면 회원가입 가능
-        Path directoryPath = Paths.get("\\\\\\\\링크주소\\\\nestlibrary\\\\user\\" + dto.getUserEmail() + "\\");
-        Files.createDirectories(directoryPath);
+//        Path directoryPath = Paths.get("\\\\\\\\링크주소\\\\nestlibrary\\\\user\\" + dto.getUserEmail() + "\\");
+//        Files.createDirectories(directoryPath);
         // dto vo로 포장
         System.out.println(dto);
         User vo = new User()
@@ -40,13 +40,13 @@ public class UserController {
                 .userInfo(dto.getUserInfo())
                 .build();
         System.out.println(vo);
-        userService.responseUser(vo);
+        userService.registerUser(vo);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
     @GetMapping("/nickname")
     public ResponseEntity nicknameCheck(String nickname){
-        
-        return ResponseEntity.status(HttpStatus.OK).build();
+        User user =  userService.findByNickname(nickname); // 있으면 중복 닉네임
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
     public String fileUpload(MultipartFile file, String email) throws IllegalStateException, Exception {
