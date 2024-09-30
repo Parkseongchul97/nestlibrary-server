@@ -1,11 +1,10 @@
-package com.server.nestlibry.model.vo;
+package com.server.nestlibrary.model.vo;
 
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

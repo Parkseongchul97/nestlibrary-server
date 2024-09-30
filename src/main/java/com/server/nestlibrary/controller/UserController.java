@@ -1,8 +1,8 @@
-package com.server.nestlibry.controller;
+package com.server.nestlibrary.controller;
 
-import com.server.nestlibry.model.dto.UserDTO;
-import com.server.nestlibry.model.vo.User;
-import com.server.nestlibry.service.UserService;
+import com.server.nestlibrary.model.dto.UserDTO;
+import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +26,9 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity registerUser(UserDTO dto) throws Exception {
-        // 서버만 있으면 회원가입 가능
-//        Path directoryPath = Paths.get("\\\\\\\\링크주소\\\\nestlibrary\\\\user\\" + dto.getUserEmail() + "\\");
-//        Files.createDirectories(directoryPath);
+        // 폴더생성 완료
+        Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\upload\\\\nestlibrary\\\\user\\" + dto.getUserEmail() + "\\");
+        Files.createDirectories(directoryPath);
         // dto vo로 포장
         System.out.println(dto);
         User vo = new User()
@@ -55,7 +55,9 @@ public class UserController {
         }
         UUID uuid = UUID.randomUUID(); // 랜덤 파일명 부여
         String fileName = uuid.toString() + "_" + file.getOriginalFilename();
-        File copyFile = new File("\\\\대충주소\\nestlibrary\\user\\" + email + "\\" + fileName);
+
+        File copyFile = new File("\\\\192.168.10.51\\upload\\nestlibrary\\user\\" + email+ "\\" + fileName);
+//        File copyFile = new File("\\\\http://192.168.10.51:8082/\\nestlibrary\\user\\" + email + "\\" + fileName);
         file.transferTo(copyFile);
         return fileName;
     }

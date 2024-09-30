@@ -1,10 +1,9 @@
-package com.server.nestlibry.model.dto;
+package com.server.nestlibrary.model.dto;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
-import com.server.nestlibry.model.vo.User;
+import com.server.nestlibrary.model.vo.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,7 +1,6 @@
-package com.server.nestlibry.model.vo;
+package com.server.nestlibrary.model.vo;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

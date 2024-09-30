@@ -1,15 +1,12 @@
-package com.server.nestlibry.model.dto;
+package com.server.nestlibrary.model.dto;
 
-import com.server.nestlibry.model.vo.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
+import com.server.nestlibrary.model.vo.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data @AllArgsConstructor @NoArgsConstructor @Builder
 public class MessagesDTO {

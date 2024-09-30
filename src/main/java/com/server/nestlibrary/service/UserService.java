@@ -1,18 +1,11 @@
-package com.server.nestlibry.service;
+package com.server.nestlibrary.service;
 
-import com.server.nestlibry.model.dto.UserDTO;
-import com.server.nestlibry.model.vo.User;
-import com.server.nestlibry.repo.UserDAO;
+import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.repo.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.beans.Transient;
-import java.util.List;
-import java.util.function.Function;
 
 @Service
 public class UserService {

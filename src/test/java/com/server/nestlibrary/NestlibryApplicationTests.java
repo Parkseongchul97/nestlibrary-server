@@ -1,4 +1,4 @@
-package com.server.nestlibry;
+package com.server.nestlibrary;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

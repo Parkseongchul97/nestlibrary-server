@@ -1,4 +1,4 @@
-package com.server.nestlibry.config;
+package com.server.nestlibrary.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

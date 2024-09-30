@@ -1,4 +1,4 @@
-package com.server.nestlibry.model.vo;
+package com.server.nestlibrary.model.vo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

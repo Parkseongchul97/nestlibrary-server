@@ -1,6 +1,6 @@
-package com.server.nestlibry.config;
+package com.server.nestlibrary.config;
 
-import com.server.nestlibry.model.vo.User;
+import com.server.nestlibrary.model.vo.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
