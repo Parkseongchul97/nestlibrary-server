@@ -1,5 +1,6 @@
 package com.server.nestlibrary.controller;
 
+import com.server.nestlibrary.config.TokenProvider;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.service.UserService;
@@ -26,6 +27,21 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TokenProvider tokenProvider;
+
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestBody User vo){
+        User user = userService.login(vo.getUserEmail(), vo.getUserPassword());
+        if(user != null){ // 회원이 있을시
+            String token = tokenProvider.create(user); // 토큰 발행
+            return ResponseEntity.ok(token);
+        }
+        return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+
+
+    }
     @PostMapping("/register")
     public ResponseEntity registerUser(UserDTO dto) throws Exception {
         // 폴더생성 완료
@@ -52,7 +68,6 @@ public class UserController {
             log.info("입력값 : " + nickname + ", 반환값 : " + (user == null));
             return ResponseEntity.ok(true);
         }
-
 //        else if(false) {  // 중복이지만 업데이트 상황 추가
 //          if(false) { // 로그인한 회원과 비교했을때 동일하면
 //              return ResponseEntity.ok(true);
