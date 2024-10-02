@@ -61,8 +61,22 @@ public class UserController {
         userService.registerUser(vo);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
+    @GetMapping("/user")
+    public ResponseEntity findUser(@RequestParam(name = "userEmail") String userEmail){
+        log.info(userEmail);
+        User user =  userService.findUser(userEmail); // 있으면 중복 닉네임
+        log.info("입력값 : " + userEmail + ", 반환값 : " + (user == null));
+        if (user == null){
+            // 해당 이메일 유저 X
+            return  ResponseEntity.ok(null);
+        }
+        // 해당 이메일 유저 O
+        return  ResponseEntity.ok(user);
+    }
+
     @GetMapping("/nickname")
-    public ResponseEntity<Boolean> nicknameCheck(@RequestParam(name="nickname") String nickname){
+    public ResponseEntity<Boolean> nicknameCheck(@RequestParam(name = "nickname") String nickname){
+        log.info(nickname);
         User user =  userService.findByNickname(nickname); // 있으면 중복 닉네임
         if (user == null){
             log.info("입력값 : " + nickname + ", 반환값 : " + (user == null));

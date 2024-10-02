@@ -31,6 +31,9 @@ public class UserService {
         }
         return null;
     }
+    public User findUser(String userEmail){
+        return dao.findById(userEmail).orElse(null);
+    }
     // 닉네임 중복체크용 닉네임으로 유저 찾기
     public User findByNickname(String nickname){
 
