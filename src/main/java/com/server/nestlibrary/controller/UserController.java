@@ -50,7 +50,7 @@ public class UserController {
     }
 
 
-    
+
 
     public String fileUpload(MultipartFile file, String email) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {
