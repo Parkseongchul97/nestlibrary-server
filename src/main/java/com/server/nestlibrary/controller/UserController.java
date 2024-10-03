@@ -1,8 +1,10 @@
 package com.server.nestlibrary.controller;
 
+import com.server.nestlibrary.config.TokenProvider;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/user/*")
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
@@ -24,6 +27,21 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TokenProvider tokenProvider;
+
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestBody User vo){
+        User user = userService.login(vo.getUserEmail(), vo.getUserPassword());
+        if(user != null){ // 회원이 있을시
+            String token = tokenProvider.create(user); // 토큰 발행
+            return ResponseEntity.ok(token);
+        }
+        return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+
+
+    }
     @PostMapping("/register")
     public ResponseEntity registerUser(UserDTO dto) throws Exception {
         // 폴더생성 완료
@@ -43,13 +61,36 @@ public class UserController {
         userService.registerUser(vo);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
-    @GetMapping("/nickname")
-    public ResponseEntity nicknameCheck(String nickname){
-        User user =  userService.findByNickname(nickname); // 있으면 중복 닉네임
-        return ResponseEntity.status(HttpStatus.OK).body(user);
+    @GetMapping("/user")
+    public ResponseEntity findUser(@RequestParam(name = "userEmail") String userEmail){
+        log.info(userEmail);
+        User user =  userService.findUser(userEmail); // 있으면 중복 닉네임
+        log.info("입력값 : " + userEmail + ", 반환값 : " + (user == null));
+        if (user == null){
+            // 해당 이메일 유저 X
+            return  ResponseEntity.ok(null);
+        }
+        // 해당 이메일 유저 O
+        return  ResponseEntity.ok(user);
     }
 
-
+    @GetMapping("/nickname")
+    public ResponseEntity<Boolean> nicknameCheck(@RequestParam(name = "nickname") String nickname){
+        log.info(nickname);
+        User user =  userService.findByNickname(nickname); // 있으면 중복 닉네임
+        if (user == null){
+            log.info("입력값 : " + nickname + ", 반환값 : " + (user == null));
+            return ResponseEntity.ok(true);
+        }
+//        else if(false) {  // 중복이지만 업데이트 상황 추가
+//          if(false) { // 로그인한 회원과 비교했을때 동일하면
+//              return ResponseEntity.ok(true);
+//          }
+//        }
+//         아닌 모든경우 <- 중복 그냥
+        log.info("입력값 : " + nickname + ", 반환값 : " + (user == null));
+        return  ResponseEntity.ok(false);
+    }
 
 
     public String fileUpload(MultipartFile file, String email) throws IllegalStateException, Exception {
