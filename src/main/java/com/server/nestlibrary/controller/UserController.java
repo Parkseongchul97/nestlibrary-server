@@ -3,7 +3,9 @@ package com.server.nestlibrary.controller;
 import com.server.nestlibrary.config.TokenProvider;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.service.KakaoService;
 import com.server.nestlibrary.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,11 +14,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -29,6 +33,9 @@ public class UserController {
 
     @Autowired
     private TokenProvider tokenProvider;
+
+    @Autowired
+    private KakaoService kakaoService;
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody User vo){
@@ -112,5 +119,19 @@ public class UserController {
             File f = new File("링크주소");
             f.delete();
         }
+    }
+
+    @PostMapping("/kakaoLogin")
+    public ResponseEntity kakaoCode(@RequestBody Map<String, String> requestBody, HttpServletResponse response) throws IOException {
+        log.info("매핑확인");
+        String code = requestBody.get("code");
+
+    String kakaotoken = kakaoService.getAccessToken(code);
+    System.out.println("카카오 토큰  : "  +kakaotoken);
+    String jwtToken = kakaoService.getUserInfo(kakaotoken);
+    System.out.println( "jwt토큰 : " + jwtToken);
+
+
+       return ResponseEntity.ok(jwtToken);
     }
 }
