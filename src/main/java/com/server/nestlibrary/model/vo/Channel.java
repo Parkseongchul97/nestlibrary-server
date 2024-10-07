@@ -26,4 +26,7 @@ public class Channel {
 	@Column(name = "channel_img_url")
 	private String channelImgUrl; // 채널 대표 이미지
 
+	@Column(name = "channel_info")
+	private  String channelInfo;
+
 }

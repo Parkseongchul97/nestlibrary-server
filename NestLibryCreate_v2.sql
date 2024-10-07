@@ -2,7 +2,7 @@
  
 -- CREATE SCHEMA testProject;
 
-CREATE TABLE user( -- 유저 테이블
+CREATE TABLE usechannelchannel_tagr( -- 유저 테이블
 	user_email VARCHAR(50) PRIMARY KEY, -- 유저 이메일아이디 
     user_password TEXT, -- 유저 비밀번호 (암호화)
     user_nickname VARCHAR(30) UNIQUE, -- 유저 닉네임 중복 X
@@ -16,9 +16,9 @@ CREATE TABLE channel( --  유저가 생성한 채널
 	channel_code INT AUTO_INCREMENT PRIMARY KEY, -- 채널 코드
     channel_name VARCHAR(50) UNIQUE, -- 채널 이름 
     channel_created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- 채널 생성일
-	channel_img_url TEXT -- 채널 대문사진
+	channel_img_url TEXT, -- 채널 대문사진
+    channel_info TEXT -- 채널 소개문
 );
-
 
 
 CREATE TABLE channel_tag( --  유저가 생성한 채널
@@ -92,3 +92,4 @@ CREATE TABLE messages( -- 쪽지
 );
 
 -- 쪽지는 관리 편하려고 참조 X  from , to 둘다 유저 eamil 참조
+
