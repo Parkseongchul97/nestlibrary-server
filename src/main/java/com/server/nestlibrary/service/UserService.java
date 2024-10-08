@@ -3,6 +3,8 @@ package com.server.nestlibrary.service;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,15 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder bcpe;
+    // 사용자 정보 가져오기
+    public User getLoginUser(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth!= null && auth.isAuthenticated()){
+            User user = (User) auth.getPrincipal();
+            return user;
+        }
+        return null;
+    }
 
     @Transactional
     public void registerUser(User vo){
@@ -36,7 +47,7 @@ public class UserService {
     }
     // 닉네임 중복체크용 닉네임으로 유저 찾기
     public User findByNickname(String nickname){
-
-        return dao.findByUserNickname(nickname);
+        User user = dao.findByUserNickname(nickname);
+        return user;
     }
 }

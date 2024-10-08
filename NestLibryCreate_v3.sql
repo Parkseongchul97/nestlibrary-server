@@ -2,7 +2,7 @@
  
 -- CREATE SCHEMA testProject;
 
-CREATE TABLE usechannelchannel_tagr( -- 유저 테이블
+CREATE TABLE user( -- 유저 테이블
 	user_email VARCHAR(50) PRIMARY KEY, -- 유저 이메일아이디 
     user_password TEXT, -- 유저 비밀번호 (암호화)
     user_nickname VARCHAR(30) UNIQUE, -- 유저 닉네임 중복 X
