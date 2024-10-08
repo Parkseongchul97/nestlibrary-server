@@ -2,9 +2,7 @@ package com.server.nestlibrary.model.vo;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class Management {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "management_code")
 	private int managementCode;  //채널 관리 코드
 

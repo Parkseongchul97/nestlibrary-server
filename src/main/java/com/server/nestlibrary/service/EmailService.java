@@ -27,9 +27,10 @@ public class EmailService {
     private static final int PASSWORD_LENGTH = 12;
 
     // 인증번호
-    public static final int code = (int)(Math.random() * (90000)) + 100000;
+    public static int code = -1;
 
     public int sendEmailCode(String userEmail) {
+        code = (int)(Math.random() * (90000)) + 100000;
         String subject = "Nest Library 사이트 인증 코드 안내";
         String body = code + "를 입력해 주십시오.";
         SimpleMailMessage message = new SimpleMailMessage();

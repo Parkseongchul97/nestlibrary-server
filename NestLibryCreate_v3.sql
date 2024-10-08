@@ -16,9 +16,9 @@ CREATE TABLE channel( --  유저가 생성한 채널
 	channel_code INT AUTO_INCREMENT PRIMARY KEY, -- 채널 코드
     channel_name VARCHAR(50) UNIQUE, -- 채널 이름 
     channel_created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- 채널 생성일
-	channel_img_url TEXT -- 채널 대문사진
+	channel_img_url TEXT, -- 채널 대문사진
+    channel_info TEXT -- 채널 소개문
 );
-
 
 
 CREATE TABLE channel_tag( --  유저가 생성한 채널
@@ -92,3 +92,4 @@ CREATE TABLE messages( -- 쪽지
 );
 
 -- 쪽지는 관리 편하려고 참조 X  from , to 둘다 유저 eamil 참조
+
