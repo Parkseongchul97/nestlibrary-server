@@ -81,10 +81,11 @@ public class UserController {
         if (user == null) {
 
             return ResponseEntity.ok(true); // 중복이 아님
-        } else if (userService.getLoginUser() != null) {  // 중복이지만 업데이트 상황 (로그인 유저가 있음)
-            if (userService.getLoginUser().getUserNickname().equals(nickname)) {// 로그인한 기존 회원의 닉네임과 변경사항이 같으면
-                return ResponseEntity.ok(true); // 기존 닉네임과 동일함
-            }
+            // 아직 삐리함이거
+//        } else if (userService.getLoginUser() != null) {  // 중복이지만 업데이트 상황 (로그인 유저가 있음)
+//            if (userService.getLoginUser().getUserNickname().equals(nickname)) {// 로그인한 기존 회원의 닉네임과 변경사항이 같으면
+//                return ResponseEntity.ok(true); // 기존 닉네임과 동일함
+//            }
         }
         return ResponseEntity.ok(false); // 닉네임이 중복임
     }
@@ -94,9 +95,7 @@ public class UserController {
         }
         UUID uuid = UUID.randomUUID(); // 랜덤 파일명 부여
         String fileName = uuid.toString() + "_" + file.getOriginalFilename();
-
         File copyFile = new File("\\\\192.168.10.51\\nest\\user\\" + email+ "\\" + fileName);
-//        File copyFile = new File("\\\\http://192.168.10.51:8082/\\nestlibrary\\user\\" + email + "\\" + fileName);
         file.transferTo(copyFile);
         return fileName;
     }
@@ -104,7 +103,7 @@ public class UserController {
     public void fileDelete(String file, String email) throws IllegalStateException, Exception {
         if (file != null) {
             String decodedString = URLDecoder.decode(file, StandardCharsets.UTF_8.name()); // 한글 디코딩 처리
-            File f = new File("링크주소");
+            File f = new File("\\\\192.168.10.51\\nest\\user\\" + email+ "\\" + decodedString);
             f.delete();
         }
     }
