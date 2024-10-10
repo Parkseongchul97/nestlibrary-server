@@ -3,6 +3,8 @@ package com.server.nestlibrary.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.server.nestlibrary.config.TokenProvider;
+import com.server.nestlibrary.controller.UserController;
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.UserDAO;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +14,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -21,9 +25,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 @Service
 public class KakaoService {
+
+
 
     @Autowired
     private UserService userService;
@@ -73,7 +81,7 @@ public class KakaoService {
     }
 
 
-    public String getUserInfo(String accessToken ) throws IOException {
+    public UserDTO getUserInfo(String accessToken ) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -84,9 +92,10 @@ public class KakaoService {
 
         ObjectMapper objectMapper = new ObjectMapper();
         String JwtToken = null;
+        UserDTO dto = null;
         try {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
-            String id = jsonNode.get("id").asText(); // 사용자 ID
+            Long id = Long.valueOf(jsonNode.get("id").asText()); // 사용자 ID
             JsonNode properties = jsonNode.get("properties");
             String email = jsonNode.get("kakao_account").get("email").asText();
             String nickname = properties.get("nickname").asText(); // 사용자 닉네임
@@ -101,25 +110,38 @@ public class KakaoService {
             System.out.println("email : " + email);
 
             User user = userService.findUser(email);
-
+            dto = new UserDTO();
 
             if (user == null) {
 
+                Random random = new Random();
+                int numeber = 100000 + random.nextInt(900000);
                 User user1 = new User();
-                user1.setUserNickname("KaKao" + nickname);
+                user1.setUserNickname("KaKao" + numeber + nickname);
                 user1.setUserEmail(email);
+                user1.setUserImgUrl(null);
                 dao.save(user1);
+
                 JwtToken = tokenProvider.create(user1);
 
+
+                dto.setToken(JwtToken);
+                dto.setUserEmail(email);
+                dto.setUserNickname("KaKao" + numeber + nickname);
+                dto.setUserImgUrl(null);
+
+
+
             } else {
+
                 JwtToken = tokenProvider.create(user);
+                dto.setToken(JwtToken);
+                dto.setUserEmail(user.getUserEmail());
+                dto.setUserNickname(user.getUserNickname());
+                dto.setImg(user.getUserImgUrl());
+
+
             }
-
-            // JWT 토큰 생성
-
-
-            // 토큰을 포함한 URL 리다이렉트 처리
-
 
 
         } catch (Exception e) {
@@ -127,6 +149,9 @@ public class KakaoService {
         }
 
 
-        return JwtToken;
+        return dto;
     }
+
+
+
 }

@@ -28,4 +28,11 @@ public class UserDTO {
 
 
     private String userInfo; // 간단한 자기소개
+
+    // 잠시 테스트용으로 추가
+    private String token;
+
+    private String img;
+
+
 }

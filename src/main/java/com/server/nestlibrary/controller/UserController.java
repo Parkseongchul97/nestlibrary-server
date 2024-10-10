@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -123,10 +125,42 @@ public class UserController {
 
     String kakaotoken = kakaoService.getAccessToken(code);
     System.out.println("카카오 토큰  : "  +kakaotoken);
-    String jwtToken = kakaoService.getUserInfo(kakaotoken);
-    System.out.println( "jwt토큰 : " + jwtToken);
+    UserDTO dto = kakaoService.getUserInfo(kakaotoken);
 
 
-       return ResponseEntity.ok(jwtToken);
+ System.out.println(dto);
+
+
+
+
+
+
+
+
+       return ResponseEntity.ok(dto);
     }
+
+
+
+
+
+    @GetMapping("/userInfo")
+    public ResponseEntity userInfo(){
+
+        System.out.println("유저인포 컨트롤러 매핑 ");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("인증여부 : " + auth);
+        if(auth!= null && auth.isAuthenticated()){
+            User user = (User) auth.getPrincipal();
+            System.out.println("유저 " + user);
+          return ResponseEntity.ok(user);
+        }
+        return ResponseEntity.ok(null);
+
+
+
+    }
+
+
+
 }
