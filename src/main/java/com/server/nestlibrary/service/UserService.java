@@ -30,6 +30,7 @@ public class UserService {
     @Transactional
     public void registerUser(User vo){
         // 비밀번호 암호화
+        if(getLoginUser()== null)
         vo.setUserPassword(bcpe.encode(vo.getUserPassword()));
 
         dao.save(vo);

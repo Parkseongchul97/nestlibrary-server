@@ -22,20 +22,20 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/channel/*")
+@RequestMapping("/api/*")
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
 public class ChannelController {
 
     @Autowired
     private ChannelService channelService;
 
-    @GetMapping("/main")
+    @GetMapping("/channel/main")
     public ResponseEntity allChannel(){
         List<Channel> list = channelService.allChannel();
         log.info("전부 : " + list);
         return ResponseEntity.ok(list);
     }
-    @GetMapping("/{channelCode}")
+    @GetMapping("/channel/{channelCode}")
     public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
        Channel chan = channelService.findChannel(channelCode);
        log.info("해당 코드의 채널 : " + chan);
@@ -44,7 +44,7 @@ public class ChannelController {
         return ResponseEntity.ok(chan);
     }
 
-    @GetMapping("/{channelCode}/{channelTagCode}")
+    @GetMapping("/channel/{channelCode}/{channelTagCode}")
     public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@PathVariable(name = "channelTagCode")int channelTagCode){
         Channel chan = channelService.findChannel(channelCode);
         log.info("해당 코드의 채널 : " + chan);
@@ -53,14 +53,14 @@ public class ChannelController {
     }
 
     // 채널 이름 중복 확인
-    @GetMapping("/name")
+    @GetMapping("/channel/name")
     public ResponseEntity findByChannelName(@RequestParam(name = "channelName")String channelName,@RequestParam( required = false, name="channelCode") int channelCode){
 
         return ResponseEntity.ok(channelService.findByChannelName(Channel.builder().channelCode(channelCode).channelName(channelName).build()));
     }
 
-    // 채널 생성
-    @PostMapping("/create")
+    // 채널 생성(프라이빗 추가)
+    @PostMapping("/channel/create")
     public ResponseEntity createChannel(ChannelDTO dto) throws Exception {
         Channel channel = channelService.createChannel(Channel
                 .builder()
