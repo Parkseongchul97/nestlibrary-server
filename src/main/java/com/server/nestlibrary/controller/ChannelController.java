@@ -17,30 +17,50 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/channel/*")
+@RequestMapping("/api/*")
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
 public class ChannelController {
 
     @Autowired
     private ChannelService channelService;
 
-    // 채널 이름 중복 확인
-    @GetMapping("/name")
-    public ResponseEntity findByChannelName(@RequestParam(name = "channelName")String channelName,@RequestParam( required = false, name="channelCode") int channelCode){
-        if(channelCode != 0){
-            // 이름만 중복확인
-        }else{
-            // 코드 받은거랑 같은 이름인지 확인
-        }
-        return ResponseEntity.ok(null);
+    @GetMapping("/channel/main")
+    public ResponseEntity allChannel(){
+        List<Channel> list = channelService.allChannel();
+        log.info("전부 : " + list);
+        return ResponseEntity.ok(list);
+    }
+    @GetMapping("/channel/{channelCode}")
+    public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
+       Channel chan = channelService.findChannel(channelCode);
+       log.info("해당 코드의 채널 : " + chan);
+       // 일단 기본 채널정보만
+        // 추후 DTO로 커다란거로 포장해서 보내야함...
+        return ResponseEntity.ok(chan);
     }
 
-    // 채널 생성
-    @PostMapping("/create")
+    @GetMapping("/channel/{channelCode}/{channelTagCode}")
+    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@PathVariable(name = "channelTagCode")int channelTagCode){
+        Channel chan = channelService.findChannel(channelCode);
+        log.info("해당 코드의 채널 : " + chan);
+        // 채널 서브 게시판 창으로 보내야함. (채널코드 + 채널 태그코드로 찾는 )
+        return ResponseEntity.ok(chan);
+    }
+
+    // 채널 이름 중복 확인
+    @GetMapping("/channel/name")
+    public ResponseEntity findByChannelName(@RequestParam(name = "channelName")String channelName,@RequestParam( required = false, name="channelCode") int channelCode){
+
+        return ResponseEntity.ok(channelService.findByChannelName(Channel.builder().channelCode(channelCode).channelName(channelName).build()));
+    }
+
+    // 채널 생성(프라이빗 추가)
+    @PostMapping("/channel/create")
     public ResponseEntity createChannel(ChannelDTO dto) throws Exception {
         Channel channel = channelService.createChannel(Channel
                 .builder()
@@ -70,10 +90,10 @@ public class ChannelController {
         return fileName;
     }
 
-    public void fileDelete(String file, String email) throws IllegalStateException, Exception {
+    public void fileDelete(String file, int channelCode) throws IllegalStateException, Exception {
         if (file != null) {
             String decodedString = URLDecoder.decode(file, StandardCharsets.UTF_8.name()); // 한글 디코딩 처리
-            File f = new File("링크주소");
+            File f = new File("\\\\192.168.10.51\\nest\\channel\\" +String.valueOf(channelCode) + "\\" + decodedString);
             f.delete();
         }
     }
