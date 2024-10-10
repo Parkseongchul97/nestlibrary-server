@@ -2,6 +2,7 @@ package com.server.nestlibrary.service;
 
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.UserDAO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class UserService {
     @Autowired
@@ -21,8 +23,10 @@ public class UserService {
     public User getLoginUser(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if(auth!= null && auth.isAuthenticated()){
+            log.info("auth >> " + auth);
             User user = (User) auth.getPrincipal();
-            return user;
+            User result = dao.findById(user.getUserEmail()).get();
+            return result;
         }
         return null;
     }
