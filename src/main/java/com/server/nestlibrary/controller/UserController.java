@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Proxy;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -169,47 +170,12 @@ public class UserController {
     }
 
     @PostMapping("/user/kakaoLogin")
-    public ResponseEntity kakaoCode(@RequestBody Map<String, String> requestBody, HttpServletResponse response) throws IOException {
-        log.info("매핑확인");
+    public ResponseEntity kakaoCode(@RequestBody Map<String, String> requestBody) throws IOException {
         String code = requestBody.get("code");
-
-    String kakaotoken = kakaoService.getAccessToken(code);
-    System.out.println("카카오 토큰  : "  +kakaotoken);
-    LoginUserDTO dto = kakaoService.getUserInfo(kakaotoken);
-
-
- System.out.println(dto);
-
-
-
-
-
-
-
-
-       return ResponseEntity.ok(dto);
+        String kakaoToken = kakaoService.getAccessToken(code);
+       return ResponseEntity.ok(kakaoService.getUserInfo(kakaoToken));
     }
 
-
-
-
-
-    @GetMapping("/userInfo")
-    public ResponseEntity userInfo(){
-
-        System.out.println("유저인포 컨트롤러 매핑 ");
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("인증여부 : " + auth);
-        if(auth!= null && auth.isAuthenticated()){
-            User user = (User) auth.getPrincipal();
-            System.out.println("유저 " + user);
-          return ResponseEntity.ok(user);
-        }
-        return ResponseEntity.ok(null);
-
-
-
-    }
 
 
 

@@ -9,6 +9,7 @@ import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.UserDAO;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-
+@Slf4j
 @Service
 public class KakaoService {
 
@@ -87,88 +88,72 @@ public class KakaoService {
 
     public LoginUserDTO getUserInfo(String accessToken ) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
-        System.out.println("KakaoService  카카오토큰 : " + accessToken);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken); // Bearer 토큰 추가
 
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange("https://kapi.kakao.com/v2/user/me", HttpMethod.GET, requestEntity, String.class);
-
         ObjectMapper objectMapper = new ObjectMapper();
 
-        LoginUserDTO  dto = new LoginUserDTO();
         try {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
-            Long id = Long.valueOf(jsonNode.get("id").asText()); // 사용자 ID
             JsonNode properties = jsonNode.get("properties");
             String email = jsonNode.get("kakao_account").get("email").asText();
             String nickname = properties.get("nickname").asText(); // 사용자 닉네임
-            String profileImage = properties.get("profile_image").asText(); // 프로필 이미지 URL
-
-
             // 필요한 정보 출력
-
-            System.out.println("User ID: " + id);
-            System.out.println("Nickname: " + nickname);
-            System.out.println("Profile Image: " + profileImage);
-            System.out.println("email : " + email);
-
             User user = userService.findUser(email);
-            System.out.println("조건문 가기전에 user" + user);
-
 
             if (user == null) {
-
-                Random random = new Random();
-                int numeber = 100000 + random.nextInt(900000);
-                User user1 = new User();
-                user1.setUserNickname("KaKao" + numeber + nickname);
-                user1.setUserEmail(email);
-                user1.setUserImgUrl(null);
-                dao.save(user1);
-                Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\user\\" +email + "\\");
+                boolean ck = true;
+                String resultNickname = "";
+                while (ck) {
+                    Random random = new Random();
+                    int number = 100000 + random.nextInt(900000);
+                    resultNickname = "Kakao_" + number + "_" + nickname;
+                    if (userService.findByNickname(resultNickname) == null) {
+                        ck = false;
+                    }
+                }
+                User localUser = User.builder()
+                        .userNickname(resultNickname)
+                        .userEmail(email)
+                        .build();
+                dao.save(localUser);
+                Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\user\\" + email + "\\");
                 Files.createDirectories(directoryPath);
-            String  JwtToken = tokenProvider.create(user1);
+                String JwtToken = tokenProvider.create(localUser);
 
 
-                dto.setToken(JwtToken);
-                dto.setUserEmail(email);
-                dto.setUserNickname("KaKao" + numeber + nickname);
-                dto.setUserImgUrl(null);
-                dto.setUserInfo(null);
-                dto.setUserPoint(0);
-                
-                System.out.println("첫 카카오 로그인 " + dto);
-
-
+                LoginUserDTO dto = LoginUserDTO.builder()
+                        .token(JwtToken)
+                        .userEmail(email)
+                        .userNickname(resultNickname)
+                        .build();
+                log.info("첫 로그인 (가입)" + dto);
+                return dto;
 
             } else {
 
-              String  JwtToken = tokenProvider.create(user);
-
-
-
-                dto.setToken(JwtToken);
-                dto.setUserEmail(user.getUserEmail());
-                dto.setUserNickname(user.getUserNickname());
-
-
-                dto.setUserImgUrl(user.getUserImgUrl());
-                dto.setUserInfo(user.getUserInfo());
-                dto.setUserPoint(user.getUserPoint());
-
-                System.out.println("2번쨰 카카오 로그인 " + dto);
-
-
+                String JwtToken = tokenProvider.create(user);
+                // 빌드빌더로 변경만
+                LoginUserDTO dto = LoginUserDTO.builder()
+                        .token(JwtToken)
+                        .userEmail(user.getUserEmail())
+                        .userNickname(user.getUserNickname())
+                        .userInfo(user.getUserInfo())
+                        .userImgUrl(user.getUserImgUrl())
+                        .userPoint(user.getUserPoint()).build();
+                log.info("재 로그인 : " + dto);
+                return dto;
             }
 
 
         } catch (Exception e) {
             e.printStackTrace(); // 오류 발생 시 로그 출력
+            return null;
         }
 
 
-        return dto;
     }
 
 
