@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Proxy;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -95,36 +96,33 @@ public class UserController {
     }
     @PutMapping("/user/update")
     public  ResponseEntity updateUser(UserDTO dto) throws Exception {
-        log.info("수정정보 : " + dto);
+        User auth = userService.getLoginUser();
         User vo = new User()
                 .builder()
-                .userEmail( userService.getLoginUser().getUserEmail())
-                .userPassword(userService.getLoginUser().getUserPassword())
+                .userEmail( auth.getUserEmail())
+                .userPassword(auth.getUserPassword())
                 .userNickname(dto.getUserNickname())
                 .userInfo(dto.getUserInfo())
-                .userPoint( userService.getLoginUser().getUserPoint())
+                .userPoint( auth.getUserPoint())
                 .build();
         // 이미지 변경여부 -1(변경X), 0(변경), 1(이미지 삭제)
         if(dto.getChangeImg()== 0){// 변경하는경우 기존 id의 저장된 파일 삭제후 새로운 파일 업로드하고 저장
-            fileDelete(userService.getLoginUser().getUserImgUrl(), userService.getLoginUser().getUserEmail());
-            vo.setUserImgUrl(fileUpload(dto.getUserImgUrl(), userService.getLoginUser().getUserEmail()));
+            fileDelete(auth.getUserImgUrl(), auth.getUserEmail());
+            vo.setUserImgUrl(fileUpload(dto.getUserImgUrl(), auth.getUserEmail()));
             vo.setUserPoint(vo.getUserPoint()-100); // 이미지변경했으니 포인트 차감
         } else if (dto.getChangeImg()== -1) { // 이미지 삭제후 저장
-            fileDelete(userService.getLoginUser().getUserImgUrl(), userService.getLoginUser().getUserEmail());
+            fileDelete(auth.getUserImgUrl(), auth.getUserEmail());
             vo.setUserImgUrl(null);
         }else{ // 변경 X 기존값 다시 추가
-            vo.setUserImgUrl(userService.getLoginUser().getUserImgUrl());
+            vo.setUserImgUrl(auth.getUserImgUrl());
         }
         // 닉네임을 변경한 경우
-        if(!vo.getUserNickname().equals(userService.getLoginUser().getUserNickname())){
+        if(!vo.getUserNickname().equals(auth.getUserNickname())){
             vo.setUserPoint(vo.getUserPoint()-300); // 닉네임변경했으니  300 포인트 차감
         }
         if(vo.getUserPoint() >= 0){ // 포인트 차감후 포인트가 -로 안내려갈때
-            log.info("아마 터지는위치");
             userService.registerUser(vo);
-            log.info("변경정보 : " + vo);
             vo.setUserPassword(null);
-            log.info("비번날린 회우너정보 : " + vo);
             return ResponseEntity.ok(vo);
         }
         return ResponseEntity.ok(null);
@@ -135,11 +133,16 @@ public class UserController {
     public ResponseEntity nicknameCheck(@RequestParam(name = "nickname") String nickname) {
         log.info(nickname);
         User user = userService.findByNickname(nickname); // 있으면 중복 닉네임
+        User auth = userService.getLoginUser(); // 로그인 유저 정보
+
+        log.info("auth : " + auth);
+
         if (user == null) {
             log.info("true 리턴");
             return ResponseEntity.ok(true); // 중복이 아님
-        } else if (userService.getLoginUser() != null) {  // 중복이지만 업데이트 상황 (로그인 유저가 있음)
-                if (userService.getLoginUser().getUserNickname().equals(nickname)) {// 로그인한 기존 회원의 닉네임과 변경사항이 같으면
+        }
+        if (auth != null) {  // 중복이지만 업데이트 상황 (로그인 유저가 있음)
+                if (auth.getUserNickname().equals(nickname)) {// 로그인한 기존 회원의 닉네임과 변경사항이 같으면
                     log.info("true 리턴");
                     return ResponseEntity.ok(true); // 기존 닉네임과 동일함
                 }
@@ -167,31 +170,11 @@ public class UserController {
     }
 
     @PostMapping("/user/kakaoLogin")
-    public ResponseEntity kakaoCode(@RequestBody Map<String, String> requestBody, HttpServletResponse response) throws IOException {
-        log.info("매핑확인");
+    public ResponseEntity kakaoCode(@RequestBody Map<String, String> requestBody) throws IOException {
         String code = requestBody.get("code");
-
-    String kakaotoken = kakaoService.getAccessToken(code);
-    System.out.println("카카오 토큰  : "  +kakaotoken);
-    LoginUserDTO dto = kakaoService.getUserInfo(kakaotoken);
-
-
-
-
-
-
-
-
-
-
-
-       return ResponseEntity.ok(dto);
+        String kakaoToken = kakaoService.getAccessToken(code);
+       return ResponseEntity.ok(kakaoService.getUserInfo(kakaoToken));
     }
-
-
-
-
-
 
 
 
