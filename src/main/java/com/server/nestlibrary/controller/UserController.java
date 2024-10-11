@@ -87,7 +87,6 @@ public class UserController {
     }
     @PutMapping("/user/update")
     public  ResponseEntity updateUser(UserDTO dto) throws Exception {
-        log.info("수정정보 : " + dto);
         User auth = userService.getLoginUser();
         User vo = new User()
                 .builder()
@@ -113,11 +112,8 @@ public class UserController {
             vo.setUserPoint(vo.getUserPoint()-300); // 닉네임변경했으니  300 포인트 차감
         }
         if(vo.getUserPoint() >= 0){ // 포인트 차감후 포인트가 -로 안내려갈때
-            log.info("아마 터지는위치");
             userService.registerUser(vo);
-            log.info("변경정보 : " + vo);
             vo.setUserPassword(null);
-            log.info("비번날린 회우너정보 : " + vo);
             return ResponseEntity.ok(vo);
         }
         return ResponseEntity.ok(null);
