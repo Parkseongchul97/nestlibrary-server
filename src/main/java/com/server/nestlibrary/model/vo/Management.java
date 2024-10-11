@@ -24,6 +24,9 @@ public class Management {
 	@Column(name = "management_delete_at")
 	private LocalDateTime managementDeleteAt; // 삭제 예정일 (벤관련)
 
+	@Column(name = "channel_code")
+	private int channelCode;
+
 	@Column(name = "user_email")
 	private String userEmail; // 해당 유저 FOREIGN_KEY
 

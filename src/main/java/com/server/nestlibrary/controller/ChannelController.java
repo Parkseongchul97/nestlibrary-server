@@ -2,7 +2,13 @@ package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.ChannelDTO;
 import com.server.nestlibrary.model.vo.Channel;
+import com.server.nestlibrary.model.vo.ChannelTag;
+import com.server.nestlibrary.model.vo.Management;
+import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.service.ChannelService;
+import com.server.nestlibrary.service.ManagementService;
+import com.server.nestlibrary.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +32,14 @@ import java.util.UUID;
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
 public class ChannelController {
 
+ @Autowired
+ private ManagementService managementService;
+
     @Autowired
     private ChannelService channelService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/channel/main")
     public ResponseEntity allChannel(){
@@ -40,8 +52,27 @@ public class ChannelController {
        Channel chan = channelService.findChannel(channelCode);
        log.info("해당 코드의 채널 : " + chan);
        // 일단 기본 채널정보만
-        // 추후 DTO로 커다란거로 포장해서 보내야함...
-        return ResponseEntity.ok(chan);
+// 추후 DTO로 커다란거로 포장해서 보내야함...
+
+        // + 해당 채널의 태그들 가져오기
+      List<ChannelTag> tags = channelService.tagList(channelCode);
+
+
+        //  + 채널의 게시판
+        ChannelDTO dto = ChannelDTO.builder()
+                .channelCode(chan.getChannelCode())
+                .channelName(chan.getChannelName())
+                .channelInfo(chan.getChannelInfo())
+                .channelImg(chan.getChannelImgUrl())
+                .channelCreatedAt(chan.getChannelCreatedAt())
+                .channelTag(tags)
+                .host(managementService.findHost(channelCode))
+                .build();
+
+        log.info("dto 정보 : " + dto);
+
+
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/channel/{channelCode}/{channelTagCode}")
@@ -60,7 +91,7 @@ public class ChannelController {
     }
 
     // 채널 생성(프라이빗 추가)
-    @PostMapping("/channel/create")
+    @PostMapping("private/channel/create")
     public ResponseEntity createChannel(ChannelDTO dto) throws Exception {
         Channel channel = channelService.createChannel(Channel
                 .builder()
