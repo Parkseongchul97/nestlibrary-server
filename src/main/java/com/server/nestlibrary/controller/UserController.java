@@ -4,7 +4,9 @@ import com.server.nestlibrary.config.TokenProvider;
 import com.server.nestlibrary.model.dto.LoginUserDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.service.KakaoService;
 import com.server.nestlibrary.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,11 +17,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -33,6 +37,10 @@ public class UserController {
     @Autowired
     private TokenProvider tokenProvider;
 
+    @Autowired
+    private KakaoService kakaoService;
+
+   
     @PostMapping("/user/login")
     public ResponseEntity login(@RequestBody User vo){
         User user = userService.login(vo.getUserEmail(), vo.getUserPassword());
@@ -159,4 +167,50 @@ public class UserController {
             f.delete();
         }
     }
+
+    @PostMapping("/user/kakaoLogin")
+    public ResponseEntity kakaoCode(@RequestBody Map<String, String> requestBody, HttpServletResponse response) throws IOException {
+        log.info("매핑확인");
+        String code = requestBody.get("code");
+
+    String kakaotoken = kakaoService.getAccessToken(code);
+    System.out.println("카카오 토큰  : "  +kakaotoken);
+    LoginUserDTO dto = kakaoService.getUserInfo(kakaotoken);
+
+
+ System.out.println(dto);
+
+
+
+
+
+
+
+
+       return ResponseEntity.ok(dto);
+    }
+
+
+
+
+
+    @GetMapping("/userInfo")
+    public ResponseEntity userInfo(){
+
+        System.out.println("유저인포 컨트롤러 매핑 ");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("인증여부 : " + auth);
+        if(auth!= null && auth.isAuthenticated()){
+            User user = (User) auth.getPrincipal();
+            System.out.println("유저 " + user);
+          return ResponseEntity.ok(user);
+        }
+        return ResponseEntity.ok(null);
+
+
+
+    }
+
+
+
 }
