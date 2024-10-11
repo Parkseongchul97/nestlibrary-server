@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.server.nestlibrary.config.TokenProvider;
 import com.server.nestlibrary.controller.UserController;
+import com.server.nestlibrary.model.dto.LoginUserDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.UserDAO;
@@ -23,6 +24,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -81,9 +85,9 @@ public class KakaoService {
     }
 
 
-    public UserDTO getUserInfo(String accessToken ) throws IOException {
+    public LoginUserDTO getUserInfo(String accessToken ) throws IOException {
         RestTemplate restTemplate = new RestTemplate();
-
+        System.out.println("KakaoService  카카오토큰 : " + accessToken);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken); // Bearer 토큰 추가
 
@@ -91,8 +95,8 @@ public class KakaoService {
         ResponseEntity<String> response = restTemplate.exchange("https://kapi.kakao.com/v2/user/me", HttpMethod.GET, requestEntity, String.class);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        String JwtToken = null;
-        UserDTO dto = null;
+
+        LoginUserDTO  dto = new LoginUserDTO();
         try {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
             Long id = Long.valueOf(jsonNode.get("id").asText()); // 사용자 ID
@@ -110,7 +114,8 @@ public class KakaoService {
             System.out.println("email : " + email);
 
             User user = userService.findUser(email);
-            dto = new UserDTO();
+            System.out.println("조건문 가기전에 user" + user);
+
 
             if (user == null) {
 
@@ -121,24 +126,38 @@ public class KakaoService {
                 user1.setUserEmail(email);
                 user1.setUserImgUrl(null);
                 dao.save(user1);
-
-                JwtToken = tokenProvider.create(user1);
+                Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\user\\" +email + "\\");
+                Files.createDirectories(directoryPath);
+            String  JwtToken = tokenProvider.create(user1);
 
 
                 dto.setToken(JwtToken);
                 dto.setUserEmail(email);
                 dto.setUserNickname("KaKao" + numeber + nickname);
                 dto.setUserImgUrl(null);
+                dto.setUserInfo(null);
+                dto.setUserPoint(0);
+                
+                System.out.println("첫 카카오 로그인 " + dto);
 
 
 
             } else {
 
-                JwtToken = tokenProvider.create(user);
+              String  JwtToken = tokenProvider.create(user);
+
+
+
                 dto.setToken(JwtToken);
                 dto.setUserEmail(user.getUserEmail());
                 dto.setUserNickname(user.getUserNickname());
-                dto.setImg(user.getUserImgUrl());
+
+
+                dto.setUserImgUrl(user.getUserImgUrl());
+                dto.setUserInfo(user.getUserInfo());
+                dto.setUserPoint(user.getUserPoint());
+
+                System.out.println("2번쨰 카카오 로그인 " + dto);
 
 
             }

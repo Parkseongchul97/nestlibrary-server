@@ -166,14 +166,14 @@ public class UserController {
         }
     }
 
-    @PostMapping("/kakaoLogin")
+    @PostMapping("/user/kakaoLogin")
     public ResponseEntity kakaoCode(@RequestBody Map<String, String> requestBody, HttpServletResponse response) throws IOException {
         log.info("매핑확인");
         String code = requestBody.get("code");
 
     String kakaotoken = kakaoService.getAccessToken(code);
     System.out.println("카카오 토큰  : "  +kakaotoken);
-    UserDTO dto = kakaoService.getUserInfo(kakaotoken);
+    LoginUserDTO dto = kakaoService.getUserInfo(kakaotoken);
 
 
  System.out.println(dto);
