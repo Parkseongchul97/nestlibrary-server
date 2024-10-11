@@ -2,9 +2,14 @@ package com.server.nestlibrary.service;
 
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.ChannelTag;
+import com.server.nestlibrary.model.vo.Management;
+import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
+import com.server.nestlibrary.repo.ManagementDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,8 +20,12 @@ public class ChannelService {
     private ChannelDAO channelDAO;
     @Autowired
     private ChannelTagDAO tagDAO;
+    @Autowired
+    private ManagementDAO managementDAO;
 
     public List<Channel> allChannel(){
+
+
         return channelDAO.findAll();
     }
     // 채널 코드로 상세 page 채널코드로 (반환 : 채널)
@@ -34,9 +43,22 @@ public class ChannelService {
     // 채널 생성 메서드 (반환 : 채널)
     public Channel createChannel(Channel vo){
         Channel chan = channelDAO.save(vo);
+
+
+
+
+
+
         // 해당 채널에 게시판 태그가 0개면
         if(tagDAO.findByChannelCode(chan.getChannelCode()).size() == 0){
         createDefaultTag(chan.getChannelCode()); // 기본 채널 3개 생성
+            Management man = Management.builder()
+                    .channelCode(vo.getChannelCode())
+                    .managementUserStatus("host")
+                    .userEmail(getLoginUser())
+                    .build();
+            managementDAO.save(man);
+
         }
         return chan;
     }
@@ -46,5 +68,22 @@ public class ChannelService {
         tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("일반").build());
         tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("공지").build());
         tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("인기글").build());
+    }
+
+
+    //  + 채널코드로 채널태그 가져오기
+    public List<ChannelTag> tagList (int channelCode){
+      List<ChannelTag>  tags =  tagDAO.findByChannelCode(channelCode);
+      return tags;
+    }
+
+
+    public String getLoginUser(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth!= null && auth.isAuthenticated()){
+            User user = (User) auth.getPrincipal();
+            return user.getUserEmail();
+        }
+        return null;
     }
 }

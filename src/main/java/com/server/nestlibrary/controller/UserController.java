@@ -176,7 +176,7 @@ public class UserController {
     LoginUserDTO dto = kakaoService.getUserInfo(kakaotoken);
 
 
- System.out.println(dto);
+
 
 
 
@@ -192,22 +192,7 @@ public class UserController {
 
 
 
-    @GetMapping("/userInfo")
-    public ResponseEntity userInfo(){
 
-        System.out.println("유저인포 컨트롤러 매핑 ");
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("인증여부 : " + auth);
-        if(auth!= null && auth.isAuthenticated()){
-            User user = (User) auth.getPrincipal();
-            System.out.println("유저 " + user);
-          return ResponseEntity.ok(user);
-        }
-        return ResponseEntity.ok(null);
-
-
-
-    }
 
 
 
