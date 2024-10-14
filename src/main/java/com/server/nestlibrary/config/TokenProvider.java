@@ -24,8 +24,8 @@ public class TokenProvider {
         return Jwts.builder()
                 .signWith(secretKey)
                 .setClaims(Map.of(  // 토큰에 넣으려고하는거
-                        "email", user.getUserEmail(),
-                        "nickname" , user.getUserNickname()
+                        "email", user.getUserEmail()
+
 
                 ))
                 .setIssuedAt(new Date()) // 토큰 발급 날짜
@@ -33,7 +33,8 @@ public class TokenProvider {
                 .compact();
     }
 
-    public  User validate(String token){
+    public User validate(String token){
+        System.out.println("토큰 확인!!");
         System.out.println("validate");
         System.out.println(token);
         Claims claims = Jwts.parser()
@@ -43,8 +44,6 @@ public class TokenProvider {
 
         return User.builder()
                     .userEmail((String) claims.get("email"))
-                .userNickname((String) claims.get("nickname"))
-
                     .build();
     }
 }

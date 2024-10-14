@@ -34,7 +34,7 @@ CREATE TABLE management( --  채널 관리
 	management_code INT AUTO_INCREMENT PRIMARY KEY, -- 관리 코드
     management_user_status VARCHAR(10) , -- 유저 상태 (host, admin ,ban, sub)
     management_delete_at DATETIME, -- 삭제 예정일(벤 관련)
-
+	channel_code INT,
     user_email VARCHAR(50) -- 대상 유저
 );
 ALTER TABLE management ADD  FOREIGN KEY (user_email) REFERENCES user(user_email); -- 채널관리 -> 유저  참조
