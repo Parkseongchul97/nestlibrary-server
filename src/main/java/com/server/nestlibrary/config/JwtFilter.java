@@ -31,6 +31,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(token != null){
             User user = tokenProvider.validate(token);
+            System.out.println("유저 : " + user);
             // 추출한 인증 정보를 필터링에서 사용할 수 있도록 Security Context에 등록
             AbstractAuthenticationToken authenticationToken= new UsernamePasswordAuthenticationToken(user , user.getUserPassword(),new ArrayList<>());
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -44,6 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private  String parseBearerToken(HttpServletRequest request){
         String bearerToken = request.getHeader("Authorization");
+        System.out.println("아래 콘솔 토큰");
          System.out.println(bearerToken);
         if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
             return  bearerToken.substring(7); // 받아오는 형태인  Authorization : Bearer 토큰글씨 에서 뒤에만

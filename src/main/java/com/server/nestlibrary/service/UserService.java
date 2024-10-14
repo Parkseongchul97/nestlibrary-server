@@ -24,8 +24,10 @@ public class UserService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if(auth!= null && auth.isAuthenticated()){
             log.info("auth >> " + auth);
+
             User user = (User) auth.getPrincipal();
             User result = dao.findById(user.getUserEmail()).get();
+            log.info("auth 유저 >> " + result);
             return result;
         }
         return null;

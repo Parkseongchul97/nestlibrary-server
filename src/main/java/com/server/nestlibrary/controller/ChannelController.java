@@ -40,19 +40,21 @@ public class ChannelController {
 
     @Autowired
     private UserService userService;
-
+    
+    // 일단 모든 채널 정보 조회
     @GetMapping("/channel/main")
     public ResponseEntity allChannel(){
         List<Channel> list = channelService.allChannel();
         log.info("전부 : " + list);
         return ResponseEntity.ok(list);
     }
+    // 채널 새부 정보 조회
     @GetMapping("/channel/{channelCode}")
     public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
        Channel chan = channelService.findChannel(channelCode);
        log.info("해당 코드의 채널 : " + chan);
        // 일단 기본 채널정보만
-// 추후 DTO로 커다란거로 포장해서 보내야함...
+        // 추후 DTO로 커다란거로 포장해서 보내야함...
 
         // + 해당 채널의 태그들 가져오기
       List<ChannelTag> tags = channelService.tagList(channelCode);
@@ -66,7 +68,7 @@ public class ChannelController {
                 .channelImg(chan.getChannelImgUrl())
                 .channelCreatedAt(chan.getChannelCreatedAt())
                 .channelTag(tags)
-                .host(managementService.findHost(channelCode))
+//                .host(managementService.findHost(channelCode))
                 .build();
 
         log.info("dto 정보 : " + dto);
@@ -105,10 +107,28 @@ public class ChannelController {
         Channel result = channelService.createChannel(channel);
         log.info("message : " + channel);
         // 채널 생성후에 로그인한 회원의 포인트 -3000
-
         // 채널에 기본 채널태그로 공지, 일반 , 인기글 탭 추가
         return ResponseEntity.ok(result);
     }
+    // 채널 태그 추가
+    @PostMapping("private/channel/tag")
+    public ResponseEntity createChannelTag(@RequestBody ChannelTag vo) throws Exception {
+       ChannelTag tag = channelService.createTag(vo);
+       log.info("생성된 새부 게시판 : " + tag);
+       // 태그 추가시 포인트 감소
+        return ResponseEntity.ok(tag);
+    }
+
+    @DeleteMapping("private/channel/tag/{channelTagCode}")
+    public ResponseEntity createChannelTag(@PathVariable(name = "channelTagCode") int channelTagCode) throws Exception {
+        channelService.removeTag(channelTagCode);
+        log.info("생성된 새부 게시판 삭제");
+        // 해당 태그 밑에 있던 게시글들 처리? 일반탭으로? 아님 삭제
+        return ResponseEntity.ok(null);
+    }
+    
+    
+    // 파일 업로드
     public String fileUpload(MultipartFile file, int channelCode) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {
             return null;
@@ -120,7 +140,7 @@ public class ChannelController {
         file.transferTo(copyFile);
         return fileName;
     }
-
+    // 삭제
     public void fileDelete(String file, int channelCode) throws IllegalStateException, Exception {
         if (file != null) {
             String decodedString = URLDecoder.decode(file, StandardCharsets.UTF_8.name()); // 한글 디코딩 처리

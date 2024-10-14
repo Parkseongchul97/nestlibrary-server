@@ -30,6 +30,7 @@ public class ChannelService {
     }
     // 채널 코드로 상세 page 채널코드로 (반환 : 채널)
     public Channel findChannel(int channelCode){
+
         return channelDAO.findById(channelCode).orElse(null);
     }
     // 채널 이름 중복체크 (반환 : 채널)
@@ -43,15 +44,10 @@ public class ChannelService {
     // 채널 생성 메서드 (반환 : 채널)
     public Channel createChannel(Channel vo){
         Channel chan = channelDAO.save(vo);
-
-
-
-
-
-
         // 해당 채널에 게시판 태그가 0개면
         if(tagDAO.findByChannelCode(chan.getChannelCode()).size() == 0){
         createDefaultTag(chan.getChannelCode()); // 기본 채널 3개 생성
+            // 채널 관리탭에 호스트 추가
             Management man = Management.builder()
                     .channelCode(vo.getChannelCode())
                     .managementUserStatus("host")
@@ -69,11 +65,19 @@ public class ChannelService {
         tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("공지").build());
         tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("인기글").build());
     }
-
+    // 채널 태그 추가
+    public ChannelTag createTag(ChannelTag vo){
+        // 이전에 유저 포인트, 등급 확인후 포인트 제거 등등
+        return tagDAO.save(vo);
+    }
+    // 채널 태그 삭제
+    public void removeTag(int channelTagCode){
+        tagDAO.deleteById(channelTagCode);
+    }
 
     //  + 채널코드로 채널태그 가져오기
     public List<ChannelTag> tagList (int channelCode){
-      List<ChannelTag>  tags =  tagDAO.findByChannelCode(channelCode);
+      List<ChannelTag> tags =  tagDAO.findByChannelCode(channelCode);
       return tags;
     }
 
