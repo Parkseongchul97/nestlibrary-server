@@ -24,7 +24,7 @@ public class Comment {
 	private LocalDateTime commentCreatedAt; // 댓글작성시간
 
 	@Column(name = "comment_parents_code")
-	private String commentParentsCode; // 부모댓글코드
+	private int commentParentsCode; // 부모댓글코드
 
 	@Column(name = "user_email")
 	private String userEmail; // 이메일  FOREIGN_KEY
