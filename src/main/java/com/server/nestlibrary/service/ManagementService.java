@@ -56,6 +56,7 @@ public class ManagementService {
         managementDAO.save(vo);
     }
 
+    // 구독 취소
     public  void remove(int managementCode){
 
         managementDAO.deleteById(managementCode);
@@ -65,6 +66,12 @@ public class ManagementService {
     public Management check(int channelCode ){
 
         return managementDAO.check(channelCode, getUserEmail());
+    }
+
+    // 구독자 수
+    public int count(int channelCode){
+
+        return managementDAO.count(channelCode);
     }
 
 
