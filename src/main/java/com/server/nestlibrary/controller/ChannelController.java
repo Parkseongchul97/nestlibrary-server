@@ -93,7 +93,7 @@ public class ChannelController {
     }
 
     // 채널 생성(프라이빗 추가)
-    @PostMapping("private/channel/create")
+    @PostMapping("/private/channel/create")
     public ResponseEntity createChannel(ChannelDTO dto) throws Exception {
         Channel channel = channelService.createChannel(Channel
                 .builder()
@@ -111,7 +111,7 @@ public class ChannelController {
         return ResponseEntity.ok(result);
     }
     // 채널 태그 추가
-    @PostMapping("private/channel/tag")
+    @PostMapping("/private/channel/tag")
     public ResponseEntity createChannelTag(@RequestBody ChannelTag vo) throws Exception {
        ChannelTag tag = channelService.createTag(vo);
        log.info("생성된 새부 게시판 : " + tag);
@@ -119,7 +119,7 @@ public class ChannelController {
         return ResponseEntity.ok(tag);
     }
 
-    @DeleteMapping("private/channel/tag/{channelTagCode}")
+    @DeleteMapping("/private/channel/tag/{channelTagCode}")
     public ResponseEntity createChannelTag(@PathVariable(name = "channelTagCode") int channelTagCode) throws Exception {
         channelService.removeTag(channelTagCode);
         log.info("생성된 새부 게시판 삭제");

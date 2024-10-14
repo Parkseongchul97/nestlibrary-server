@@ -72,6 +72,7 @@ public class ChannelService {
     }
     // 채널 태그 삭제
     public void removeTag(int channelTagCode){
+        
         tagDAO.deleteById(channelTagCode);
     }
 
