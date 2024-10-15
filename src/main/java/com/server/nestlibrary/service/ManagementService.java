@@ -3,6 +3,7 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
@@ -35,7 +36,7 @@ public class ManagementService {
     private final QManagement qManagement = QManagement.management;
 
     // 해당 채널의 관리자들 user 로 반환 0번째는 호스트
-    public List<User> findAdmin(int channelCode) {
+    public List<UserDTO> findAdmin(int channelCode) {
         List<Management> adminList = queryFactory.selectFrom(qManagement)
                 .where(qManagement.channelCode.eq(channelCode))
                 .where(
@@ -47,9 +48,14 @@ public class ManagementService {
                                         qManagement.managementUserStatus, "host", 1, 2)
                                 .asc()
                 ).fetch();
-        List<User> userList = new ArrayList<>();
+        List<UserDTO> userList = new ArrayList<>();
         for (Management m : adminList) {
-            userList.add(userDAO.findById(m.getUserEmail()).get());
+            User vo = userDAO.findById(m.getUserEmail()).get();
+            userList.add(UserDTO.builder()
+                            .userEmail(vo.getUserEmail())
+                            .userImg(vo.getUserImgUrl())
+                            .userNickname(vo.getUserNickname())
+                            .build());
         }
         return userList;
     }
