@@ -55,21 +55,24 @@ public class ChannelController {
         return ResponseEntity.ok(dtoList);
     }
 
-    // 채널 새부 정보 조회
+//    // 채널 새부 정보 조회
+//    @GetMapping("/channel/{channelCode}")
+//    public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
+//
+//
+//    }
+
     @GetMapping("/channel/{channelCode}")
-    public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
+    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@RequestParam(required = false, name = "channelTagCode")int channelTagCode){
+        if(channelTagCode==0){
+            log.info("아무것도 같이안옴 (전체조회)");
+        } else{
+            log.info("뒤에 세부태그 옴 : " + channelTagCode);
+        }
 
         ChannelPostDTO chanDTO = channelService.allChannelInfo(channelCode);
         log.info("해당채널 모든 정보 : " + chanDTO);
         return ResponseEntity.ok(chanDTO);
-    }
-
-    @GetMapping("/channel/{channelCode}/{channelTagCode}")
-    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@PathVariable(name = "channelTagCode")int channelTagCode){
-        Channel chan = channelService.findChannel(channelCode);
-        log.info("해당 코드의 채널 : " + chan);
-        // 채널 서브 게시판 창으로 보내야함. (채널코드 + 채널 태그코드로 찾는 )
-        return ResponseEntity.ok(chan);
     }
 
     // 채널 이름 중복 확인
