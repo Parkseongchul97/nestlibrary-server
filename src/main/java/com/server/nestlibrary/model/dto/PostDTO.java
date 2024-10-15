@@ -32,4 +32,6 @@ public class PostDTO {
     private String channelTagCode; // 채널 세부 게시판 태그 FOREIGN_KEY
     
     private int likeCount; // 좋아요 숫자
+    
+    private int commentCount; // 댓글 숫자
 }

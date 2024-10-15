@@ -1,9 +1,11 @@
 package com.server.nestlibrary.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.server.nestlibrary.model.dto.CommentDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
+import com.server.nestlibrary.repo.CommentDAO;
 import com.server.nestlibrary.repo.PostDAO;
 import com.server.nestlibrary.repo.PostLikeDAO;
 import com.server.nestlibrary.repo.UserDAO;
@@ -27,6 +29,9 @@ public class PostService {
 
     @Autowired
     private UserDAO userDAO;
+
+    @Autowired
+    private CommentService commentService;
 
     @Autowired
     private JPAQueryFactory queryFactory;
@@ -57,6 +62,7 @@ public class PostService {
                         .userImg(user.getUserImgUrl())
                         .userEmail(user.getUserEmail()).build())
                 .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postCode)).fetch().size())
+                .commentCount(commentService.commentCount(postCode))
                 .build();
        // 작성자, 게시글 , 좋아요 숫자 리턴
         

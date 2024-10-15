@@ -40,6 +40,11 @@ public class CommentService {
         comment.setCommentContent(vo.getCommentContent());
         return commentDAO.save(comment);
     }
+    public int commentCount(int postCode){
+        return queryFactory.selectFrom(qComment)
+                .where(qComment.postCode.eq(postCode))
+                .fetch().size();
+    }
 
     // 자식댓글 확인
     public List<Comment> findChildComment(int commentCode){
