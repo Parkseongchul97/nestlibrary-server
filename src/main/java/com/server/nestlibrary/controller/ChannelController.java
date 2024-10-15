@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,38 +44,23 @@ public class ChannelController {
     private UserService userService;
 
 
-    
-    // 일단 모든 채널 정보 조회
+
     @GetMapping("/channel/main")
     public ResponseEntity allChannel(){
         List<Channel> list = channelService.allChannel();
-        log.info("전부 : " + list);
-        return ResponseEntity.ok(list);
+        List<ChannelPostDTO> dtoList= new ArrayList<>();
+        for(Channel c : list){
+            dtoList.add(channelService.allChannelInfo(c.getChannelCode()));
+        }
+
+        return ResponseEntity.ok(dtoList);
     }
+
     // 채널 새부 정보 조회
     @GetMapping("/channel/{channelCode}")
     public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
-       Channel chan = channelService.findChannel(channelCode);
-       log.info("해당 코드의 채널 : " + chan);
-       // 일단 기본 채널정보만
-        // 추후 DTO로 커다란거로 포장해서 보내야함...
-
-        // + 해당 채널의 태그들 가져오기
-      List<ChannelTag> tags = channelService.tagList(channelCode);
 
 
-        //  + 채널의 게시판
-        ChannelDTO dto = ChannelDTO.builder()
-                .channelCode(chan.getChannelCode())
-                .channelName(chan.getChannelName())
-                .channelInfo(chan.getChannelInfo())
-                .channelImg(chan.getChannelImgUrl())
-                .channelCreatedAt(chan.getChannelCreatedAt())
-                .channelTag(tags)
-                .host(managementService.findAdmin(channelCode).get(0))
-                .build();
-
-        log.info("dto 정보 : " + dto);
         ChannelPostDTO chanDTO = channelService.allChannelInfo(channelCode);
         log.info("해당채널 모든 정보 : " + chanDTO);
         return ResponseEntity.ok(chanDTO);
