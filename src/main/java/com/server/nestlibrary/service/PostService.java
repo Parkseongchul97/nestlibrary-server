@@ -5,10 +5,7 @@ import com.server.nestlibrary.model.dto.CommentDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
-import com.server.nestlibrary.repo.CommentDAO;
-import com.server.nestlibrary.repo.PostDAO;
-import com.server.nestlibrary.repo.PostLikeDAO;
-import com.server.nestlibrary.repo.UserDAO;
+import com.server.nestlibrary.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,10 +32,78 @@ public class PostService {
     private CommentService commentService;
 
     @Autowired
+    private ChannelTagDAO tagDAO;
+
+    @Autowired
     private JPAQueryFactory queryFactory;
 
     private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
+
+    // 해당 채널의 전체 글
+    public List<PostDTO> channelCodeByAllPost(int channelCode){
+        List<PostDTO> dtoList = new ArrayList<>();
+        List<Post> voList =  queryFactory.selectFrom(qPost)
+                .where(qPost.channelCode.eq(channelCode))
+                .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
+                .limit(10) // 일단 10개만 빼보기
+                .fetch();
+        for(Post p : voList){
+            User userVo = userDAO.findById(p.getUserEmail()).get();
+            dtoList.add(PostDTO.builder()
+                    .postCreatedAt(p.getPostCreatedAt())
+                    .postTitle(p.getPostTitle())
+                    .postContent(p.getPostContent())
+                    .postCode(p.getPostCode())
+                    .channelTag(tagDAO.findById(p.getChannelTagCode()).get())
+                    .channelCode(p.getChannelCode())
+                    .postViews(p.getPostViews())
+                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
+                                    .userImg(userVo.getUserImgUrl())
+                                    .userEmail(userVo.getUserEmail()).build())
+                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
+                    .commentCount(commentService.commentCount(p.getPostCode()))
+                    .build());
+
+        }
+        if(dtoList.size() == 0){
+            return null;
+        }
+        return dtoList;
+
+    }
+    // 채널 태그별 게시글
+    public List<PostDTO> channelTagCodeByAllPost(int channelTagCode){
+        List<PostDTO> dtoList = new ArrayList<>();
+        List<Post> voList =  queryFactory.selectFrom(qPost)
+                .where(qPost.channelTagCode.eq(channelTagCode))
+                .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
+                .limit(10) // 일단 10개만 빼보기
+                .fetch();
+        for(Post p : voList){
+            User userVo = userDAO.findById(p.getUserEmail()).get();
+            dtoList.add(PostDTO.builder()
+                    .postCreatedAt(p.getPostCreatedAt())
+                    .postTitle(p.getPostTitle())
+                    .postContent(p.getPostContent())
+                    .postCode(p.getPostCode())
+                    .channelTag(tagDAO.findById(p.getChannelTagCode()).get())
+                    .channelCode(p.getChannelCode())
+                    .postViews(p.getPostViews())
+                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
+                            .userImg(userVo.getUserImgUrl())
+                            .userEmail(userVo.getUserEmail()).build())
+                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
+                    .commentCount(commentService.commentCount(p.getPostCode()))
+                    .build());
+
+        }
+        if(dtoList.size() == 0){
+            return null;
+        }
+        return dtoList;
+
+    }
 
     // 게시글 조회
     @Transactional
@@ -55,7 +121,7 @@ public class PostService {
                 .postTitle(vo.getPostTitle())
                 .postContent(vo.getPostContent())
                 .postCode(postCode)
-                .channelTagCode(vo.getChannelTagCode())
+                .channelTag(tagDAO.findById(vo.getChannelTagCode()).get())
                 .channelCode(vo.getChannelCode())
                 .postViews(vo.getPostViews())
                 .user(UserDTO.builder().userNickname(user.getUserNickname())

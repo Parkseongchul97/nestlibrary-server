@@ -1,6 +1,7 @@
 package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.ChannelDTO;
+import com.server.nestlibrary.model.dto.ChannelPostDTO;
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.ChannelTag;
 import com.server.nestlibrary.model.vo.Management;
@@ -74,9 +75,9 @@ public class ChannelController {
                 .build();
 
         log.info("dto 정보 : " + dto);
-
-
-        return ResponseEntity.ok(dto);
+        ChannelPostDTO chanDTO = channelService.allChannelInfo(channelCode);
+        log.info("해당채널 모든 정보 : " + chanDTO);
+        return ResponseEntity.ok(chanDTO);
     }
 
     @GetMapping("/channel/{channelCode}/{channelTagCode}")
