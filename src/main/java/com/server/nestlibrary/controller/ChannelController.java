@@ -34,16 +34,17 @@ import java.util.UUID;
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
 public class ChannelController {
 
- @Autowired
- private ManagementService managementService;
+    @Autowired
+   private ManagementService managementService;
 
     @Autowired
     private ChannelService channelService;
 
     @Autowired
     private UserService userService;
-    
-    // 일단 모든 채널 정보 조회
+
+
+
     @GetMapping("/channel/main")
     public ResponseEntity allChannel(){
         List<Channel> list = channelService.allChannel();
@@ -53,6 +54,7 @@ public class ChannelController {
         }
         return ResponseEntity.ok(dtoList);
     }
+
     // 채널 새부 정보 조회
     @GetMapping("/channel/{channelCode}")
     public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
@@ -133,4 +135,8 @@ public class ChannelController {
             f.delete();
         }
     }
+
+
+
+
 }

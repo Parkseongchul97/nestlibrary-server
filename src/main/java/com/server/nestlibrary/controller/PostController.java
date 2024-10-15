@@ -1,15 +1,17 @@
 package com.server.nestlibrary.controller;
 
+import com.server.nestlibrary.model.dto.ChannelDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
-import com.server.nestlibrary.model.vo.Channel;
-import com.server.nestlibrary.model.vo.Management;
-import com.server.nestlibrary.model.vo.Post;
-import com.server.nestlibrary.model.vo.PostLike;
+import com.server.nestlibrary.model.vo.*;
+import com.server.nestlibrary.service.ChannelService;
 import com.server.nestlibrary.service.ManagementService;
 import com.server.nestlibrary.service.PostService;
+import com.server.nestlibrary.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -25,7 +27,22 @@ public class PostController {
     private PostService postService;
 
     @Autowired
+    private ChannelService channelService;
+
+    @Autowired
     private ManagementService managementService;
+
+    @Autowired
+    private UserService userService;
+
+    private String getEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            User user = (User) auth.getPrincipal();
+            return user.getUserEmail();
+        }
+        return null;
+    }
     
     // 게시글 상세 페이지
     @GetMapping("/post/{postCode}")
@@ -46,6 +63,47 @@ public class PostController {
         Post post = postService.savePost(vo);
         return ResponseEntity.ok(post);
     }
+
+    @GetMapping("/private/post/{channelCode}")
+    public ResponseEntity write (@PathVariable(name = "channelCode")int channelCode){
+
+
+
+        Channel chan = channelService.findChannel(channelCode);
+
+        List<ChannelTag> tags = channelService.tagList(channelCode);
+
+
+        for( int i=0; i<managementService.findAdmin(channelCode).size(); i++) {
+
+            if (managementService.findAdmin(channelCode).get(i).getUserEmail().equals(getEmail())) {
+                tags = channelService.tagList(channelCode);
+
+                break;
+            } else {
+                tags.remove(1);
+                break;
+            }
+
+        }
+
+        ChannelDTO dto = ChannelDTO.builder()
+                .channelCode(chan.getChannelCode())
+                .channelName(chan.getChannelName())
+                .channelInfo(chan.getChannelInfo())
+                .channelImg(chan.getChannelImgUrl())
+                .channelCreatedAt(chan.getChannelCreatedAt())
+                .channelTag(tags)
+//                .host(managementService.findHost(channelCode))
+                .build();
+
+
+
+        return ResponseEntity.ok(dto);
+
+    }
+
+
     // 게시글 수정
     @PutMapping("/private/post")
     public ResponseEntity updatePost(@RequestBody Post vo){
@@ -80,6 +138,9 @@ public class PostController {
         // 좋아요 받았던 게시글 작성자 -10포인트(포인트 있으면)
         return ResponseEntity.ok(null);
     }
+
+
+
 
 
 

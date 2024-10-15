@@ -22,7 +22,6 @@ public class ManagementService {
     @Autowired
     private ManagementDAO managementDAO;
 
-
     @Autowired
     private UserDAO userDAO;
 
@@ -34,6 +33,10 @@ public class ManagementService {
     private final QUser qUser = QUser.user;
     private final QChannel qChannel = QChannel.channel;
     private final QManagement qManagement = QManagement.management;
+
+
+
+
 
     // 해당 채널의 관리자들 user 로 반환 0번째는 호스트
     public List<UserDTO> findAdmin(int channelCode) {
@@ -82,6 +85,32 @@ public class ManagementService {
         }
         return null;
     }
+
+    // 구독하기
+    public void subscribe(Management vo){
+
+        managementDAO.save(vo);
+    }
+
+    // 구독 취소
+    public  void remove(int managementCode){
+
+        managementDAO.deleteById(managementCode);
+    }
+
+    // 구독체크
+    public Management check(int channelCode ){
+
+        return managementDAO.check(channelCode, getEmail());
+    }
+
+    // 구독자 수
+    public int count(int channelCode){
+
+        return managementDAO.count(channelCode);
+    }
+
+
 }
 
 

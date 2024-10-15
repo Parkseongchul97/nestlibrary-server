@@ -116,7 +116,7 @@ public class UserController {
             fileDelete(auth.getUserImgUrl(), auth.getUserEmail());
             vo.setUserImgUrl(fileUpload(dto.getUserImgUrl(), auth.getUserEmail()));
             vo.setUserPoint(vo.getUserPoint()-100); // 이미지변경했으니 포인트 차감
-        } else if (dto.getChangeImg()== -1) { // 이미지 삭제후 저장
+        } else if (dto.getChangeImg()==  1) { // 이미지 삭제후 저장
             fileDelete(auth.getUserImgUrl(), auth.getUserEmail());
             vo.setUserImgUrl(null);
         }else{ // 변경 X 기존값 다시 추가

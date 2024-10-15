@@ -143,7 +143,6 @@ public class PostService {
             User user = userDAO.findById(getEmail()).get();
             user.setUserPoint(user.getUserPoint()+50);
             // 게시글 작성시 50포인트 추가
-
             userDAO.save(user);
             return postDAO.save(vo);
         } else{
@@ -204,6 +203,9 @@ public class PostService {
         }
         return null;
     }
+
+
+
 
 
 }
