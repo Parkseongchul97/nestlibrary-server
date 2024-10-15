@@ -45,8 +45,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private  String parseBearerToken(HttpServletRequest request){
         String bearerToken = request.getHeader("Authorization");
-        System.out.println("아래 콘솔 토큰");
-         System.out.println(bearerToken);
         if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
             return  bearerToken.substring(7); // 받아오는 형태인  Authorization : Bearer 토큰글씨 에서 뒤에만
         }

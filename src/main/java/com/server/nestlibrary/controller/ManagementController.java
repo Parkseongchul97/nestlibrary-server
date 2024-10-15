@@ -57,7 +57,6 @@ public class ManagementController {
     @GetMapping("/subscribe/{channelCode}")
     public ResponseEntity count (@PathVariable (name="channelCode") int channelCode){
 
-         System.out.println(managementService.count(channelCode));
         return ResponseEntity.ok(managementService.count(channelCode));
 
     }

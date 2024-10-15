@@ -2,6 +2,7 @@ package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.ChannelDTO;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
+import com.server.nestlibrary.model.dto.ChannelTagDTO;
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.ChannelTag;
 import com.server.nestlibrary.model.vo.Management;
@@ -63,15 +64,17 @@ public class ChannelController {
 //    }
 
     @GetMapping("/channel/{channelCode}")
-    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@RequestParam(required = false, name = "channelTagCode")int channelTagCode){
-        if(channelTagCode==0){
-            log.info("아무것도 같이안옴 (전체조회)");
-        } else{
-            log.info("뒤에 세부태그 옴 : " + channelTagCode);
-        }
-
+    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode){
         ChannelPostDTO chanDTO = channelService.allChannelInfo(channelCode);
         log.info("해당채널 모든 정보 : " + chanDTO);
+        return ResponseEntity.ok(chanDTO);
+    }
+    @GetMapping("/channel/{channelCode}/{channelTagCode}")
+    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@PathVariable(required = false, name = "channelTagCode")int channelTagCode){
+        ChannelTagDTO chanDTO = channelService.channelTagAllPost(channelTagCode);
+        log.info("해당태그 모든 게시글 : " + chanDTO);
+        // 지금 서로 형태가 달라서 뽑아낼때 같은거 사용 못함
+        // 형태 맞춰서 내보내야함!! 채널의 모든정보 뽑아내는걸 postDTO 를 사용?
         return ResponseEntity.ok(chanDTO);
     }
 
@@ -91,8 +94,8 @@ public class ChannelController {
                 .channelInfo(dto.getChannelInfo())
                 .channelCreatedAt(LocalDateTime.now())
                 .build());
-        Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\channel\\" + String.valueOf(channel.getChannelCode())  + "\\");
-        Files.createDirectories(directoryPath); 
+//        Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\channel\\" + String.valueOf(channel.getChannelCode())  + "\\");
+//        Files.createDirectories(directoryPath);
         channel.setChannelImgUrl(fileUpload(dto.getChannelImgUrl(), channel.getChannelCode())); // 이미지 추가
         Channel result = channelService.createChannel(channel);
         log.info("message : " + channel);

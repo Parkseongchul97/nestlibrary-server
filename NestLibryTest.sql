@@ -1,6 +1,8 @@
 select * from user;
 insert into user
 values("asd123@naver.com", "123", "커피왕", "대충이미지주소.jpg" , "반가월");
+update user
+set user_point = 9000;
 
 select * from channel;
 insert into channel(channel_name,  channel_img_url)

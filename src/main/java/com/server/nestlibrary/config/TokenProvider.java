@@ -34,9 +34,7 @@ public class TokenProvider {
     }
 
     public User validate(String token){
-        System.out.println("토큰 확인!!");
-        System.out.println("validate");
-        System.out.println(token);
+
         Claims claims = Jwts.parser()
                     .setSigningKey(secretKey)
                     .parseClaimsJws(token)
