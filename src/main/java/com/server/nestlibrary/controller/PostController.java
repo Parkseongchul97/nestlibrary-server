@@ -2,8 +2,10 @@ package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.PostDTO;
 import com.server.nestlibrary.model.vo.Channel;
+import com.server.nestlibrary.model.vo.Management;
 import com.server.nestlibrary.model.vo.Post;
 import com.server.nestlibrary.model.vo.PostLike;
+import com.server.nestlibrary.service.ManagementService;
 import com.server.nestlibrary.service.PostService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,18 +23,26 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private ManagementService managementService;
     
     // 게시글 상세 페이지
     @GetMapping("/post/{postCode}")
     public ResponseEntity viewPost(@PathVariable(name = "postCode")int postCode){
-
-        PostDTO dto =postService.viewPost(postCode);
+        PostDTO dto = postService.viewPost(postCode);
+        // 작성자 정보, 게시글, 좋아요 숫자 가지고있는 DTO 리턴
         return ResponseEntity.ok(dto);
     }
     // 게시글 작성
     @PostMapping("/private/post")
     public ResponseEntity addPost(@RequestBody Post vo){
+        Management ban = managementService.findBan(vo.getChannelCode());
         log.info("게시글 내용 : "  + vo);
+        if(ban != null){ // 내가 벤당했다면 벤정보 리턴
+            return ResponseEntity.ok(ban);
+        }
+        // 작성자 50포인트
         Post post = postService.savePost(vo);
         return ResponseEntity.ok(post);
     }
@@ -62,12 +72,14 @@ public class PostController {
     @PostMapping("/private/like")
     public ResponseEntity like(@RequestBody PostLike vo){
         postService.like(vo);
+        // 좋아요 받은 게시글 작성자 10포인트
         return ResponseEntity.ok( postService.like(vo));
     }
     // 좋아요 취소
     @DeleteMapping("/private/like/{postLikeCode}")
     public ResponseEntity unLike(@PathVariable(name = "postLikeCode") int postLikeCode){
         postService.unLike(postLikeCode);
+        // 좋아요 받았던 게시글 작성자 -10포인트(포인트 있으면)
         return ResponseEntity.ok(null);
     }
 

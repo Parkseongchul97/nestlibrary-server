@@ -32,7 +32,7 @@ public class PostService {
 
     private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
-    private final QUser qUser = QUser.user;
+
     // 게시글 조회
     @Transactional
     public PostDTO viewPost(int postCode){
@@ -65,11 +65,21 @@ public class PostService {
         if(vo.getPostCode() == 0){
             // 수정이아니라 작성의 경우에만
             vo.setPostCreatedAt(LocalDateTime.now());
+            User user = userDAO.findById(getEmail()).get();
+            user.setUserPoint(user.getUserPoint()+50);
+            // 게시글 작성시 50포인트 추가
+            userDAO.save(user);
+            return postDAO.save(vo);
         } else{
             // 수정일땐 시간 원래 시간 다시 넣기
-        vo.setPostCreatedAt(viewPost(vo.getPostCode()).getPostCreatedAt());
+             Post post =  postDAO.findById(vo.getPostCode()).get();
+             post.setPostTitle(vo.getPostTitle());
+             post.setChannelTagCode(vo.getChannelTagCode());
+             post.setPostContent(vo.getPostContent());
+
+            return postDAO.save(post);
         }
-        return postDAO.save(vo);
+
     }
     // 게시글 삭제
     public void removePost (int postCode){
@@ -79,11 +89,25 @@ public class PostService {
     // 게시글 좋아요
     public PostLike like(PostLike vo){
         // 좋아요 숫자가 일정 달성시 해당 post 조회하고 조회수, 좋아요수 조건 충족하면 인기글로 < 추가
-        return likeDAO.save(vo);
+        PostLike like = likeDAO.save(vo);
+        // 좋아요 받은 게시글 작성자 포인트 + 10
+        Post post = postDAO.findById(like.getPostCode()).get();
+        User postAuthor= userDAO.findById(post.getUserEmail()).get();
+        postAuthor.setUserPoint(postAuthor.getUserPoint()+10);
+        userDAO.save(postAuthor);
+        return like;
     }
     // 좋아요 취소
     public void unLike(int postLikeCode){
-        likeDAO.deleteById(postLikeCode);
+        // 좋아요 취소되면 다시 포인트 -10
+        Post post = postDAO.findById(likeDAO.findById(postLikeCode).get().getPostCode()).get();
+        User postAuthor= userDAO.findById(post.getUserEmail()).get();
+        // 작성자의 보유 포인트가 10보다 크면
+        if(postAuthor.getUserPoint() > 10){
+            postAuthor.setUserPoint(postAuthor.getUserPoint()-10);
+            userDAO.save(postAuthor); // 포인트 감소
+        }
+        likeDAO.deleteById(postLikeCode); // 좋아요 취소
     }
     // 로그인한 사용자의 좋아요 여부
     public PostLike findLike(int postCode){

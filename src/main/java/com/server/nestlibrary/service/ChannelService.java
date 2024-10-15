@@ -63,7 +63,6 @@ public class ChannelService {
     public void createDefaultTag(int ChannelCode){
         tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("일반").build());
         tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("공지").build());
-        tagDAO.save(ChannelTag.builder().channelCode(ChannelCode).channelTagName("인기글").build());
     }
     // 채널 태그 추가
     public ChannelTag createTag(ChannelTag vo){
@@ -72,6 +71,7 @@ public class ChannelService {
     }
     // 채널 태그 삭제
     public void removeTag(int channelTagCode){
+
         tagDAO.deleteById(channelTagCode);
     }
 

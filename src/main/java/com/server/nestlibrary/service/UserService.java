@@ -21,16 +21,22 @@ public class UserService {
     private PasswordEncoder bcpe;
     // 사용자 정보 가져오기
     public User getLoginUser(){
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(auth!= null && auth.isAuthenticated()){
-            log.info("auth >> " + auth);
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if(auth!= null && auth.isAuthenticated()){
+                log.info("auth >> " + auth);
 
-            User user = (User) auth.getPrincipal();
-            User result = dao.findById(user.getUserEmail()).get();
-            log.info("auth 유저 >> " + result);
-            return result;
+                User user = (User) auth.getPrincipal();
+                User result = dao.findById(user.getUserEmail()).get();
+                log.info("auth 유저 >> " + result);
+                return result;
+            }
+            return null;
+        } catch (Exception e) {
+
+            return null;
         }
-        return null;
+
     }
 
     @Transactional

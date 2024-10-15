@@ -1,6 +1,7 @@
 package com.server.nestlibrary.model.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.server.nestlibrary.model.vo.User;
@@ -22,7 +23,7 @@ public class CommentDTO {
 
 		private User user; // 댓글단 유저
 	
-		private List<CommentDTO> reCommentDTO; // 대댓글
+		private List<CommentDTO> reCommentDTO =  new ArrayList<CommentDTO>(); // 대댓글
 
 	
 }
