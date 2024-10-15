@@ -36,6 +36,8 @@ public class PostController {
         Post post = postService.savePost(vo);
         return ResponseEntity.ok(post);
     }
+
+
     // 게시글 수정
     @PutMapping("/private/post")
     public ResponseEntity updatePost(@RequestBody Post vo){
@@ -68,6 +70,9 @@ public class PostController {
         postService.unLike(postLikeCode);
         return ResponseEntity.ok(null);
     }
+
+
+
 
 
 

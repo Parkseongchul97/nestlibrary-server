@@ -12,4 +12,5 @@ import java.util.List;
 public interface ChannelTagDAO extends JpaRepository<ChannelTag, Integer> {
     @Query(value = "SELECT * FROM channel_tag WHERE channel_code = :channelCode", nativeQuery = true)
     List<ChannelTag> findByChannelCode(@Param("channelCode") int channelCode);
+
 }
