@@ -1,5 +1,8 @@
 package com.server.nestlibrary.service;
 
+import com.server.nestlibrary.model.dto.ChannelPostDTO;
+import com.server.nestlibrary.model.dto.ChannelTagDTO;
+import com.server.nestlibrary.model.dto.PostDTO;
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.ChannelTag;
 import com.server.nestlibrary.model.vo.Management;
@@ -12,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,6 +26,11 @@ public class ChannelService {
     private ChannelTagDAO tagDAO;
     @Autowired
     private ManagementDAO managementDAO;
+    @Autowired
+    private  ManagementService managementService;
+
+    @Autowired
+    private  PostService postService;
 
     public List<Channel> allChannel(){
 
@@ -90,4 +99,36 @@ public class ChannelService {
         }
         return null;
     }
+    // 해당 채널의 모든 정보(게시글까지)
+    public ChannelPostDTO allChannelInfo(int channelCode){
+        Channel vo = channelDAO.findById(channelCode).get(); // 해당 채널 vo
+
+        List<ChannelTag> tagVoList = tagList(channelCode); // 해당채널 모든 태그vo
+        List<ChannelTagDTO> tagDTOList = new ArrayList<>();
+        for(ChannelTag tag : tagVoList){
+           tagDTOList.add(channelTagAllPost(tag.getChannelTagCode()));
+        }
+        ChannelPostDTO dto = ChannelPostDTO.builder()
+                .channelCode(channelCode)
+                .channelInfo(vo.getChannelInfo())
+                .channelName(vo.getChannelName())
+                .channelImg(vo.getChannelImgUrl())
+                .channelCreatedAt(vo.getChannelCreatedAt())
+                .favoriteCount(0)// 즐찾 숫자 추가
+                .channelTag(tagDTOList) // 태그 추가 + 태그 산하 게시글 추가
+                .allPost(postService.channelCodeByAllPost(channelCode)) // 해당 채널의 모든 태그 게시글 추가
+                .host(managementService.findAdmin(channelCode).get(0))
+                .build();
+        return dto;
+    }
+    // 해당 채널의 게시판 태그별 게시글 정보
+    public ChannelTagDTO channelTagAllPost(int channelTagCode){
+        ChannelTag vo = tagDAO.findById(channelTagCode).get();
+        return ChannelTagDTO.builder()
+                .channelTagCode(vo.getChannelTagCode())
+                .channelTagName(vo.getChannelTagName())
+                .posts(postService.channelTagCodeByAllPost(vo.getChannelTagCode())
+                ).build();
+    }
+
 }

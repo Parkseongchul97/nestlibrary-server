@@ -36,6 +36,6 @@ public class Post {
 	private int channelCode; // 채널 코드 FOREIGN_KEY
 
 	@Column(name = "channel_tag_code")
-	private String channelTagCode; // 채널 세부 게시판 태그 FOREIGN_KEY
+	private int channelTagCode; // 채널 세부 게시판 태그 FOREIGN_KEY
 	
 }

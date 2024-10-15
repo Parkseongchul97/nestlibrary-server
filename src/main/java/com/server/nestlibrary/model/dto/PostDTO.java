@@ -1,5 +1,6 @@
 package com.server.nestlibrary.model.dto;
 
+import com.server.nestlibrary.model.vo.ChannelTag;
 import com.server.nestlibrary.model.vo.User;
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
@@ -29,7 +30,7 @@ public class PostDTO {
 
     private int channelCode; // 채널 코드 FOREIGN_KEY
 
-    private String channelTagCode; // 채널 세부 게시판 태그 FOREIGN_KEY
+    private ChannelTag channelTag; // 채널 세부 게시판 태그 FOREIGN_KEY
     
     private int likeCount; // 좋아요 숫자
     

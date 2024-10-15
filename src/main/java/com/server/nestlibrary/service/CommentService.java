@@ -109,7 +109,7 @@ public class CommentService {
                 .selectFrom(qComment)
                 .where(qComment.postCode.eq(postCode))
                 .where(qComment.commentParentsCode.eq(0)) // 부모가 없는 댓글(대댓글 X 일반)
-                .orderBy(qComment.commentCreatedAt.desc()) // 작성시간따라 정렬
+                .orderBy(qComment.commentCreatedAt.asc()) // 작성순서대로
 //                .limit(20) // 페이징 관련된거 추가
                 .fetch();
     }
