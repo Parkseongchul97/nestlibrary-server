@@ -44,7 +44,7 @@ public class PostService {
         Post vo = postDAO.findById(postCode).get();
         // 게시글 좋아요 숫자 확인
         User user = userDAO.findById(vo.getUserEmail()).get();
-        user.setUserPassword(null);
+        user.setUserPassword("하이용");
         PostDTO dto = PostDTO.builder()
                 .postCreatedAt(vo.getPostCreatedAt())
                 .postTitle(vo.getPostTitle())
@@ -68,6 +68,7 @@ public class PostService {
             User user = userDAO.findById(getEmail()).get();
             user.setUserPoint(user.getUserPoint()+50);
             // 게시글 작성시 50포인트 추가
+            System.out.println("포스트 서비스 " + user);
             userDAO.save(user);
             return postDAO.save(vo);
         } else{

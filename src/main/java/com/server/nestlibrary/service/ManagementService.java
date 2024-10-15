@@ -3,7 +3,7 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.vo.Management;
-import com.server.nestlibrary.model.vo.QManagement;
+
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
@@ -24,27 +24,6 @@ public class ManagementService {
     private ManagementDAO managementDAO;
 
     @Autowired
-    private JPAQueryFactory queryFactory;
-
-
-
-    private final QManagement qManagement = QManagement.management;
-
-
-
-    // 사용자 아이디
-    private String getUserEmail(){
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if( auth != null && auth.isAuthenticated()){
-            User user = (User) auth.getPrincipal();
-            return user.getUserEmail();
-        }
-        return  null;
-    }
-
-
-    @Autowired
     private UserDAO userDAO;
 
     @Autowired
@@ -55,6 +34,10 @@ public class ManagementService {
     private final QUser qUser = QUser.user;
     private final QChannel qChannel = QChannel.channel;
     private final QManagement qManagement = QManagement.management;
+
+
+
+
 
     // 해당 채널의 관리자들 user 로 반환 0번째는 호스트
     public List<User> findAdmin(int channelCode) {
@@ -108,7 +91,7 @@ public class ManagementService {
     // 구독체크
     public Management check(int channelCode ){
 
-        return managementDAO.check(channelCode, getUserEmail());
+        return managementDAO.check(channelCode, getEmail());
     }
 
     // 구독자 수
