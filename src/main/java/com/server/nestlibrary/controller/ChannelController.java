@@ -68,7 +68,7 @@ public class ChannelController {
                 .channelImg(chan.getChannelImgUrl())
                 .channelCreatedAt(chan.getChannelCreatedAt())
                 .channelTag(tags)
-//                .host(managementService.findHost(channelCode))
+                .host(managementService.findAdmin(channelCode).get(0))
                 .build();
 
         log.info("dto 정보 : " + dto);

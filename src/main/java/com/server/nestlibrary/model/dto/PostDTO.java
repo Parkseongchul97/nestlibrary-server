@@ -25,7 +25,7 @@ public class PostDTO {
 
     private int postViews; // 조회수
 
-    private User user; // 이메일 FOREIGN_KEY
+    private UserDTO user; // 이메일 FOREIGN_KEY
 
     private int channelCode; // 채널 코드 FOREIGN_KEY
 

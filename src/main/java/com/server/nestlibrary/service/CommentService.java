@@ -1,11 +1,9 @@
 package com.server.nestlibrary.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.server.nestlibrary.model.vo.Comment;
-import com.server.nestlibrary.model.vo.QComment;
-import com.server.nestlibrary.model.vo.QPost;
-import com.server.nestlibrary.model.vo.QPostLike;
+import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.CommentDAO;
+import com.server.nestlibrary.repo.UserDAO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,12 +20,17 @@ public class CommentService {
     private CommentDAO commentDAO;
 
     @Autowired
+    private UserDAO userDAO;
+
+    @Autowired
     private JPAQueryFactory queryFactory;
 
     private final QComment qComment = QComment.comment;
     private final QPost qPost = QPost.post;
     // 댓글 추가
     public Comment addComment(Comment vo) {
+//        User user = userDAO.findById(getEmail()).get();
+//        user.setUserPoint(user.getUserPoint()+50);
         return commentDAO.save(vo);
     }
 

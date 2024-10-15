@@ -1,6 +1,7 @@
 package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.CommentDTO;
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.Comment;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.service.CommentService;
@@ -68,13 +69,12 @@ public class CommentController {
     }
 
     public CommentDTO commentDetail(Comment c){
-        User user = userService.findUser(c.getUserEmail());
-        user.setUserPassword(null);
+        User vo = userService.findUser(c.getUserEmail());
         return CommentDTO.builder()
                 .commentCode(c.getCommentCode())
                 .commentCreatedAt(c.getCommentCreatedAt())
                 .postCode(c.getPostCode())
-                .user(user)
+                .user(UserDTO.builder().userEmail(vo.getUserEmail()).userNickname(vo.getUserNickname()).userImg(vo.getUserImgUrl()).build())
                 .commentContent((c.getCommentContent())).build();
     }
 }
