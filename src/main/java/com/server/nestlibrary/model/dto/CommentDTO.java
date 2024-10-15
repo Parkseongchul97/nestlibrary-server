@@ -21,7 +21,7 @@ public class CommentDTO {
 
 		private LocalDateTime commentCreatedAt; // 댓글작성시간
 
-		private User user; // 댓글단 유저
+		private UserDTO user; // 댓글단 유저
 	
 		private List<CommentDTO> reCommentDTO =  new ArrayList<CommentDTO>(); // 대댓글
 

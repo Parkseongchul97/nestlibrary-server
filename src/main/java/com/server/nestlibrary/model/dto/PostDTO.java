@@ -25,11 +25,13 @@ public class PostDTO {
 
     private int postViews; // 조회수
 
-    private User user; // 이메일 FOREIGN_KEY
+    private UserDTO user; // 이메일 FOREIGN_KEY
 
     private int channelCode; // 채널 코드 FOREIGN_KEY
 
     private String channelTagCode; // 채널 세부 게시판 태그 FOREIGN_KEY
     
     private int likeCount; // 좋아요 숫자
+    
+    private int commentCount; // 댓글 숫자
 }

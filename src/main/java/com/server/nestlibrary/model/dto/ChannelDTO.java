@@ -28,7 +28,7 @@ public class ChannelDTO {
 
 	private MultipartFile channelImgUrl; // 파일
 
-	private  String channelInfo; // 채널소개
+	private String channelInfo; // 채널소개
 
 	private List<ChannelTag> channelTag; // 채널 내의 게시판 정보
 

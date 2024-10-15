@@ -1,8 +1,11 @@
 package com.server.nestlibrary.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.server.nestlibrary.model.dto.CommentDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
+import com.server.nestlibrary.repo.CommentDAO;
 import com.server.nestlibrary.repo.PostDAO;
 import com.server.nestlibrary.repo.PostLikeDAO;
 import com.server.nestlibrary.repo.UserDAO;
@@ -28,6 +31,9 @@ public class PostService {
     private UserDAO userDAO;
 
     @Autowired
+    private CommentService commentService;
+
+    @Autowired
     private JPAQueryFactory queryFactory;
 
     private final QPostLike qPostLike = QPostLike.postLike;
@@ -44,7 +50,6 @@ public class PostService {
         Post vo = postDAO.findById(postCode).get();
         // 게시글 좋아요 숫자 확인
         User user = userDAO.findById(vo.getUserEmail()).get();
-        user.setUserPassword("하이용");
         PostDTO dto = PostDTO.builder()
                 .postCreatedAt(vo.getPostCreatedAt())
                 .postTitle(vo.getPostTitle())
@@ -53,8 +58,11 @@ public class PostService {
                 .channelTagCode(vo.getChannelTagCode())
                 .channelCode(vo.getChannelCode())
                 .postViews(vo.getPostViews())
-                .user(user)
+                .user(UserDTO.builder().userNickname(user.getUserNickname())
+                        .userImg(user.getUserImgUrl())
+                        .userEmail(user.getUserEmail()).build())
                 .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postCode)).fetch().size())
+                .commentCount(commentService.commentCount(postCode))
                 .build();
        // 작성자, 게시글 , 좋아요 숫자 리턴
         
@@ -64,11 +72,11 @@ public class PostService {
     public Post savePost (Post vo){
         if(vo.getPostCode() == 0){
             // 수정이아니라 작성의 경우에만
+            // 추가조건 : 도배방지 같은 제목 내용 나우랑 최근글 페이징 해오는거 비교
             vo.setPostCreatedAt(LocalDateTime.now());
             User user = userDAO.findById(getEmail()).get();
             user.setUserPoint(user.getUserPoint()+50);
             // 게시글 작성시 50포인트 추가
-            System.out.println("포스트 서비스 " + user);
             userDAO.save(user);
             return postDAO.save(vo);
         } else{
@@ -84,7 +92,7 @@ public class PostService {
     }
     // 게시글 삭제
     public void removePost (int postCode){
-
+        // 삭제시 포인트감소?
         postDAO.deleteById(postCode);
     }
     // 게시글 좋아요

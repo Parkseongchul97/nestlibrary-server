@@ -1,6 +1,7 @@
 package com.server.nestlibrary.service;
 
 
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.vo.Management;
 
@@ -43,9 +44,15 @@ public class ManagementService {
     public List<User> findAdmin(int channelCode) {
         List<Management> adminList = queryFactory.selectFrom(qManagement)
                 .where(qManagement.channelCode.eq(channelCode))
-                .where(qManagement.managementUserStatus.eq("host").or(qManagement.managementUserStatus.eq("admin")))
-                .orderBy((qManagement.managementUserStatus.eq("host").desc()))
-                .fetch();
+                .where(
+                        qManagement.managementUserStatus.eq("host")
+                        .or(qManagement.managementUserStatus.eq("admin"))
+                ).orderBy(
+                        Expressions.numberTemplate(Integer.class,
+                                        "case when {0} = {1} then {2} else {3} end",
+                                        qManagement.managementUserStatus, "host", 1, 2)
+                                .asc()
+                ).fetch();
         List<User> userList = new ArrayList<>();
         for (Management m : adminList) {
             userList.add(userDAO.findById(m.getUserEmail()).get());
