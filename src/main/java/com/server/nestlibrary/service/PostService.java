@@ -69,11 +69,17 @@ public class PostService {
             user.setUserPoint(user.getUserPoint()+50);
             // 게시글 작성시 50포인트 추가
             userDAO.save(user);
+            return postDAO.save(vo);
         } else{
             // 수정일땐 시간 원래 시간 다시 넣기
-        vo.setPostCreatedAt(viewPost(vo.getPostCode()).getPostCreatedAt());
+             Post post =  postDAO.findById(vo.getPostCode()).get();
+             post.setPostTitle(vo.getPostTitle());
+             post.setChannelTagCode(vo.getChannelTagCode());
+             post.setPostContent(vo.getPostContent());
+
+            return postDAO.save(post);
         }
-        return postDAO.save(vo);
+
     }
     // 게시글 삭제
     public void removePost (int postCode){

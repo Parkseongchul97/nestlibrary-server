@@ -51,7 +51,7 @@ public class CommentController {
     public ResponseEntity viewComment(@PathVariable(name = "postCode")int postCode){
         List<Comment> allComment = commentService.getTopComment(postCode);
         List<CommentDTO> response = commentList(allComment);
-
+        log.info("댓글통 : " + response);
         return  ResponseEntity.ok(response);
     }
 

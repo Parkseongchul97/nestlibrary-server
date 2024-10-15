@@ -48,13 +48,13 @@ public class ManagementService {
     }
     // 로그인 유저가 벤되었나 확인
     public Management findBan(int channelCode) {
-        List<Management> adminList = queryFactory.selectFrom(qManagement)
+        List<Management> banList = queryFactory.selectFrom(qManagement)
                 .where(qManagement.channelCode.eq(channelCode))
                 .where(qManagement.managementUserStatus.eq("ban"))
                 .where(qManagement.userEmail.eq(getEmail()))
                 .fetch();
-        if(adminList.size() > 0){ // 내가 벤되었다면
-            return adminList.get(0);
+        if(banList.size() > 0){ // 내가 벤되었다면
+            return banList.get(0);
         }else{ // 일반적으로 접근가능상황
             return null;
         }
