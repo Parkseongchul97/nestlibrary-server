@@ -32,14 +32,16 @@ import java.util.UUID;
 @CrossOrigin(origins = {"*"}, maxAge = 6000)
 public class ChannelController {
 
- @Autowired
- private ManagementService managementService;
+    @Autowired
+   private ManagementService managementService;
 
     @Autowired
     private ChannelService channelService;
 
     @Autowired
     private UserService userService;
+
+
     
     // 일단 모든 채널 정보 조회
     @GetMapping("/channel/main")

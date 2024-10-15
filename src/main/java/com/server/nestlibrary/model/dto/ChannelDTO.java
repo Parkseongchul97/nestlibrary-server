@@ -3,6 +3,7 @@ package com.server.nestlibrary.model.dto;
 
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.ChannelTag;
+import com.server.nestlibrary.model.vo.Post;
 import com.server.nestlibrary.model.vo.User;
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;

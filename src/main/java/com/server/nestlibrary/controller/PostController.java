@@ -73,18 +73,19 @@ public class PostController {
 
         List<ChannelTag> tags = channelService.tagList(channelCode);
 
-    if (managementService.findAdmin(channelCode).contains(getEmail())){
 
-             tags = channelService.tagList(channelCode);
+        for( int i=0; i<managementService.findAdmin(channelCode).size(); i++) {
 
-    }else {
+            if (managementService.findAdmin(channelCode).get(i).getUserEmail().equals(getEmail())) {
+                tags = channelService.tagList(channelCode);
 
-        tags.remove(1);
+                break;
+            } else {
+                tags.remove(1);
+                break;
+            }
 
-    }
-
-
-
+        }
 
         ChannelDTO dto = ChannelDTO.builder()
                 .channelCode(chan.getChannelCode())
