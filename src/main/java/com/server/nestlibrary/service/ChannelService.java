@@ -1,12 +1,10 @@
 package com.server.nestlibrary.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.server.nestlibrary.model.dto.ChannelManagementDTO;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
 import com.server.nestlibrary.model.dto.ChannelTagDTO;
-import com.server.nestlibrary.model.dto.PostDTO;
-import com.server.nestlibrary.model.vo.Channel;
-import com.server.nestlibrary.model.vo.ChannelTag;
-import com.server.nestlibrary.model.vo.Management;
-import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
 import com.server.nestlibrary.repo.ManagementDAO;
@@ -14,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +31,11 @@ public class ChannelService {
     @Autowired
     private  PostService postService;
 
+    @Autowired
+    private JPAQueryFactory queryFactory;
+    private final QPost qPost = QPost.post;
+    private final QChannel qChannel = QChannel.channel;
+
     public List<Channel> allChannel(){
 
 
@@ -42,6 +46,32 @@ public class ChannelService {
 
         return channelDAO.findById(channelCode).orElse(null);
     }
+
+    // 채널수정 페이지에 필요한 정보 띄우기
+    public ChannelManagementDTO update(int channelCode){
+        Channel vo =  findChannel(channelCode);
+        List<ChannelTag> tags = tagList(channelCode);
+        List<User> admins = managementService.findAdmin(channelCode); // 여기 0번째는 호스트
+        List<User> bans = managementService.bans(channelCode);
+
+        ChannelManagementDTO cmDTO =  ChannelManagementDTO
+                .builder()
+                .channelCode(vo.getChannelCode())
+                .channelName(vo.getChannelName())
+                .channelCreatedAt(vo.getChannelCreatedAt())
+                .channelImg(vo.getChannelImgUrl())
+                .channelInfo(vo.getChannelInfo())
+                .channelTag(tags)
+                .favoriteCount(managementDAO.count(channelCode))
+                .adminList(admins)
+                .banList(bans)
+                .build();
+
+        return  cmDTO;
+    }
+
+
+
     // 채널 이름 중복체크 (반환 : 채널)
     public Channel findByChannelName(Channel vo){
         Channel chan = channelDAO.findByChannelName(vo.getChannelName());
@@ -79,9 +109,26 @@ public class ChannelService {
         return tagDAO.save(vo);
     }
     // 채널 태그 삭제
-    public void removeTag(int channelTagCode){
+    @Transactional
+    public void removeTag(int channelTagCode ){
 
-        tagDAO.deleteById(channelTagCode);
+
+      ChannelTag tag = tagDAO.findById(channelTagCode).get(); // 태그 코드로 ChannelTag 객체
+    int channelCode =  tag.getChannelCode();             // 해당 객체의 채널코드
+       if( updateTag(channelCode , channelTagCode)) { //업데이트 실행
+           tagDAO.deleteById(channelTagCode);
+       }// 삭제
+    }
+
+    public boolean updateTag(int channelCode , int channelTagcode) {
+       // 채널코드로 태그 리스트 뽑아서 첫번째 태그코드(일반)추출후 삭제된 태그 자리에 업데이트
+        List<ChannelTag> tags =  tagDAO.findByChannelCode(channelCode);
+       int regularCode = tags.get(0).getChannelTagCode();
+        queryFactory.update(qPost)
+                .set(qPost.channelTagCode, regularCode)
+                .where(qPost.channelTagCode.eq(channelTagcode))
+                .execute();
+        return true;
     }
 
     //  + 채널코드로 채널태그 가져오기
@@ -129,6 +176,17 @@ public class ChannelService {
                 .channelTagName(vo.getChannelTagName())
                 .posts(postService.channelTagCodeByAllPost(vo.getChannelTagCode())
                 ).build();
+    }
+    // 채널 소개 수정
+
+    @Transactional
+    public void updateInfo(String channelInfo, int channelCode){
+
+        queryFactory.update(qChannel)
+                .set(qChannel.channelInfo, channelInfo)
+                .where(qChannel.channelCode.eq(channelCode))
+                .execute();
+
     }
 
 }

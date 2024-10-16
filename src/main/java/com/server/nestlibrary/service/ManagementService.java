@@ -59,6 +59,9 @@ public class ManagementService {
         }
         return userList;
     }
+
+
+
     // 로그인 유저가 벤되었나 확인
     public Management findBan(int channelCode) {
         List<Management> banList = queryFactory.selectFrom(qManagement)
@@ -72,6 +75,24 @@ public class ManagementService {
             return null;
         }
 
+    }
+
+    //벤된 애들
+
+    public List<User> bans (int channelCode){
+
+        List<Management> banUser = queryFactory.selectFrom(qManagement)
+                .where(qManagement.channelCode.eq(channelCode))
+                .where(qManagement.managementUserStatus.eq("ban"))
+
+                .fetch();
+
+        List<User> userList = new ArrayList<>();
+        for (Management m : banUser) {
+            userList.add(userDAO.findById(m.getUserEmail()).get());
+        }
+
+        return userList;
     }
 
     private String getEmail() {

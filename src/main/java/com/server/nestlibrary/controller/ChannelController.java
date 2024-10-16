@@ -1,6 +1,7 @@
 package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.ChannelDTO;
+import com.server.nestlibrary.model.dto.ChannelManagementDTO;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.ChannelTag;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -108,15 +110,47 @@ public class ChannelController {
         return ResponseEntity.ok(tag);
     }
 
+    // 채널 태그 삭제
     @DeleteMapping("/private/channel/tag/{channelTagCode}")
-    public ResponseEntity createChannelTag(@PathVariable(name = "channelTagCode") int channelTagCode) throws Exception {
-        channelService.removeTag(channelTagCode);
+    public ResponseEntity createChannelTag(@PathVariable(name = "channelTagCode") int channelTagCode ) throws Exception {
+        channelService.removeTag(channelTagCode );
         log.info("생성된 새부 게시판 삭제");
         // 해당 태그 밑에 있던 게시글들 처리? 일반탭으로? 아님 삭제
         return ResponseEntity.ok(null);
     }
-    
-    
+
+    // 채널 수정 페이지
+    @GetMapping("/private/channel/update/{channelCode}")
+    public ResponseEntity updatePage (@PathVariable(name = "channelCode") int channelCode){
+
+          ChannelManagementDTO dto =    channelService.update(channelCode);
+        log.info("채널 수정 페이지 정보 :  "  + dto);
+
+        return ResponseEntity.ok(dto);
+    }
+
+
+    // 채널 소개 수정
+    @PutMapping("/private/channel/update")
+    public ResponseEntity updateInfo (@RequestBody Channel vo ) {
+
+      channelService.updateInfo(vo.getChannelInfo(), vo.getChannelCode());
+
+        return ResponseEntity.ok(null);
+
+
+    }
+
+    @PutMapping ("/private/channel/channelImg")
+    public ResponseEntity imgUpdate (@RequestBody ChannelDTO dto) throws Exception{
+
+
+        log.info("이미지 : ");
+
+        return ResponseEntity.ok(null);
+    }
+
+
     // 파일 업로드
     public String fileUpload(MultipartFile file, int channelCode) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {
