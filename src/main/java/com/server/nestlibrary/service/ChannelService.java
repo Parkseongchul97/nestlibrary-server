@@ -10,6 +10,7 @@ import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
 import com.server.nestlibrary.repo.ManagementDAO;
+import com.server.nestlibrary.repo.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,7 +29,11 @@ public class ChannelService {
     private ManagementDAO managementDAO;
     @Autowired
     private  ManagementService managementService;
+    @Autowired
+    private UserService userService;
 
+    @Autowired
+    private UserDAO userDAO;
     @Autowired
     private  PostService postService;
 
@@ -55,7 +60,14 @@ public class ChannelService {
         Channel chan = channelDAO.save(vo);
         // 해당 채널에 게시판 태그가 0개면
         if(tagDAO.findByChannelCode(chan.getChannelCode()).size() == 0){
-        createDefaultTag(chan.getChannelCode()); // 기본 채널 3개 생성
+            User user = userService.getLoginUser();
+            if(user.getUserPoint() < 3000){
+                return null; // 포인트 부족
+            }
+            user.setUserPoint(user.getUserPoint()-3000);
+            userDAO.save(user); // 포인트 소모
+            
+            createDefaultTag(chan.getChannelCode()); // 기본 채널 3개 생성
             // 채널 관리탭에 호스트 추가
             Management man = Management.builder()
                     .channelCode(vo.getChannelCode())
@@ -131,4 +143,8 @@ public class ChannelService {
                 ).build();
     }
 
+    // 해당 채널의 모든 게시판 게시글 정보
+    public List<PostDTO> channelAllPost(int channelCode){
+        return null;
+    }
 }

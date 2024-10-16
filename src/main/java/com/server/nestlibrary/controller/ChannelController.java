@@ -3,6 +3,7 @@ package com.server.nestlibrary.controller;
 import com.server.nestlibrary.model.dto.ChannelDTO;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
 import com.server.nestlibrary.model.dto.ChannelTagDTO;
+import com.server.nestlibrary.model.dto.PostDTO;
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.ChannelTag;
 import com.server.nestlibrary.model.vo.Management;
@@ -10,6 +11,7 @@ import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.service.ChannelService;
 import com.server.nestlibrary.service.ManagementService;
+import com.server.nestlibrary.service.PostService;
 import com.server.nestlibrary.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,9 @@ public class ChannelController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PostService postService;
+
 
 
     @GetMapping("/channel/main")
@@ -56,26 +61,38 @@ public class ChannelController {
         return ResponseEntity.ok(dtoList);
     }
 
-//    // 채널 새부 정보 조회
-//    @GetMapping("/channel/{channelCode}")
-//    public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
-//
-//
-//    }
-
+    // 채널정보 조회
     @GetMapping("/channel/{channelCode}")
     public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode){
-        ChannelPostDTO chanDTO = channelService.allChannelInfo(channelCode);
-        log.info("해당채널 모든 정보 : " + chanDTO);
-        return ResponseEntity.ok(chanDTO);
+        Channel vo = channelService.findChannel(channelCode);
+        ChannelDTO dto = ChannelDTO.builder()
+                .channelCode(channelCode)
+                .channelImg(vo.getChannelImgUrl())
+                .channelCreatedAt(vo.getChannelCreatedAt())
+                .channelName(vo.getChannelName())
+                .channelInfo(vo.getChannelInfo())
+                .channelTag(channelService.tagList(channelCode))
+                .host(managementService.findAdmin(channelCode).get(0))
+                .favoriteCount(managementService.count(channelCode))
+                .build();
+        log.info("채널정보 : " + dto);
+        return ResponseEntity.ok(dto);
     }
-    @GetMapping("/channel/{channelCode}/{channelTagCode}")
-    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@PathVariable(required = false, name = "channelTagCode")int channelTagCode){
-        ChannelTagDTO chanDTO = channelService.channelTagAllPost(channelTagCode);
-        log.info("해당태그 모든 게시글 : " + chanDTO);
-        // 지금 서로 형태가 달라서 뽑아낼때 같은거 사용 못함
-        // 형태 맞춰서 내보내야함!! 채널의 모든정보 뽑아내는걸 postDTO 를 사용?
-        return ResponseEntity.ok(chanDTO);
+    // 채널의 전체 게시판 조회
+    @GetMapping("/{channelCode}")
+    public ResponseEntity allPost(@PathVariable(name = "channelCode")int channelCode){
+            // 전체 게시글
+            List<PostDTO>  postList = postService.channelCodeByAllPost(channelCode);
+            log.info("전체 게시판 : " + postList);
+            return ResponseEntity.ok(postList);
+    }
+    // 채널의 세부탭 게시판 조회
+    @GetMapping("/{channelCode}/{channelTagCode}")
+    public ResponseEntity tagPost(@PathVariable(name = "channelCode")int channelCode,@PathVariable(required = false, name = "channelTagCode")int channelTagCode){
+             // 세부 게시글
+            List<PostDTO> postList = postService.channelTagCodeByAllPost(channelTagCode);
+            log.info("태그 게시판 : " + postList);
+            return ResponseEntity.ok(postList);
     }
 
     // 채널 이름 중복 확인
@@ -94,13 +111,14 @@ public class ChannelController {
                 .channelInfo(dto.getChannelInfo())
                 .channelCreatedAt(LocalDateTime.now())
                 .build());
-//        Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\channel\\" + String.valueOf(channel.getChannelCode())  + "\\");
-//        Files.createDirectories(directoryPath);
+        if(channel == null){
+            return ResponseEntity.ok(null);
+        }
+        Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\channel\\" + String.valueOf(channel.getChannelCode())  + "\\");
+        Files.createDirectories(directoryPath);
         channel.setChannelImgUrl(fileUpload(dto.getChannelImgUrl(), channel.getChannelCode())); // 이미지 추가
         Channel result = channelService.createChannel(channel);
         log.info("message : " + channel);
-        // 채널 생성후에 로그인한 회원의 포인트 -3000
-        // 채널에 기본 채널태그로 공지, 일반 , 인기글 탭 추가
         return ResponseEntity.ok(result);
     }
     // 채널 태그 추가

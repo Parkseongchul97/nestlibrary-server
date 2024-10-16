@@ -6,7 +6,10 @@ import com.server.nestlibrary.repo.CommentDAO;
 import com.server.nestlibrary.repo.UserDAO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,14 +26,36 @@ public class CommentService {
     private UserDAO userDAO;
 
     @Autowired
+    private ManagementService managementService;
+
+    @Lazy
+    @Autowired
+    private PostService postService;
+
+    @Autowired
+    private UserService userService;
+    @Autowired
     private JPAQueryFactory queryFactory;
 
     private final QComment qComment = QComment.comment;
     private final QPost qPost = QPost.post;
+
+    public Comment findComment(int commentCode){
+        return commentDAO.findById(commentCode).orElse(null);
+    }
     // 댓글 추가
     public Comment addComment(Comment vo) {
-//        User user = userDAO.findById(getEmail()).get();
-//        user.setUserPoint(user.getUserPoint()+50);
+       // 댓글로 -> 포스트 -> 채널코드
+        log.info("작성 댓글 정보 : " + vo);
+        Post postVo = postService.postCodeByPost(vo.getPostCode());
+        if(managementService.findBan(postVo.getChannelCode())!=null){
+            // 해당 채널의 블랙리스트인경우
+            return null;
+        }
+
+        User user =  userService.getLoginUser();
+        user.setUserPoint(user.getUserPoint()+20);
+        userDAO.save(user);
         return commentDAO.save(vo);
     }
 
@@ -121,4 +146,6 @@ public class CommentService {
                 .orderBy(qComment.commentCreatedAt.asc())
                 .fetch();
     }
+
+
 }

@@ -7,6 +7,7 @@ import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class PostService {
 
     @Autowired
     private UserDAO userDAO;
-
+    @Lazy
     @Autowired
     private CommentService commentService;
 
@@ -40,6 +41,9 @@ public class PostService {
     private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
 
+    public Post postCodeByPost(int postCode){
+        return postDAO.findById(postCode).orElse(null);
+    }
     // 해당 채널의 전체 글
     public List<PostDTO> channelCodeByAllPost(int channelCode){
         List<PostDTO> dtoList = new ArrayList<>();
@@ -103,6 +107,9 @@ public class PostService {
         }
         return dtoList;
 
+    }
+    public Post findByPostCode(int postCode){
+        return postDAO.findById(postCode).orElse(null);
     }
 
     // 게시글 조회

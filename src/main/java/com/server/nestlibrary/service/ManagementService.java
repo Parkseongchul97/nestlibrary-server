@@ -25,15 +25,14 @@ public class ManagementService {
     @Autowired
     private UserDAO userDAO;
 
+
     @Autowired
     private JPAQueryFactory queryFactory;
 
-    private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
     private final QUser qUser = QUser.user;
     private final QChannel qChannel = QChannel.channel;
     private final QManagement qManagement = QManagement.management;
-
 
 
 
@@ -87,9 +86,9 @@ public class ManagementService {
     }
 
     // 구독하기
-    public void subscribe(Management vo){
-
-        managementDAO.save(vo);
+    public Management subscribe(Management vo){
+        vo.setManagementUserStatus("sub");
+       return managementDAO.save(vo);
     }
 
     // 구독 취소
@@ -100,8 +99,14 @@ public class ManagementService {
 
     // 구독체크
     public Management check(int channelCode ){
-
-        return managementDAO.check(channelCode, getEmail());
+       List<Management> list =  queryFactory.selectFrom(qManagement)
+                .where(qManagement.userEmail.eq(getEmail()))
+                .where(qManagement.channelCode.eq(channelCode))
+                .where(qManagement.managementUserStatus.eq("sub"))
+                .fetch();
+        if(list.size() == 0)
+        return null ;
+        return list.get(0);
     }
 
     // 구독자 수
