@@ -41,12 +41,14 @@ public class PostService {
 
     private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
+    private final QUser qUser = QUser.user;
 
     public Post postCodeByPost(int postCode){
         return postDAO.findById(postCode).orElse(null);
     }
     public int allPostCount(int channelCode, String target, String keyword){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
                 .where(qPost.channelCode.eq(channelCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
@@ -54,7 +56,8 @@ public class PostService {
             }else if(target.equals("content")){// 내용이 포함된게시글
                 query.where(qPost.postContent.containsIgnoreCase(keyword));
             }else if(target.equals("user")){ // 작성자가
-                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
+
             }
         }
         return query.fetch().size();
@@ -62,6 +65,7 @@ public class PostService {
     }
     public int tagPostCount(int channelTagCode,String target, String keyword){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
                 .where(qPost.channelTagCode.eq(channelTagCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
@@ -69,7 +73,7 @@ public class PostService {
             }else if(target.equals("content")){// 내용이 포함된게시글
                 query.where(qPost.postContent.containsIgnoreCase(keyword));
             }else if(target.equals("user")){ // 작성자가
-                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
             }
         }
         return query.fetch().size();
@@ -78,6 +82,7 @@ public class PostService {
     public List<PostDTO> channelCodeByAllPost(int channelCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
                     .where(qPost.channelCode.eq(channelCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
@@ -85,7 +90,7 @@ public class PostService {
             }else if(target.equals("content")){// 내용이 포함된게시글
                 query.where(qPost.postContent.containsIgnoreCase(keyword));
             }else if(target.equals("user")){ // 작성자가
-                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
             }
         }
 
@@ -122,6 +127,7 @@ public class PostService {
     public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
                 .where(qPost.channelTagCode.eq(channelTagCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
@@ -129,7 +135,7 @@ public class PostService {
             }else if(target.equals("content")){// 내용이 포함된게시글
                 query.where(qPost.postContent.containsIgnoreCase(keyword));
             }else if(target.equals("user")){ // 작성자가
-                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
             }
         }
         List<Post> voList =  query
