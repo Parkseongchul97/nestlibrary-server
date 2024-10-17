@@ -1,5 +1,6 @@
 package com.server.nestlibrary.service;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.ChannelManagementDTO;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
@@ -9,6 +10,8 @@ import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
 import com.server.nestlibrary.repo.ManagementDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -41,6 +44,13 @@ public class ChannelService {
 
         return channelDAO.findAll();
     }
+// 페이징 시도 --------------------------------
+    public Page<Channel> allChannelPage(BooleanBuilder builder, Pageable pageable){
+
+
+        return channelDAO.findAll(builder, pageable);
+    }
+    //---------------------------------------
     // 채널 코드로 상세 page 채널코드로 (반환 : 채널)
     public Channel findChannel(int channelCode){
 
@@ -188,5 +198,33 @@ public class ChannelService {
                 .execute();
 
     }
+
+    // 채널 이미지  url 반환
+    public String  getUrl (int channelCode) {
+
+     Channel channel =  channelDAO.findById(channelCode).get();
+
+     return  channel.getChannelImgUrl();
+
+    }
+
+    @Transactional
+    public void imgUpdate (String fileName , int channelCode){
+
+        queryFactory.update(qChannel)
+                .set(qChannel.channelImgUrl, fileName)
+                .where(qChannel.channelCode.eq(channelCode))
+                .execute();
+
+    }
+
+    // 모든 코드 리스트
+    public List<Integer> allCode (){
+
+
+        return channelDAO.findAllChannelCode();
+    }
+
+
 
 }
