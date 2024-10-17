@@ -9,6 +9,7 @@ import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.service.ChannelService;
 import com.server.nestlibrary.service.ManagementService;
+import com.server.nestlibrary.service.PostService;
 import com.server.nestlibrary.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.Proxy;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -45,6 +47,9 @@ public class ChannelController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PostService postService;
 
 
 
@@ -141,22 +146,57 @@ return ResponseEntity.ok(dtoList);
         return ResponseEntity.ok(dtoList);
     }
 
-    // 채널 새부 정보 조회
+    // 채널정보 조회
     @GetMapping("/channel/{channelCode}")
-    public ResponseEntity channelMain(@PathVariable(name = "channelCode")int channelCode){
-
-
-        ChannelPostDTO chanDTO = channelService.allChannelInfo(channelCode);
-        log.info("해당채널 모든 정보 : " + chanDTO);
-        return ResponseEntity.ok(chanDTO);
+    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode){
+        Channel vo = channelService.findChannel(channelCode);
+        ChannelDTO dto = ChannelDTO.builder()
+                .channelCode(channelCode)
+                .channelImg(vo.getChannelImgUrl())
+                .channelCreatedAt(vo.getChannelCreatedAt())
+                .channelName(vo.getChannelName())
+                .channelInfo(vo.getChannelInfo())
+                .channelTag(channelService.tagList(channelCode))
+                .host(managementService.findAdmin(channelCode).get(0))
+                .favoriteCount(managementService.count(channelCode))
+                .build();
+        log.info("채널정보 : " + dto);
+        return ResponseEntity.ok(dto);
     }
-
-    @GetMapping("/channel/{channelCode}/{channelTagCode}")
-    public ResponseEntity channelSub(@PathVariable(name = "channelCode")int channelCode,@PathVariable(name = "channelTagCode")int channelTagCode){
-        Channel chan = channelService.findChannel(channelCode);
-        log.info("해당 코드의 채널 : " + chan);
-        // 채널 서브 게시판 창으로 보내야함. (채널코드 + 채널 태그코드로 찾는 )
-        return ResponseEntity.ok(chan);
+    // 채널의 전체 게시판 조회
+    @GetMapping("/{channelCode}")
+    public ResponseEntity allPost(@PathVariable(name = "channelCode")int channelCode,
+                                  @RequestParam(name = "page",defaultValue = "1")int page,
+                                  @RequestParam(name = "target",defaultValue = "" ,required = false)String target,
+                                  @RequestParam(name = "keyword",defaultValue = "" ,required = false)String keyword
+                                  ){
+        log.info("page : " + page);
+        log.info("target : " + target);
+        log.info("keyword : " + keyword);
+        int totalCount = postService.allPostCount(channelCode);
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage()-1));
+            // 전체 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
+            List<PostDTO>  postList = postService.channelCodeByAllPost(channelCode,paging,target,keyword);
+        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
+        // 페이징도 같이 담긴걸로?
+            return ResponseEntity.ok(postBorad);
+    }
+    // 채널의 세부탭 게시판 조회
+    @GetMapping("/{channelCode}/{channelTagCode}")
+    public ResponseEntity tagPost(@PathVariable(name = "channelCode")int channelCode,@PathVariable(required = false, name = "channelTagCode")int channelTagCode,
+                                  @RequestParam(name = "page",defaultValue = "1")int page,
+                                  @RequestParam(name = "target",defaultValue = "" ,required = false)String target,
+                                  @RequestParam(name = "keyword",defaultValue = "" ,required = false)String keyword){
+             // 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
+        int totalCount = postService.tagPostCount(channelTagCode);
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage()-1));
+        List<PostDTO>  postList = postService.channelTagCodeByAllPost(channelTagCode,paging,target,keyword);
+        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
+            return ResponseEntity.ok(postBorad);
     }
 
     // 채널 이름 중복 확인
@@ -175,13 +215,14 @@ return ResponseEntity.ok(dtoList);
                 .channelInfo(dto.getChannelInfo())
                 .channelCreatedAt(LocalDateTime.now())
                 .build());
+        if(channel == null){
+            return ResponseEntity.ok(null);
+        }
         Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\channel\\" + String.valueOf(channel.getChannelCode())  + "\\");
-        Files.createDirectories(directoryPath); 
+        Files.createDirectories(directoryPath);
         channel.setChannelImgUrl(fileUpload(dto.getChannelImgUrl(), channel.getChannelCode())); // 이미지 추가
         Channel result = channelService.createChannel(channel);
         log.info("message : " + channel);
-        // 채널 생성후에 로그인한 회원의 포인트 -3000
-        // 채널에 기본 채널태그로 공지, 일반 , 인기글 탭 추가
         return ResponseEntity.ok(result);
     }
     // 채널 태그 추가

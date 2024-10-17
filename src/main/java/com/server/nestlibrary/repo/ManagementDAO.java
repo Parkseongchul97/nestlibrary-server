@@ -10,11 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface ManagementDAO extends JpaRepository<Management, Integer> {
-
-
-   @Query(value = "SELECT * FROM management WHERE channel_code = :channelCode AND user_email = :userEmail" , nativeQuery = true)
-   Management check(@Param("channelCode") int channelCode, @Param("userEmail") String userEmail);
-
    @Query(value = "SELECT count(*) FROM management WHERE channel_code =:channelCode AND  management_user_status = 'sub'", nativeQuery = true)
     int count(@Param("channelCode") int channelcode);
 

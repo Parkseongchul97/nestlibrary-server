@@ -16,3 +16,5 @@ select * from management;
 select * from messages;
 select * from post;
 select * from post_like;
+insert into post (post_title, post_content, user_email, channel_code, channel_tag_code)
+values("제목1", "제목1", "asd", 15, 40);

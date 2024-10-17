@@ -3,9 +3,7 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.server.nestlibrary.model.vo.Management;
-
-import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
@@ -27,10 +25,10 @@ public class ManagementService {
     @Autowired
     private UserDAO userDAO;
 
+
     @Autowired
     private JPAQueryFactory queryFactory;
 
-    private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
     private final QUser qUser = QUser.user;
     private final QChannel qChannel = QChannel.channel;
@@ -39,9 +37,8 @@ public class ManagementService {
 
 
 
-
     // 해당 채널의 관리자들 user 로 반환 0번째는 호스트
-    public List<User> findAdmin(int channelCode) {
+    public List<UserDTO> findAdmin(int channelCode) {
         List<Management> adminList = queryFactory.selectFrom(qManagement)
                 .where(qManagement.channelCode.eq(channelCode))
                 .where(
@@ -53,9 +50,14 @@ public class ManagementService {
                                         qManagement.managementUserStatus, "host", 1, 2)
                                 .asc()
                 ).fetch();
-        List<User> userList = new ArrayList<>();
+        List<UserDTO> userList = new ArrayList<>();
         for (Management m : adminList) {
-            userList.add(userDAO.findById(m.getUserEmail()).get());
+            User vo = userDAO.findById(m.getUserEmail()).get();
+            userList.add(UserDTO.builder()
+                            .userEmail(vo.getUserEmail())
+                            .userImg(vo.getUserImgUrl())
+                            .userNickname(vo.getUserNickname())
+                            .build());
         }
         return userList;
     }
@@ -105,9 +107,9 @@ public class ManagementService {
     }
 
     // 구독하기
-    public void subscribe(Management vo){
-
-        managementDAO.save(vo);
+    public Management subscribe(Management vo){
+        vo.setManagementUserStatus("sub");
+       return managementDAO.save(vo);
     }
 
     // 구독 취소
@@ -118,8 +120,14 @@ public class ManagementService {
 
     // 구독체크
     public Management check(int channelCode ){
-
-        return managementDAO.check(channelCode, getEmail());
+       List<Management> list =  queryFactory.selectFrom(qManagement)
+                .where(qManagement.userEmail.eq(getEmail()))
+                .where(qManagement.channelCode.eq(channelCode))
+                .where(qManagement.managementUserStatus.eq("sub"))
+                .fetch();
+        if(list.size() == 0)
+        return null ;
+        return list.get(0);
     }
 
     // 구독자 수
