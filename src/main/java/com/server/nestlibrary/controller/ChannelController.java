@@ -1,13 +1,7 @@
 package com.server.nestlibrary.controller;
 
-import com.server.nestlibrary.model.dto.ChannelDTO;
-import com.server.nestlibrary.model.dto.ChannelPostDTO;
-import com.server.nestlibrary.model.dto.ChannelTagDTO;
-import com.server.nestlibrary.model.dto.PostDTO;
-import com.server.nestlibrary.model.vo.Channel;
-import com.server.nestlibrary.model.vo.ChannelTag;
-import com.server.nestlibrary.model.vo.Management;
-import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.model.dto.*;
+import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.service.ChannelService;
 import com.server.nestlibrary.service.ManagementService;
@@ -21,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.Proxy;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -80,19 +75,38 @@ public class ChannelController {
     }
     // 채널의 전체 게시판 조회
     @GetMapping("/{channelCode}")
-    public ResponseEntity allPost(@PathVariable(name = "channelCode")int channelCode){
-            // 전체 게시글
-            List<PostDTO>  postList = postService.channelCodeByAllPost(channelCode);
-            log.info("전체 게시판 : " + postList);
-            return ResponseEntity.ok(postList);
+    public ResponseEntity allPost(@PathVariable(name = "channelCode")int channelCode,
+                                  @RequestParam(name = "page",defaultValue = "1")int page,
+                                  @RequestParam(name = "target",defaultValue = "" ,required = false)String target,
+                                  @RequestParam(name = "keyword",defaultValue = "" ,required = false)String keyword
+                                  ){
+        log.info("page : " + page);
+        log.info("target : " + target);
+        log.info("keyword : " + keyword);
+        int totalCount = postService.allPostCount(channelCode);
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage()-1));
+            // 전체 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
+            List<PostDTO>  postList = postService.channelCodeByAllPost(channelCode,paging,target,keyword);
+        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
+        // 페이징도 같이 담긴걸로?
+            return ResponseEntity.ok(postBorad);
     }
     // 채널의 세부탭 게시판 조회
     @GetMapping("/{channelCode}/{channelTagCode}")
-    public ResponseEntity tagPost(@PathVariable(name = "channelCode")int channelCode,@PathVariable(required = false, name = "channelTagCode")int channelTagCode){
-             // 세부 게시글
-            List<PostDTO> postList = postService.channelTagCodeByAllPost(channelTagCode);
-            log.info("태그 게시판 : " + postList);
-            return ResponseEntity.ok(postList);
+    public ResponseEntity tagPost(@PathVariable(name = "channelCode")int channelCode,@PathVariable(required = false, name = "channelTagCode")int channelTagCode,
+                                  @RequestParam(name = "page",defaultValue = "1")int page,
+                                  @RequestParam(name = "target",defaultValue = "" ,required = false)String target,
+                                  @RequestParam(name = "keyword",defaultValue = "" ,required = false)String keyword){
+             // 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
+        int totalCount = postService.tagPostCount(channelTagCode);
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage()-1));
+        List<PostDTO>  postList = postService.channelTagCodeByAllPost(channelTagCode,paging,target,keyword);
+        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
+            return ResponseEntity.ok(postBorad);
     }
 
     // 채널 이름 중복 확인

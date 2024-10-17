@@ -3,10 +3,7 @@ package com.server.nestlibrary.service;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
 import com.server.nestlibrary.model.dto.ChannelTagDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
-import com.server.nestlibrary.model.vo.Channel;
-import com.server.nestlibrary.model.vo.ChannelTag;
-import com.server.nestlibrary.model.vo.Management;
-import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
 import com.server.nestlibrary.repo.ManagementDAO;
@@ -38,7 +35,6 @@ public class ChannelService {
     private  PostService postService;
 
     public List<Channel> allChannel(){
-
 
         return channelDAO.findAll();
     }
@@ -120,6 +116,10 @@ public class ChannelService {
         for(ChannelTag tag : tagVoList){
            tagDTOList.add(channelTagAllPost(tag.getChannelTagCode()));
         }
+        int totalCount = postService.allPostCount(channelCode);
+        Paging paging = new Paging(1, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage()-1));
         ChannelPostDTO dto = ChannelPostDTO.builder()
                 .channelCode(channelCode)
                 .channelInfo(vo.getChannelInfo())
@@ -128,7 +128,7 @@ public class ChannelService {
                 .channelCreatedAt(vo.getChannelCreatedAt())
                 .favoriteCount(0)// 즐찾 숫자 추가
                 .channelTag(tagDTOList) // 태그 추가 + 태그 산하 게시글 추가
-                .allPost(postService.channelCodeByAllPost(channelCode)) // 해당 채널의 모든 태그 게시글 추가
+                .allPost(postService.channelCodeByAllPost(channelCode,paging,"","")) // 해당 채널의 모든 태그 게시글 추가
                 .host(managementService.findAdmin(channelCode).get(0))
                 .build();
         return dto;
@@ -136,15 +136,15 @@ public class ChannelService {
     // 해당 채널의 게시판 태그별 게시글 정보
     public ChannelTagDTO channelTagAllPost(int channelTagCode){
         ChannelTag vo = tagDAO.findById(channelTagCode).get();
+        int totalCount = postService.tagPostCount(channelTagCode);
+        Paging paging = new Paging(1, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage()-1));
         return ChannelTagDTO.builder()
                 .channelTagCode(vo.getChannelTagCode())
                 .channelTagName(vo.getChannelTagName())
-                .posts(postService.channelTagCodeByAllPost(vo.getChannelTagCode())
+                .posts(postService.channelTagCodeByAllPost(vo.getChannelTagCode(),paging,"","")
                 ).build();
     }
 
-    // 해당 채널의 모든 게시판 게시글 정보
-    public List<PostDTO> channelAllPost(int channelCode){
-        return null;
-    }
 }

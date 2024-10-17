@@ -67,6 +67,7 @@ public class CommentService {
     }
     public int commentCount(int postCode){
         return queryFactory.selectFrom(qComment)
+
                 .where(qComment.postCode.eq(postCode))
                 .fetch().size();
     }
@@ -129,13 +130,22 @@ public class CommentService {
 
     }
 
-    public List<Comment> getTopComment(int postCode) {
+    public int getTopCommentCount(int postCode) {
         return queryFactory
                 .selectFrom(qComment)
                 .where(qComment.postCode.eq(postCode))
                 .where(qComment.commentParentsCode.eq(0)) // 부모가 없는 댓글(대댓글 X 일반)
                 .orderBy(qComment.commentCreatedAt.asc()) // 작성순서대로
-//                .limit(20) // 페이징 관련된거 추가
+                .fetch().size();
+    }
+    public List<Comment> getTopComment(int postCode ,Paging paging) {
+        return queryFactory
+                .selectFrom(qComment)
+                .where(qComment.postCode.eq(postCode))
+                .where(qComment.commentParentsCode.eq(0)) // 부모가 없는 댓글(대댓글 X 일반)
+                .orderBy(qComment.commentCreatedAt.asc()) // 작성순서대로
+                .offset(paging.getOffset()) //
+                .limit(paging.getLimit())
                 .fetch();
     }
 

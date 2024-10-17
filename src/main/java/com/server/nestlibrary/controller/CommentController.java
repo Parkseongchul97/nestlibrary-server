@@ -1,8 +1,10 @@
 package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.CommentDTO;
+import com.server.nestlibrary.model.dto.CommentListDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.Comment;
+import com.server.nestlibrary.model.vo.Paging;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.service.CommentService;
 import com.server.nestlibrary.service.UserService;
@@ -49,10 +51,19 @@ public class CommentController {
 
     // 게시글 댓글 전체 보여주기 <- 페이징 처리 추가(부모댓글 숫자에 따라서)
     @GetMapping("/post/{postCode}/comment")
-    public ResponseEntity viewComment(@PathVariable(name = "postCode")int postCode){
-        List<Comment> allComment = commentService.getTopComment(postCode);
+    public ResponseEntity viewComment(@PathVariable(name = "postCode")int postCode,@RequestParam(name = "page" ,defaultValue = "1")int page){
+
+        int totalCount = commentService.getTopCommentCount(postCode); // 총 상위댓글 숫자
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage()-1));
+        List<Comment> allComment = commentService.getTopComment(postCode, paging);
         List<CommentDTO> response = commentList(allComment);
-        return  ResponseEntity.ok(response);
+        CommentListDTO commentListDTO = CommentListDTO.builder()
+                .commentList(response)
+                .paging(paging)
+                .build();
+        return  ResponseEntity.ok(commentListDTO);
     }
 
     public  List<CommentDTO> commentList(List<Comment> comments){

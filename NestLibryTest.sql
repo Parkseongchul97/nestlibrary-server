@@ -1,8 +1,6 @@
 select * from user;
 insert into user
 values("asd123@naver.com", "123", "커피왕", "대충이미지주소.jpg" , "반가월");
-update user
-set user_point = 9000;
 
 select * from channel;
 insert into channel(channel_name,  channel_img_url)
@@ -18,3 +16,5 @@ select * from management;
 select * from messages;
 select * from post;
 select * from post_like;
+insert into post (post_title, post_content, user_email, channel_code, channel_tag_code)
+values("제목1", "제목1", "asd", 15, 40);

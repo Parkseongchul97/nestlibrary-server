@@ -44,13 +44,28 @@ public class PostService {
     public Post postCodeByPost(int postCode){
         return postDAO.findById(postCode).orElse(null);
     }
+    public int allPostCount(int channelCode){
+        return queryFactory.selectFrom(qPost)
+                .where(qPost.channelCode.eq(channelCode))
+                .fetch().size();
+    }
+    public int tagPostCount(int channelTagCode){
+        return queryFactory.selectFrom(qPost)
+                .where(qPost.channelTagCode.eq(channelTagCode))
+                .fetch().size();
+
+    }
     // 해당 채널의 전체 글
-    public List<PostDTO> channelCodeByAllPost(int channelCode){
+    public List<PostDTO> channelCodeByAllPost(int channelCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
+
+
+
         List<Post> voList =  queryFactory.selectFrom(qPost)
                 .where(qPost.channelCode.eq(channelCode))
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-                .limit(10) // 일단 10개만 빼보기
+                .offset(paging.getOffset()) //
+                .limit(paging.getLimit()) //10개씩
                 .fetch();
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
@@ -77,12 +92,13 @@ public class PostService {
 
     }
     // 채널 태그별 게시글
-    public List<PostDTO> channelTagCodeByAllPost(int channelTagCode){
+    public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
         List<Post> voList =  queryFactory.selectFrom(qPost)
                 .where(qPost.channelTagCode.eq(channelTagCode))
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-                .limit(10) // 일단 10개만 빼보기
+                .offset(paging.getOffset()) //
+                .limit(paging.getLimit())
                 .fetch();
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
