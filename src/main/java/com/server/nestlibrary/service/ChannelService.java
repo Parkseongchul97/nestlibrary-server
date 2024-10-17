@@ -116,7 +116,7 @@ public class ChannelService {
         for(ChannelTag tag : tagVoList){
            tagDTOList.add(channelTagAllPost(tag.getChannelTagCode()));
         }
-        int totalCount = postService.allPostCount(channelCode);
+        int totalCount = postService.allPostCount(channelCode,null,null);
         Paging paging = new Paging(1, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage()-1));
@@ -136,7 +136,7 @@ public class ChannelService {
     // 해당 채널의 게시판 태그별 게시글 정보
     public ChannelTagDTO channelTagAllPost(int channelTagCode){
         ChannelTag vo = tagDAO.findById(channelTagCode).get();
-        int totalCount = postService.tagPostCount(channelTagCode);
+        int totalCount = postService.tagPostCount(channelTagCode, null,null);
         Paging paging = new Paging(1, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage()-1));

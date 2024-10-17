@@ -1,5 +1,6 @@
 package com.server.nestlibrary.service;
 
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.CommentDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
@@ -44,25 +45,51 @@ public class PostService {
     public Post postCodeByPost(int postCode){
         return postDAO.findById(postCode).orElse(null);
     }
-    public int allPostCount(int channelCode){
-        return queryFactory.selectFrom(qPost)
-                .where(qPost.channelCode.eq(channelCode))
-                .fetch().size();
-    }
-    public int tagPostCount(int channelTagCode){
-        return queryFactory.selectFrom(qPost)
-                .where(qPost.channelTagCode.eq(channelTagCode))
-                .fetch().size();
+    public int allPostCount(int channelCode, String target, String keyword){
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .where(qPost.channelCode.eq(channelCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+            }
+        }
+        return query.fetch().size();
 
+    }
+    public int tagPostCount(int channelTagCode,String target, String keyword){
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .where(qPost.channelTagCode.eq(channelTagCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+            }
+        }
+        return query.fetch().size();
     }
     // 해당 채널의 전체 글
     public List<PostDTO> channelCodeByAllPost(int channelCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                    .where(qPost.channelCode.eq(channelCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+            }
+        }
 
-
-
-        List<Post> voList =  queryFactory.selectFrom(qPost)
-                .where(qPost.channelCode.eq(channelCode))
+        List<Post> voList =  query
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
                 .offset(paging.getOffset()) //
                 .limit(paging.getLimit()) //10개씩
@@ -94,8 +121,18 @@ public class PostService {
     // 채널 태그별 게시글
     public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
-        List<Post> voList =  queryFactory.selectFrom(qPost)
-                .where(qPost.channelTagCode.eq(channelTagCode))
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .where(qPost.channelTagCode.eq(channelTagCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qPost.userEmail.containsIgnoreCase(keyword));
+            }
+        }
+        List<Post> voList =  query
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
                 .offset(paging.getOffset()) //
                 .limit(paging.getLimit())
