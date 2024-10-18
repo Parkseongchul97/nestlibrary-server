@@ -1,5 +1,6 @@
 package com.server.nestlibrary.service;
 
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.UserDAO;
 import lombok.extern.slf4j.Slf4j;
@@ -62,5 +63,17 @@ public class UserService {
     public User findByNickname(String nickname){
         User user = dao.findByUserNickname(nickname);
         return user;
+    }
+    public UserDTO findDTO(String userEmail){
+        User user = dao.findById(userEmail).get();
+
+        UserDTO userdto = UserDTO
+                .builder()
+                .userNickname(user.getUserNickname())
+                .userImg(user.getUserImgUrl())
+
+                .build();
+
+        return userdto;
     }
 }

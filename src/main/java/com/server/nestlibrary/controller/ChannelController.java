@@ -6,10 +6,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
-import com.server.nestlibrary.service.ChannelService;
-import com.server.nestlibrary.service.ManagementService;
-import com.server.nestlibrary.service.PostService;
-import com.server.nestlibrary.service.UserService;
+import com.server.nestlibrary.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -55,6 +52,9 @@ public class ChannelController {
     @Autowired
     private JPAQueryFactory queryFactory;
 
+    @Autowired
+    private CommentService commentService;
+
 
 
     @GetMapping("/channel/main")
@@ -88,7 +88,7 @@ public class ChannelController {
             channels = queryFactory.selectFrom(qChannel)
                     .join(qManagement).on(qManagement.channel.eq(qChannel))
                     .leftJoin(qPost).on(qPost.channel.eq(qChannel))
-                    .where(qChannel.channelName.like("%" + keyword + "%"))
+
                     .groupBy(qChannel.channelCode)
                     .orderBy(qManagement.count().desc())
                     .orderBy(qPost.count().desc())
@@ -102,6 +102,63 @@ public class ChannelController {
 
 
        List<ChannelPostDTO> dtoList = new ArrayList<>();
+        // 뽑아낸 채널 리스트로 모든 채널을 돌면서
+        // 채널 1개당 게시글 10개씩 뽑고 -> 게시글 마다 게시글 dto로 만들어서
+        // - postDTO 만들어서
+        // 채널 + PostDTO 묶음 으로 dto 생성
+        // posts는 채널 수만큼 존재함
+
+
+
+
+        for(int i=0; i<channels.size(); i++){
+
+            List<Post> posts = queryFactory.selectFrom(qPost)
+                    .join(qChannelTag).on(qPost.channelTag.eq(qChannelTag))
+                    .where(qPost.channel.channelCode.eq(channels.get(i).getChannelCode()))
+                    .orderBy(qPost.postCreatedAt.desc())
+                    .limit(10)
+                    .fetch();
+            List<PostDTO> postDtos = new ArrayList<>();
+
+            for(int j=0; j<posts.size(); j++){
+
+                PostDTO postdto = PostDTO
+                        .builder()
+                        .postCode(posts.get(j).getPostCode())
+                        .postTitle(posts.get(j).getPostTitle())
+                        .postCreatedAt(posts.get(j).getPostCreatedAt())
+                        .postContent(posts.get(j).getPostContent())
+                        .postViews(posts.get(j).getPostViews())
+                        .channelTag(posts.get(j).getChannelTag())
+                        .channelCode(posts.get(j).getChannel().getChannelCode())
+                        .commentCount(commentService.commentCount(posts.get(j).getPostCode()))
+                        .user(userService.findDTO(posts.get(j).getUserEmail()))
+                        .build();
+
+                postDtos.add(postdto);
+            }
+
+            ChannelPostDTO dto = ChannelPostDTO.builder()
+                    .channelCode(channels.get(i).getChannelCode())
+                    .channelName(channels.get(i).getChannelName())
+                    .channelCreatedAt(channels.get(i).getChannelCreatedAt())
+                    .channelImg(channels.get(i).getChannelImgUrl())
+                    .channelInfo(channels.get(i).getChannelInfo())
+                    .allPost(postDtos)
+                    .build();
+            dtoList.add(dto);
+
+
+        }
+
+        // posts 각 채널당 1개씩 만듬
+        // 이제 이걸 postsDTO에 댓글과 함께 넣으면?
+
+
+
+
+     /*
        for(Channel channel : channels) {
 
            List<Post> posts = queryFactory.selectFrom(qPost)
@@ -117,14 +174,12 @@ public class ChannelController {
                    .channelCreatedAt(channel.getChannelCreatedAt())
                    .channelImg(channel.getChannelImgUrl())
                    .channelInfo(channel.getChannelInfo())
-                   .posts(posts)
+                   .posts(postDtos)
                    .build();
            dtoList.add(dto);
        }
-   log.info("키워드"+keyword);
-   log.info("리스트 "+ dtoList );
-       log.info("사이즈 " + dtoList.size());
-       log.info("페이지" + page);
+*/
+
         return ResponseEntity.ok(dtoList);
     }
 
@@ -191,6 +246,7 @@ public class ChannelController {
     // 채널 생성(프라이빗 추가)
     @PostMapping("/private/channel/create")
     public ResponseEntity createChannel(ChannelDTO dto) throws Exception {
+        log.info("채널 생성 ! " + dto);
         Channel channel = channelService.createChannel(Channel
                 .builder()
                 .channelName(dto.getChannelName())
@@ -234,12 +290,12 @@ public class ChannelController {
         for (int i = 0; i < list.size(); i++) {
 
             if (list.get(i).getChannelCode() == channelCode) {
-                log.info("조건성립");
+
                 ChannelManagementDTO dto = channelService.update(channelCode);
                 return ResponseEntity.ok(dto);
             }
         }
-        log.info("조건x1");
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("채널을 찾을 수 없습니다.");
     }
 
