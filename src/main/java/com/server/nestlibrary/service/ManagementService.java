@@ -39,8 +39,9 @@ public class ManagementService {
 
     // 해당 채널의 관리자들 user 로 반환 0번째는 호스트
     public List<UserDTO> findAdmin(int channelCode) {
+        // 여기도 혹시나 문제 생기면 알려주세요 (2024.10.18)
         List<Management> adminList = queryFactory.selectFrom(qManagement)
-                .where(qManagement.channelCode.eq(channelCode))
+                .where(qManagement.channel.channelCode.eq(channelCode))
                 .where(
                         qManagement.managementUserStatus.eq("host")
                         .or(qManagement.managementUserStatus.eq("admin"))
@@ -66,8 +67,9 @@ public class ManagementService {
 
     // 로그인 유저가 벤되었나 확인
     public Management findBan(int channelCode) {
+        // 혹시나 문제 생기면 알려주세요 (2024.10.18)
         List<Management> banList = queryFactory.selectFrom(qManagement)
-                .where(qManagement.channelCode.eq(channelCode))
+                .where(qManagement.channel.channelCode.eq(channelCode))
                 .where(qManagement.managementUserStatus.eq("ban"))
                 .where(qManagement.userEmail.eq(getEmail()))
                 .fetch();
@@ -83,8 +85,9 @@ public class ManagementService {
 
     public List<User> bans (int channelCode){
 
+        // 문제 생기면 알려주세요 (2024.10.18)
         List<Management> banUser = queryFactory.selectFrom(qManagement)
-                .where(qManagement.channelCode.eq(channelCode))
+                .where(qManagement.channel.channelCode.eq(channelCode))
                 .where(qManagement.managementUserStatus.eq("ban"))
 
                 .fetch();
@@ -120,9 +123,10 @@ public class ManagementService {
 
     // 구독체크
     public Management check(int channelCode ){
-       List<Management> list =  queryFactory.selectFrom(qManagement)
+       // 문제 생기면 알려주세요 (2024.10.18)
+        List<Management> list =  queryFactory.selectFrom(qManagement)
                 .where(qManagement.userEmail.eq(getEmail()))
-                .where(qManagement.channelCode.eq(channelCode))
+                .where(qManagement.channel.channelCode.eq(channelCode))
                 .where(qManagement.managementUserStatus.eq("sub"))
                 .fetch();
         if(list.size() == 0)

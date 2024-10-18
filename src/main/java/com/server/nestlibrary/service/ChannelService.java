@@ -108,9 +108,9 @@ public class ChannelService {
             userDAO.save(user); // 포인트 소모
             
             createDefaultTag(chan.getChannelCode()); // 기본 채널 3개 생성
-            // 채널 관리탭에 호스트 추가
+            // 채널 관리탭에 호스트 추가 -> 여기 문제 생기면 알려주세요!! (2024.10.18)
             Management man = Management.builder()
-                    .channelCode(vo.getChannelCode())
+                    .channel(Channel.builder().channelCode(vo.getChannelCode()).build())
                     .managementUserStatus("host")
                     .userEmail(getLoginUser())
                     .build();
@@ -144,11 +144,12 @@ public class ChannelService {
 
     public boolean updateTag(int channelCode , int channelTagcode) {
        // 채널코드로 태그 리스트 뽑아서 첫번째 태그코드(일반)추출후 삭제된 태그 자리에 업데이트
+        // 문제 생기면 알려주세요 (2024.10.18)
         List<ChannelTag> tags =  tagDAO.findByChannelCode(channelCode);
        int regularCode = tags.get(0).getChannelTagCode();
         queryFactory.update(qPost)
-                .set(qPost.channelTagCode, regularCode)
-                .where(qPost.channelTagCode.eq(channelTagcode))
+                .set(qPost.channelTag.channelTagCode, regularCode)
+                .where(qPost.channelTag.channelTagCode.eq(channelTagcode))
                 .execute();
         return true;
     }

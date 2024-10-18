@@ -44,14 +44,17 @@ public class PostService {
     public Post postCodeByPost(int postCode){
         return postDAO.findById(postCode).orElse(null);
     }
+
     public int allPostCount(int channelCode){
+        // 문제 생기면 알려주세요 (2024.10.18)
         return queryFactory.selectFrom(qPost)
-                .where(qPost.channelCode.eq(channelCode))
+                .where(qPost.channel.channelCode.eq(channelCode))
                 .fetch().size();
     }
     public int tagPostCount(int channelTagCode){
+        // 문제 생기면 알려주세요 (2024.10.18)
         return queryFactory.selectFrom(qPost)
-                .where(qPost.channelTagCode.eq(channelTagCode))
+                .where(qPost.channelTag.channelTagCode.eq(channelTagCode))
                 .fetch().size();
 
     }
@@ -59,23 +62,23 @@ public class PostService {
     public List<PostDTO> channelCodeByAllPost(int channelCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
 
-
-
+        // 문제 생기면 알려주세요 (2024.10.18)
         List<Post> voList =  queryFactory.selectFrom(qPost)
-                .where(qPost.channelCode.eq(channelCode))
+                .where(qPost.channel.channelCode.eq(channelCode))
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
                 .offset(paging.getOffset()) //
                 .limit(paging.getLimit()) //10개씩
                 .fetch();
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
+            // 문제 생기면 알려주세요 (2024.10.18)
             dtoList.add(PostDTO.builder()
                     .postCreatedAt(p.getPostCreatedAt())
                     .postTitle(p.getPostTitle())
                     .postContent(p.getPostContent())
                     .postCode(p.getPostCode())
-                    .channelTag(tagDAO.findById(p.getChannelTagCode()).get())
-                    .channelCode(p.getChannelCode())
+                            .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                            .channelCode(p.getChannel().getChannelCode())
                     .postViews(p.getPostViews())
                     .user(UserDTO.builder().userNickname(userVo.getUserNickname())
                                     .userImg(userVo.getUserImgUrl())
@@ -93,13 +96,15 @@ public class PostService {
     }
     // 채널 태그별 게시글
     public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
+        // 문제 생기면 알려주세요 (2024.10.18)
         List<PostDTO> dtoList = new ArrayList<>();
         List<Post> voList =  queryFactory.selectFrom(qPost)
-                .where(qPost.channelTagCode.eq(channelTagCode))
+                .where(qPost.channelTag.channelTagCode.eq(channelTagCode))
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
                 .offset(paging.getOffset()) //
                 .limit(paging.getLimit())
                 .fetch();
+        // 문제 생기면 알려주세요 (2024.10.18)
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
             dtoList.add(PostDTO.builder()
@@ -107,8 +112,8 @@ public class PostService {
                     .postTitle(p.getPostTitle())
                     .postContent(p.getPostContent())
                     .postCode(p.getPostCode())
-                    .channelTag(tagDAO.findById(p.getChannelTagCode()).get())
-                    .channelCode(p.getChannelCode())
+                            .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                            .channelCode(p.getChannel().getChannelCode())
                     .postViews(p.getPostViews())
                     .user(UserDTO.builder().userNickname(userVo.getUserNickname())
                             .userImg(userVo.getUserImgUrl())
@@ -138,14 +143,15 @@ public class PostService {
                 .execute();
         Post vo = postDAO.findById(postCode).get();
         // 게시글 좋아요 숫자 확인
+        // 문제 생기면 알려주세요 (2024.10.18)
         User user = userDAO.findById(vo.getUserEmail()).get();
         PostDTO dto = PostDTO.builder()
                 .postCreatedAt(vo.getPostCreatedAt())
                 .postTitle(vo.getPostTitle())
                 .postContent(vo.getPostContent())
                 .postCode(postCode)
-                .channelTag(tagDAO.findById(vo.getChannelTagCode()).get())
-                .channelCode(vo.getChannelCode())
+                .channelTag(tagDAO.findById(vo.getChannelTag().getChannelTagCode()).get())
+                .channelCode(vo.getChannel().getChannelCode())
                 .postViews(vo.getPostViews())
                 .user(UserDTO.builder().userNickname(user.getUserNickname())
                         .userImg(user.getUserImgUrl())
@@ -172,7 +178,10 @@ public class PostService {
             // 수정일땐 시간 원래 시간 다시 넣기
              Post post =  postDAO.findById(vo.getPostCode()).get();
              post.setPostTitle(vo.getPostTitle());
-             post.setChannelTagCode(vo.getChannelTagCode());
+             // 문제 생기면 알려주세요 (2024.10.18)
+            post.setChannelTag(ChannelTag.builder()
+                            .channelTagCode(vo.getChannelTag().getChannelTagCode())
+                    .build());
              post.setPostContent(vo.getPostContent());
 
             return postDAO.save(post);
