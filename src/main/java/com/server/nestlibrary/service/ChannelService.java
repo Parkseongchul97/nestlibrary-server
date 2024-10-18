@@ -5,6 +5,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.ChannelManagementDTO;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
 import com.server.nestlibrary.model.dto.ChannelTagDTO;
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
@@ -65,7 +66,7 @@ public class ChannelService {
     public ChannelManagementDTO update(int channelCode){
         Channel vo =  findChannel(channelCode);
         List<ChannelTag> tags = tagList(channelCode);
-        List<User> admins = managementService.findAdmin(channelCode); // 여기 0번째는 호스트
+        List<UserDTO> admins = managementService.findAdmin(channelCode); // 여기 0번째는 호스트
         List<User> bans = managementService.bans(channelCode);
 
         ChannelManagementDTO cmDTO =  ChannelManagementDTO

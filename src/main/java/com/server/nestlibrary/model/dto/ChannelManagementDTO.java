@@ -28,7 +28,7 @@ public class ChannelManagementDTO {
 
     private List<ChannelTag> channelTag = new ArrayList<>(); // 채널 내의 게시판 정보
 
-    private List<User>  adminList = new ArrayList<>(); // 관리자이상 유저 정보
+    private List<UserDTO>  adminList = new ArrayList<>(); // 관리자이상 유저 정보
 
     private List<User> banList = new ArrayList<>(); // 차단유저 리스트  정보
 

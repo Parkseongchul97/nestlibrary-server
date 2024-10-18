@@ -2,9 +2,7 @@ package com.server.nestlibrary.controller;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.server.nestlibrary.model.dto.ChannelDTO;
-import com.server.nestlibrary.model.dto.ChannelManagementDTO;
-import com.server.nestlibrary.model.dto.ChannelPostDTO;
+import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.service.ChannelService;
@@ -73,6 +71,7 @@ public class ChannelController {
         // q 도메인 클래스를 이용하면 Entity 클래스에 선언된 필드들을 변수로 사용 가능
         QChannel qChannel = QChannel.channel;
         // WHERE channel_title LIKE CONCAT ('%',keyword,'%');
+
 if(keyword != null && keyword != ""){
     log.info("키워드 컨트롤러 : " + keyword);
     // 원하는 조건은 필드값과 같이 결합해서 생성
@@ -84,7 +83,9 @@ if(keyword != null && keyword != ""){
     Page<Channel> list = channelService.allChannelPage(builder, pageable);
     List<ChannelPostDTO> dtoList= new ArrayList<>();
 
-    for(int i=0; i<list.getSize(); i++){
+
+
+    for(int i=0; i<list.getContent().size(); i++){
 
 
         dtoList.add(channelService.allChannelInfo(list.getContent().get(i).getChannelCode()));
@@ -95,6 +96,7 @@ if(keyword != null && keyword != ""){
     System.out.println(dtoList);
 
 return ResponseEntity.ok(dtoList);
+
 }
 
 
