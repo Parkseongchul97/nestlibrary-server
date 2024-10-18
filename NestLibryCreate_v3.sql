@@ -54,7 +54,10 @@ CREATE TABLE post( -- 게시글 테이블
 
 ALTER TABLE post ADD  FOREIGN KEY (user_email) REFERENCES user(user_email); -- 게시글 -> 유저  참조
 --  ALTER TABLE post ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code); -- 게시글 -> 채널 참조
-ALTER TABLE post ADD  FOREIGN KEY (channel_tag_code) REFERENCES channel_tag(channel_tag_code); -- 게시글 -> 채널태그 참조
+ALTER TABLE post ADD  FOREIGN KEY (channel_tag_code) REFERENCES channel_tag(channel_tag_code)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE;-- 게시글 -> 채널태그 참조
+-- CASCADE 옵션 추가인데 잘 돌아갈지 모르겠음
 
 CREATE TABLE post_like(-- 게시글 추천 테이블
 	post_like_code INT AUTO_INCREMENT PRIMARY KEY,  -- 추천 코드
@@ -90,6 +93,9 @@ CREATE TABLE messages( -- 쪽지
     messages_from_user VARCHAR(50), -- 발신자 
     messages_to_user VARCHAR(50) -- 수신자
 );
+
+
+
 
 -- 쪽지는 관리 편하려고 참조 X  from , to 둘다 유저 eamil 참조
 

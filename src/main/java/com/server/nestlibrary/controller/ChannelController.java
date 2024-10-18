@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -247,13 +249,24 @@ return ResponseEntity.ok(dtoList);
 
     // 채널 수정 페이지
     @GetMapping("/private/channel/update/{channelCode}")
-    public ResponseEntity updatePage (@PathVariable(name = "channelCode") int channelCode){
+    public ResponseEntity updatePage (@PathVariable(name = "channelCode") int channelCode) {
 
-          ChannelManagementDTO dto =    channelService.update(channelCode);
-        log.info("채널 수정 페이지 정보 :  "  + dto);
+        List<Channel> list = channelService.myChannel(getEmail());
 
-        return ResponseEntity.ok(dto);
+        for (int i = 0; i < list.size(); i++) {
+
+            if (list.get(i).getChannelCode() == channelCode) {
+                log.info("조건성립");
+                ChannelManagementDTO dto = channelService.update(channelCode);
+                return ResponseEntity.ok(dto);
+            }
+        }
+        log.info("조건x1");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("채널을 찾을 수 없습니다.");
     }
+
+
+
 
 
     // 채널 소개 수정
@@ -321,6 +334,23 @@ return ResponseEntity.ok(dtoList);
         return ResponseEntity.ok(null);
     }
 
+    // 채널 삭제
+    @DeleteMapping("/private/channel/{channelCode}")
+    public ResponseEntity removeChannel(@PathVariable(name = "channelCode") int channelCode){
+
+        log.info("삭제 컨트롤러 " + channelCode);
+        channelService.removeChannel(channelCode);
+
+        return ResponseEntity.ok(null);
+    }
+// 내 채널 정보
+    @GetMapping("/private/channel/{userEmail}")
+    public  ResponseEntity myChannel (@PathVariable(name = "userEmail") String userEmail){
+
+
+        return  ResponseEntity.ok( channelService.myChannel(userEmail));
+    }
+
 
     // 파일 업로드
     public String fileUpload(MultipartFile file, int channelCode) throws IllegalStateException, Exception {
@@ -343,7 +373,14 @@ return ResponseEntity.ok(dtoList);
         }
     }
 
-
+    private String getEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            User user = (User) auth.getPrincipal();
+            return user.getUserEmail();
+        }
+        return null;
+    }
 
 
 }

@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ChannelService {
@@ -243,6 +244,34 @@ public class ChannelService {
 
 
         return channelDAO.findAllChannelCode();
+    }
+
+    // 채널 삭제
+
+    public void removeChannel(int channelCode){
+
+        channelDAO.deleteById(channelCode);
+    }
+
+    // 내 채널들
+    public List<Channel> myChannel (  String userEmail ){
+
+       List<Integer> myCodes = managementDAO.myChannel(userEmail);
+       List<Channel> myChan = new ArrayList<>();
+
+       if( myCodes != null) {
+           for (int i = 0; i < myCodes.size(); i++) {
+
+               myChan.add(channelDAO.findById(myCodes.get(i)).get());
+
+           }
+
+            return  myChan;
+       } else {
+
+           return null;
+       }
+
     }
 
 
