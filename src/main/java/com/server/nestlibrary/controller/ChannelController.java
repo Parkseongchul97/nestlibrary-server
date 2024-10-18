@@ -2,6 +2,7 @@ package com.server.nestlibrary.controller;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
@@ -51,102 +52,79 @@ public class ChannelController {
     @Autowired
     private PostService postService;
 
+    @Autowired
+    private JPAQueryFactory queryFactory;
+
 
 
     @GetMapping("/channel/main")
-    public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1")int page , @RequestParam(name = "keyword", required = false) String keyword){
-        /*
-        List<Channel> list = channelService.allChannel();
-        List<ChannelPostDTO> dtoList= new ArrayList<>();
-        for(Channel c : list){
-            dtoList.add(channelService.allChannelInfo(c.getChannelCode()));
-        }*/
+    public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1") int page , @RequestParam(name = "keyword", required = false) String keyword){
 
-
-        // 정렬 조건 필요시 Sort 객체 // 여기서 구독자 수 많은 순으로 보여주기
-      // Sort sort = Sort.by("")
         BooleanBuilder builder = new BooleanBuilder();
         Pageable pageable = PageRequest.of(page-1, 4);
 
-        // 동적 처리를 하려면 Q도메인 클래스 가져오기
-
-        // q 도메인 클래스를 이용하면 Entity 클래스에 선언된 필드들을 변수로 사용 가능
         QChannel qChannel = QChannel.channel;
-        // WHERE channel_title LIKE CONCAT ('%',keyword,'%');
+        QManagement qManagement = QManagement.management;
+        QPost qPost = QPost.post;
+        QChannelTag qChannelTag = QChannelTag.channelTag;
 
-if(keyword != null && keyword != ""){
-    log.info("키워드 컨트롤러 : " + keyword);
-    // 원하는 조건은 필드값과 같이 결합해서 생성
-    BooleanExpression expression = qChannel.channelName.like("%"+keyword+"%");
-    // 만들어진 조건은 WHERE문에 and 나 or 같은 키워드와 결합해서 추가
-    builder.and(expression);
-
-
-    Page<Channel> list = channelService.allChannelPage(builder, pageable);
-    List<ChannelPostDTO> dtoList= new ArrayList<>();
-
-
-
-    for(int i=0; i<list.getContent().size(); i++){
-
-
-        dtoList.add(channelService.allChannelInfo(list.getContent().get(i).getChannelCode()));
-
-    }
+        List<Channel> channels = new ArrayList<>();
+        if(keyword != null && keyword != "") {
+            BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
+            builder.and(expression);
+             channels = queryFactory.selectFrom(qChannel)
+                    .join(qManagement).on(qManagement.channel.eq(qChannel))
+                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                    .where(qChannel.channelName.like("%" + keyword + "%"))
+                    .groupBy(qChannel.channelCode)
+                    .orderBy(qManagement.count().desc())
+                    .orderBy(qPost.count().desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
 
 
-    System.out.println(dtoList);
-
-return ResponseEntity.ok(dtoList);
-
-}
-
-
-
-
-        Page<Channel> list = channelService.allChannelPage(builder, pageable);
-
-
-        List<ChannelPostDTO> dtoList= new ArrayList<>();
-
-        HashMap<Integer,Integer> map2 = new HashMap<>();
+        }else {
+            channels = queryFactory.selectFrom(qChannel)
+                    .join(qManagement).on(qManagement.channel.eq(qChannel))
+                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                    .where(qChannel.channelName.like("%" + keyword + "%"))
+                    .groupBy(qChannel.channelCode)
+                    .orderBy(qManagement.count().desc())
+                    .orderBy(qPost.count().desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
 
 
-        // 모든 채널 코드
-     List<Integer> codeList = channelService.allCode();
-
-        // 각 채널코드의 인원수 배열
-       List<Integer> countList = new ArrayList<>();
-
-        for(int i =0; i<channelService.allCode().size(); i++){
-            map2.put(codeList.get(i), managementService.count(codeList.get(i)));
 
         }
-        List<Map.Entry<Integer, Integer>> entryList = new LinkedList<>(map2.entrySet());
-        entryList.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
-
-        System.out.println(entryList);
 
 
-     for(int i=0; i < (page*4); i++) {
+       List<ChannelPostDTO> dtoList = new ArrayList<>();
+       for(Channel channel : channels) {
 
+           List<Post> posts = queryFactory.selectFrom(qPost)
+                   .join(qChannelTag).on(qPost.channelTag.eq(qChannelTag))
+                   .where(qPost.channel.channelCode.eq(channel.getChannelCode()))
+                   .orderBy(qPost.postCreatedAt.desc())
+                   .limit(10)
+                   .fetch();
 
-         if (i < entryList.size()) {
-             dtoList.add(channelService.allChannelInfo(entryList.get(i).getKey()));
-         }
-
-     }
-
-/*
-        for(Channel c : list){
-            if(c.getChannelCode() > 0) {
-                dtoList.add(channelService.allChannelInfo(c.getChannelCode()));
-            }
-        }
-*/
-
-
-
+           ChannelPostDTO dto = ChannelPostDTO.builder()
+                   .channelCode(channel.getChannelCode())
+                   .channelName(channel.getChannelName())
+                   .channelCreatedAt(channel.getChannelCreatedAt())
+                   .channelImg(channel.getChannelImgUrl())
+                   .channelInfo(channel.getChannelInfo())
+                   .posts(posts)
+                   .build();
+           dtoList.add(dto);
+       }
+   log.info("키워드"+keyword);
+   log.info("리스트 "+ dtoList );
+       log.info("사이즈 " + dtoList.size());
+       log.info("페이지" + page);
         return ResponseEntity.ok(dtoList);
     }
 

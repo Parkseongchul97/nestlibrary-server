@@ -24,8 +24,10 @@ public class Management {
 	@Column(name = "management_delete_at")
 	private LocalDateTime managementDeleteAt; // 삭제 예정일 (벤관련)
 
-	@Column(name = "channel_code")
-	private int channelCode;
+	// 문제 생기면 알려주세요 (2024.10.18)
+	@ManyToOne
+	@JoinColumn(name="channel_code")
+	private Channel channel;
 
 	@Column(name = "user_email")
 	private String userEmail; // 해당 유저 FOREIGN_KEY

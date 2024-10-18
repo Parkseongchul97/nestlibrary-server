@@ -1,6 +1,7 @@
 package com.server.nestlibrary.model.dto;
 
 import com.server.nestlibrary.model.vo.ChannelTag;
+import com.server.nestlibrary.model.vo.Post;
 import com.server.nestlibrary.model.vo.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,8 @@ public class ChannelPostDTO {
     private List<ChannelTagDTO> channelTag = new ArrayList<>(); // 채널 내의 게시판 정보
 
     private  List<PostDTO> allPost = new ArrayList<>(); // 채널의 모든 작성글
+
+    private List<Post> posts = new ArrayList<>(); // vo로 가지고 오는 걸로
 
     private int favoriteCount; // 즐찾한 인원
 
