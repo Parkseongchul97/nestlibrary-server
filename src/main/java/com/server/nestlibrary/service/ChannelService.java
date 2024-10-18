@@ -9,6 +9,7 @@ import com.server.nestlibrary.repo.ChannelTagDAO;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class ChannelService {
     private ChannelTagDAO tagDAO;
     @Autowired
     private ManagementDAO managementDAO;
+    @Lazy
     @Autowired
     private  ManagementService managementService;
     @Autowired
