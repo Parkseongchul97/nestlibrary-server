@@ -56,7 +56,7 @@ public class ChannelController {
 
 
     @GetMapping("/channel/main")
-    public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1")int page , @RequestParam(name = "keyword", required = false) String keyword){
+    public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1") int page , @RequestParam(name = "keyword", required = false) String keyword){
 
         BooleanBuilder builder = new BooleanBuilder();
         Pageable pageable = PageRequest.of(page-1, 4);
@@ -66,20 +66,38 @@ public class ChannelController {
         QPost qPost = QPost.post;
         QChannelTag qChannelTag = QChannelTag.channelTag;
 
+        List<Channel> channels = new ArrayList<>();
         if(keyword != null && keyword != "") {
             BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
             builder.and(expression);
+             channels = queryFactory.selectFrom(qChannel)
+                    .join(qManagement).on(qManagement.channel.eq(qChannel))
+                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                    .where(qChannel.channelName.like("%" + keyword + "%"))
+                    .groupBy(qChannel.channelCode)
+                    .orderBy(qManagement.count().desc())
+                    .orderBy(qPost.count().desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
+
+
+        }else {
+            channels = queryFactory.selectFrom(qChannel)
+                    .join(qManagement).on(qManagement.channel.eq(qChannel))
+                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                    .where(qChannel.channelName.like("%" + keyword + "%"))
+                    .groupBy(qChannel.channelCode)
+                    .orderBy(qManagement.count().desc())
+                    .orderBy(qPost.count().desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
+
+
+
         }
 
-       List<Channel> channels = queryFactory.selectFrom(qChannel)
-                                    .join(qManagement).on(qManagement.channel.eq(qChannel))
-               .join(qPost).on(qPost.channel.eq(qChannel))
-               .groupBy(qChannel.channelCode)
-               .orderBy(qManagement.count().desc())
-               .orderBy(qPost.count().desc())
-               .offset(pageable.getOffset())
-               .limit(pageable.getPageSize())
-               .fetch();
 
        List<ChannelPostDTO> dtoList = new ArrayList<>();
        for(Channel channel : channels) {
@@ -101,7 +119,10 @@ public class ChannelController {
                    .build();
            dtoList.add(dto);
        }
-
+   log.info("키워드"+keyword);
+   log.info("리스트 "+ dtoList );
+       log.info("사이즈 " + dtoList.size());
+       log.info("페이지" + page);
         return ResponseEntity.ok(dtoList);
     }
 
