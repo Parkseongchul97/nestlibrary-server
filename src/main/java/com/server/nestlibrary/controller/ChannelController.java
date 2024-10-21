@@ -58,21 +58,60 @@ public class ChannelController {
 
 
     @GetMapping("/channel/main")
-    public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1") int page , @RequestParam(name = "keyword", required = false) String keyword){
+    public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1") int page , @RequestParam(name = "keyword", required = false) String keyword , @RequestParam(name="subCheck" , defaultValue = "0") int subCheck ){
 
         BooleanBuilder builder = new BooleanBuilder();
         Pageable pageable = PageRequest.of(page-1, 4);
-
+        QUser qUser = QUser.user;
         QChannel qChannel = QChannel.channel;
         QManagement qManagement = QManagement.management;
         QPost qPost = QPost.post;
         QChannelTag qChannelTag = QChannelTag.channelTag;
-
+         log.info("구독채널 : "+ subCheck);
         List<Channel> channels = new ArrayList<>();
-        if(keyword != null && keyword != "") {
+       log.info("로그인했다" +  userService.getLoginUser());
+
+if(subCheck  == 0) {
+    if (keyword != null && keyword != "") {
+        BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
+        builder.and(expression);
+        channels = queryFactory.selectFrom(qChannel)
+                .join(qManagement).on(qManagement.channel.eq(qChannel))
+                .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                .where(qChannel.channelName.like("%" + keyword + "%"))
+                .groupBy(qChannel.channelCode)
+
+                .orderBy(qManagement.count().desc())
+                .orderBy(qPost.count().desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+
+    } else {
+        channels = queryFactory.selectFrom(qChannel)
+                .join(qManagement).on(qManagement.channel.eq(qChannel))
+                .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+
+                .groupBy(qChannel.channelCode)
+                .orderBy(qManagement.count().desc())
+                .orderBy(qPost.count().desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+
+    }
+
+
+}else {
+
+    if(userService.getLoginUser() == null ){
+
+        if (keyword != null && keyword != "") {
             BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
             builder.and(expression);
-             channels = queryFactory.selectFrom(qChannel)
+            channels = queryFactory.selectFrom(qChannel)
                     .join(qManagement).on(qManagement.channel.eq(qChannel))
                     .leftJoin(qPost).on(qPost.channel.eq(qChannel))
                     .where(qChannel.channelName.like("%" + keyword + "%"))
@@ -84,7 +123,7 @@ public class ChannelController {
                     .fetch();
 
 
-        }else {
+        } else {
             channels = queryFactory.selectFrom(qChannel)
                     .join(qManagement).on(qManagement.channel.eq(qChannel))
                     .leftJoin(qPost).on(qPost.channel.eq(qChannel))
@@ -97,8 +136,49 @@ public class ChannelController {
                     .fetch();
 
 
+        }
+
+
+
+
+
+    }else {
+        if (keyword != null && keyword != "") {
+            BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
+            builder.and(expression);
+            channels = queryFactory.selectFrom(qChannel)
+                    .join(qManagement).on(qManagement.channel.eq(qChannel))
+                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                    .where(qChannel.channelName.like("%" + keyword + "%"))
+                    .groupBy(qChannel.channelCode)
+                    .orderBy(qManagement.count().desc())
+                    .orderBy(qPost.count().desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
+
+
+        } else {
+            channels = queryFactory.selectFrom(qChannel)
+                    .join(qManagement).on(qManagement.channel.eq(qChannel))
+                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                    .where(qManagement.managementUserStatus.eq("sub"))
+                    .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail()))
+                    .groupBy(qChannel.channelCode)
+                    .orderBy(qManagement.count().desc())
+                    .orderBy(qPost.count().desc())
+                    .offset(pageable.getOffset())
+                    .limit(pageable.getPageSize())
+                    .fetch();
+
 
         }
+
+
+    }
+
+
+}
 
 
        List<ChannelPostDTO> dtoList = new ArrayList<>();
@@ -151,6 +231,7 @@ public class ChannelController {
 
 
         }
+
 
         // posts 각 채널당 1개씩 만듬
         // 이제 이걸 postsDTO에 댓글과 함께 넣으면?
@@ -207,9 +288,7 @@ public class ChannelController {
                                   @RequestParam(name = "target",defaultValue = "" ,required = false)String target,
                                   @RequestParam(name = "keyword",defaultValue = "" ,required = false)String keyword
                                   ){
-        log.info("page : " + page);
-        log.info("target : " + target);
-        log.info("keyword : " + keyword);
+
         int totalCount = postService.allPostCount(channelCode, target , keyword);
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
@@ -285,7 +364,7 @@ public class ChannelController {
     @GetMapping("/private/channel/update/{channelCode}")
     public ResponseEntity updatePage (@PathVariable(name = "channelCode") int channelCode) {
 
-        List<Channel> list = channelService.myChannel(getEmail());
+        List<Channel> list = channelService.myChannel(userService.getLoginUser().getUserEmail());
 
         for (int i = 0; i < list.size(); i++) {
 
@@ -407,14 +486,7 @@ public class ChannelController {
         }
     }
 
-    private String getEmail() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            User user = (User) auth.getPrincipal();
-            return user.getUserEmail();
-        }
-        return null;
-    }
+
 
 
 }
