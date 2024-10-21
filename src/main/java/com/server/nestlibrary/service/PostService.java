@@ -49,7 +49,7 @@ public class PostService {
     public int allPostCount(int channelCode, String target, String keyword){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelCode.eq(channelCode));
+                .where(qPost.channel.channelCode.eq(channelCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -66,7 +66,7 @@ public class PostService {
     public int tagPostCount(int channelTagCode,String target, String keyword){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelTagCode.eq(channelTagCode));
+                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -83,7 +83,7 @@ public class PostService {
         List<PostDTO> dtoList = new ArrayList<>();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                    .where(qPost.channelCode.eq(channelCode));
+                    .where(qPost.channel.channelCode.eq(channelCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -101,13 +101,14 @@ public class PostService {
                 .fetch();
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
+            // 문제 생기면 알려주세요 (2024.10.18)
             dtoList.add(PostDTO.builder()
                     .postCreatedAt(p.getPostCreatedAt())
                     .postTitle(p.getPostTitle())
                     .postContent(p.getPostContent())
                     .postCode(p.getPostCode())
-                    .channelTag(tagDAO.findById(p.getChannelTagCode()).get())
-                    .channelCode(p.getChannelCode())
+                            .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                            .channelCode(p.getChannel().getChannelCode())
                     .postViews(p.getPostViews())
                     .user(UserDTO.builder().userNickname(userVo.getUserNickname())
                                     .userImg(userVo.getUserImgUrl())
@@ -125,10 +126,11 @@ public class PostService {
     }
     // 채널 태그별 게시글
     public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
+        // 문제 생기면 알려주세요 (2024.10.18)
         List<PostDTO> dtoList = new ArrayList<>();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelTagCode.eq(channelTagCode));
+                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -143,6 +145,7 @@ public class PostService {
                 .offset(paging.getOffset()) //
                 .limit(paging.getLimit())
                 .fetch();
+        // 문제 생기면 알려주세요 (2024.10.18)
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
             dtoList.add(PostDTO.builder()
@@ -150,8 +153,8 @@ public class PostService {
                     .postTitle(p.getPostTitle())
                     .postContent(p.getPostContent())
                     .postCode(p.getPostCode())
-                    .channelTag(tagDAO.findById(p.getChannelTagCode()).get())
-                    .channelCode(p.getChannelCode())
+                            .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                            .channelCode(p.getChannel().getChannelCode())
                     .postViews(p.getPostViews())
                     .user(UserDTO.builder().userNickname(userVo.getUserNickname())
                             .userImg(userVo.getUserImgUrl())
@@ -181,14 +184,15 @@ public class PostService {
                 .execute();
         Post vo = postDAO.findById(postCode).get();
         // 게시글 좋아요 숫자 확인
+        // 문제 생기면 알려주세요 (2024.10.18)
         User user = userDAO.findById(vo.getUserEmail()).get();
         PostDTO dto = PostDTO.builder()
                 .postCreatedAt(vo.getPostCreatedAt())
                 .postTitle(vo.getPostTitle())
                 .postContent(vo.getPostContent())
                 .postCode(postCode)
-                .channelTag(tagDAO.findById(vo.getChannelTagCode()).get())
-                .channelCode(vo.getChannelCode())
+                .channelTag(tagDAO.findById(vo.getChannelTag().getChannelTagCode()).get())
+                .channelCode(vo.getChannel().getChannelCode())
                 .postViews(vo.getPostViews())
                 .user(UserDTO.builder().userNickname(user.getUserNickname())
                         .userImg(user.getUserImgUrl())
@@ -215,7 +219,10 @@ public class PostService {
             // 수정일땐 시간 원래 시간 다시 넣기
              Post post =  postDAO.findById(vo.getPostCode()).get();
              post.setPostTitle(vo.getPostTitle());
-             post.setChannelTagCode(vo.getChannelTagCode());
+             // 문제 생기면 알려주세요 (2024.10.18)
+            post.setChannelTag(ChannelTag.builder()
+                            .channelTagCode(vo.getChannelTag().getChannelTagCode())
+                    .build());
              post.setPostContent(vo.getPostContent());
 
             return postDAO.save(post);

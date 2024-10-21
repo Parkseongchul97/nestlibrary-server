@@ -36,5 +36,7 @@ public class ChannelDTO {
 	private int favoriteCount; // 즐찾한 인원
 
 	private UserDTO host; // 호스트
+
+	private int change ;
 	
 }

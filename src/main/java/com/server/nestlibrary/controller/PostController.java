@@ -51,10 +51,10 @@ public class PostController {
         // 작성자 정보, 게시글, 좋아요 숫자 가지고있는 DTO 리턴
         return ResponseEntity.ok(dto);
     }
-    // 게시글 작성
+    // 게시글 작성 - 문제 생기면 알려주세요 (2024.10.18)
     @PostMapping("/private/post")
     public ResponseEntity addPost(@RequestBody Post vo){
-        Management ban = managementService.findBan(vo.getChannelCode());
+        Management ban = managementService.findBan(vo.getChannel().getChannelCode());
         log.info("게시글 내용 : "  + vo);
         if(ban != null){ // 내가 벤당했다면 벤정보 리턴
             return ResponseEntity.ok(ban);

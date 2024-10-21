@@ -87,9 +87,9 @@ public class UserController {
     }
     @GetMapping("/private/user/info")
     public ResponseEntity findUser(@RequestParam(name = "userEmail") String userEmail){
-        log.info(userEmail);
+
         User user =  userService.findUser(userEmail); // 있으면 중복 닉네임
-        log.info("입력값 : " + userEmail + ", 반환값 : " + (user == null));
+
         if (user == null){
             // 해당 이메일 유저 X
             return  ResponseEntity.ok(null);

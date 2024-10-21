@@ -24,6 +24,7 @@ public class ManagementController {
     @PostMapping("private/subscribe")
     public ResponseEntity subscribe(@RequestBody Management vo){
         Management management = managementService.subscribe(vo);
+        log.info("구독버튼 누름 " + vo);
         return ResponseEntity.ok(management );
     }
 

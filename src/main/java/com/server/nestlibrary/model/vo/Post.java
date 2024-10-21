@@ -32,10 +32,13 @@ public class Post {
 	@Column(name = "user_email")
 	private String userEmail; // 이메일 FOREIGN_KEY
 
-	@Column(name = "channel_code")
-	private int channelCode; // 채널 코드 FOREIGN_KEY
+	// 문제 생기면 알려주세요 (2024.10.18)
+	@ManyToOne
+	@JoinColumn(name="channel_code")
+	private Channel channel;
 
-	@Column(name = "channel_tag_code")
-	private int channelTagCode; // 채널 세부 게시판 태그 FOREIGN_KEY
+	@ManyToOne
+	@JoinColumn(name="channel_tag_code")
+	private ChannelTag channelTag;
 	
 }

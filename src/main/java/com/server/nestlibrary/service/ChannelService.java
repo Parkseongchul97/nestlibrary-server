@@ -1,8 +1,11 @@
 package com.server.nestlibrary.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.server.nestlibrary.model.dto.ChannelManagementDTO;
 import com.server.nestlibrary.model.dto.ChannelPostDTO;
 import com.server.nestlibrary.model.dto.ChannelTagDTO;
-import com.server.nestlibrary.model.dto.PostDTO;
+import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
@@ -10,12 +13,16 @@ import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ChannelService {
@@ -36,15 +43,53 @@ public class ChannelService {
     @Autowired
     private  PostService postService;
 
+    @Autowired
+    private JPAQueryFactory queryFactory;
+    private final QPost qPost = QPost.post;
+    private final QChannel qChannel = QChannel.channel;
+
     public List<Channel> allChannel(){
 
         return channelDAO.findAll();
     }
+// 페이징 시도 --------------------------------
+    public Page<Channel> allChannelPage(BooleanBuilder builder, Pageable pageable){
+
+
+        return channelDAO.findAll(builder, pageable);
+    }
+    //---------------------------------------
     // 채널 코드로 상세 page 채널코드로 (반환 : 채널)
     public Channel findChannel(int channelCode){
 
         return channelDAO.findById(channelCode).orElse(null);
     }
+
+    // 채널수정 페이지에 필요한 정보 띄우기
+    public ChannelManagementDTO update(int channelCode){
+        Channel vo =  findChannel(channelCode);
+        List<ChannelTag> tags = tagList(channelCode);
+        List<UserDTO> admins = managementService.findAdmin(channelCode); // 여기 0번째는 호스트
+        List<User> bans = managementService.bans(channelCode);
+
+        ChannelManagementDTO cmDTO =  ChannelManagementDTO
+                .builder()
+                .channelCode(vo.getChannelCode())
+                .channelName(vo.getChannelName())
+                .channelCreatedAt(vo.getChannelCreatedAt())
+                .channelImg(vo.getChannelImgUrl())
+                .channelInfo(vo.getChannelInfo())
+                .channelTag(tags)
+                .favoriteCount(managementDAO.count(channelCode))
+                .adminList(admins)
+                .banList(bans)
+                .build();
+
+        return  cmDTO;
+    }
+
+
+
     // 채널 이름 중복체크 (반환 : 채널)
     public Channel findByChannelName(Channel vo){
         Channel chan = channelDAO.findByChannelName(vo.getChannelName());
@@ -66,9 +111,9 @@ public class ChannelService {
             userDAO.save(user); // 포인트 소모
             
             createDefaultTag(chan.getChannelCode()); // 기본 채널 3개 생성
-            // 채널 관리탭에 호스트 추가
+            // 채널 관리탭에 호스트 추가 -> 여기 문제 생기면 알려주세요!! (2024.10.18)
             Management man = Management.builder()
-                    .channelCode(vo.getChannelCode())
+                    .channel(Channel.builder().channelCode(vo.getChannelCode()).build())
                     .managementUserStatus("host")
                     .userEmail(getLoginUser())
                     .build();
@@ -89,9 +134,27 @@ public class ChannelService {
         return tagDAO.save(vo);
     }
     // 채널 태그 삭제
-    public void removeTag(int channelTagCode){
+    @Transactional
+    public void removeTag(int channelTagCode ){
 
-        tagDAO.deleteById(channelTagCode);
+
+      ChannelTag tag = tagDAO.findById(channelTagCode).get(); // 태그 코드로 ChannelTag 객체
+    int channelCode =  tag.getChannelCode();             // 해당 객체의 채널코드
+       if( updateTag(channelCode , channelTagCode)) { //업데이트 실행
+           tagDAO.deleteById(channelTagCode);
+       }// 삭제
+    }
+
+    public boolean updateTag(int channelCode , int channelTagcode) {
+       // 채널코드로 태그 리스트 뽑아서 첫번째 태그코드(일반)추출후 삭제된 태그 자리에 업데이트
+        // 문제 생기면 알려주세요 (2024.10.18)
+        List<ChannelTag> tags =  tagDAO.findByChannelCode(channelCode);
+       int regularCode = tags.get(0).getChannelTagCode();
+        queryFactory.update(qPost)
+                .set(qPost.channelTag.channelTagCode, regularCode)
+                .where(qPost.channelTag.channelTagCode.eq(channelTagcode))
+                .execute();
+        return true;
     }
 
     //  + 채널코드로 채널태그 가져오기
@@ -148,5 +211,72 @@ public class ChannelService {
                 .posts(postService.channelTagCodeByAllPost(vo.getChannelTagCode(),paging,"","")
                 ).build();
     }
+    // 채널 소개 수정
+
+    @Transactional
+    public void updateInfo(String channelInfo, int channelCode){
+
+        queryFactory.update(qChannel)
+                .set(qChannel.channelInfo, channelInfo)
+                .where(qChannel.channelCode.eq(channelCode))
+                .execute();
+
+    }
+
+    // 채널 이미지  url 반환
+    public String  getUrl (int channelCode) {
+
+     Channel channel =  channelDAO.findById(channelCode).get();
+
+     return  channel.getChannelImgUrl();
+
+    }
+
+    @Transactional
+    public void imgUpdate (String fileName , int channelCode){
+
+        queryFactory.update(qChannel)
+                .set(qChannel.channelImgUrl, fileName)
+                .where(qChannel.channelCode.eq(channelCode))
+                .execute();
+
+    }
+
+    // 모든 코드 리스트
+    public List<Integer> allCode (){
+
+
+        return channelDAO.findAllChannelCode();
+    }
+
+    // 채널 삭제
+
+    public void removeChannel(int channelCode){
+
+        channelDAO.deleteById(channelCode);
+    }
+
+    // 내 채널들
+    public List<Channel> myChannel (  String userEmail ){
+
+       List<Integer> myCodes = managementDAO.myChannel(userEmail);
+       List<Channel> myChan = new ArrayList<>();
+
+       if( myCodes != null) {
+           for (int i = 0; i < myCodes.size(); i++) {
+
+               myChan.add(channelDAO.findById(myCodes.get(i)).get());
+
+           }
+
+            return  myChan;
+       } else {
+
+           return null;
+       }
+
+    }
+
+
 
 }
