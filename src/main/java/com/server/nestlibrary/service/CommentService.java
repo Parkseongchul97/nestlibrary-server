@@ -69,7 +69,7 @@ public class CommentService {
     }
     public int commentCount(int postCode){
         return queryFactory.selectFrom(qComment)
-
+                .where(qComment.commentContent.isNotNull())
                 .where(qComment.postCode.eq(postCode))
                 .fetch().size();
     }

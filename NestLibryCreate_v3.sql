@@ -28,7 +28,9 @@ CREATE TABLE channel_tag( --  유저가 생성한 채널
 	channel_code INT -- 채널 코드
 );
 
-ALTER TABLE channel_tag ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code); -- 채널과 채널 태그 참조
+ALTER TABLE channel_tag ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE; -- 채널과 채널 태그 참조
 
 CREATE TABLE management( --  채널 관리
 	management_code INT AUTO_INCREMENT PRIMARY KEY, -- 관리 코드
@@ -37,8 +39,12 @@ CREATE TABLE management( --  채널 관리
 	channel_code INT,
     user_email VARCHAR(50) -- 대상 유저
 );
-ALTER TABLE management ADD  FOREIGN KEY (user_email) REFERENCES user(user_email); -- 채널관리 -> 유저  참조
-ALTER TABLE channel_tag ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code); -- 채널태그 -> 채널 참조
+ALTER TABLE management ADD  FOREIGN KEY (user_email) REFERENCES user(user_email)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE; -- 채널관리 -> 유저  참조
+ALTER TABLE channel_tag ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE; -- 채널태그 -> 채널 참조
 
 CREATE TABLE post( -- 게시글 테이블 
 	post_code INT AUTO_INCREMENT PRIMARY KEY, -- 게시판 코드
@@ -52,7 +58,9 @@ CREATE TABLE post( -- 게시글 테이블
     channel_tag_code INT -- 채널 세부 게시판태그
 );
 
-ALTER TABLE post ADD  FOREIGN KEY (user_email) REFERENCES user(user_email); -- 게시글 -> 유저  참조
+ALTER TABLE post ADD  FOREIGN KEY (user_email) REFERENCES user(user_email)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE; -- 게시글 -> 유저  참조
 --  ALTER TABLE post ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code); -- 게시글 -> 채널 참조
 ALTER TABLE post ADD  FOREIGN KEY (channel_tag_code) REFERENCES channel_tag(channel_tag_code)
  ON DELETE CASCADE
@@ -66,8 +74,11 @@ CREATE TABLE post_like(-- 게시글 추천 테이블
 	user_email VARCHAR(50) -- 추천, 비추천을 누른사람
 );
 
-ALTER TABLE post_like ADD  FOREIGN KEY (user_email) REFERENCES user(user_email); -- 좋아용 -> 유저  참조
-ALTER TABLE post_like ADD  FOREIGN KEY (post_code) REFERENCES post(post_code); -- 좋아용 -> 게시글 참조
+ALTER TABLE post_like ADD  FOREIGN KEY (user_email) REFERENCES user(user_email)
+ ON DELETE SET NULL; -- 좋아용 -> 유저  참조
+ALTER TABLE post_like ADD  FOREIGN KEY (post_code) REFERENCES post(post_code)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE; -- 좋아용 -> 게시글 참조
 
 CREATE TABLE comment( -- 댓글 테이블 
 	comment_code INT AUTO_INCREMENT PRIMARY KEY, -- 댓글 코드
@@ -79,8 +90,11 @@ CREATE TABLE comment( -- 댓글 테이블
     user_email VARCHAR(50) -- 댓글 작성자
 );
 
-ALTER TABLE comment ADD  FOREIGN KEY (user_email) REFERENCES user(user_email); -- 댓글 -> 유저  참조
-ALTER TABLE comment ADD  FOREIGN KEY (post_code) REFERENCES post(post_code); -- 댓글 -> 게시글 참조
+ALTER TABLE comment ADD  FOREIGN KEY (user_email) REFERENCES user(user_email)
+ON DELETE SET NULL; -- 댓글 -> 유저  참조 유저 삭제시 유저 널처리
+ALTER TABLE comment ADD  FOREIGN KEY (post_code) REFERENCES post(post_code)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE; -- 댓글 -> 게시글 참조
 -- 대댓글도 관리상의 이유로 참조 X
 
 CREATE TABLE messages( -- 쪽지
@@ -95,6 +109,10 @@ CREATE TABLE messages( -- 쪽지
 );
 
 
+
+-- select * from information_schema.table_constraints
+-- where CONSTRAINT_SCHEMA = 'nest';
+-- ALTER TABLE management DROP FOREIGN KEY management_ibfk_2;
 
 
 -- 쪽지는 관리 편하려고 참조 X  from , to 둘다 유저 eamil 참조
