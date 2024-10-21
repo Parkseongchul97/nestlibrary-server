@@ -24,6 +24,7 @@ public class ManagementController {
     @PostMapping("private/subscribe")
     public ResponseEntity subscribe(@RequestBody Management vo){
         Management management = managementService.subscribe(vo);
+        log.info("구독버튼 누름 " + vo);
         return ResponseEntity.ok(management );
     }
 
@@ -38,6 +39,7 @@ public class ManagementController {
      //  구독중인지
     @GetMapping("/private/subscribe/{channelCode}")
     public ResponseEntity check(@PathVariable  (name="channelCode") int channelCode) {
+        log.info("구독 체크 왔다");
             return ResponseEntity.ok(managementService.check(channelCode));
     }
     // 내가 구독중인 채널

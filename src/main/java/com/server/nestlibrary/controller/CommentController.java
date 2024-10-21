@@ -10,6 +10,7 @@ import com.server.nestlibrary.service.CommentService;
 import com.server.nestlibrary.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +33,16 @@ public class CommentController {
     @PostMapping("/private/comment")
     public ResponseEntity addComment(@RequestBody Comment vo){
         vo.setCommentCreatedAt(LocalDateTime.now());
-        return  ResponseEntity.ok(commentService.addComment(vo));
+
+        Comment com = commentService.addComment(vo);
+        log.info("체크 " + com);
+        if(com != null ){
+
+            return ResponseEntity.ok(com);
+        }
+
+
+        return   ResponseEntity.ok("실패");
     }
 
     // 댓글 수정
