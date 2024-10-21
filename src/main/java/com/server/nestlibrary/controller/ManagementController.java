@@ -44,6 +44,7 @@ public class ManagementController {
     @GetMapping("/private/subscribe/channel")
     public ResponseEntity myChannel() {
         List<ChannelDTO> list = managementService.mySubscribe();
+        log.info("유저가 구독중인 채널 : " + list);
         return ResponseEntity.ok(list);
     }
 
