@@ -49,7 +49,7 @@ public class PostService {
     public int allPostCount(int channelCode, String target, String keyword){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelCode.eq(channelCode));
+                .where(qPost.channel.channelCode.eq(channelCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -66,7 +66,7 @@ public class PostService {
     public int tagPostCount(int channelTagCode,String target, String keyword){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelTagCode.eq(channelTagCode));
+                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -83,7 +83,7 @@ public class PostService {
         List<PostDTO> dtoList = new ArrayList<>();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                    .where(qPost.channelCode.eq(channelCode));
+                    .where(qPost.channel.channelCode.eq(channelCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -130,7 +130,7 @@ public class PostService {
         List<PostDTO> dtoList = new ArrayList<>();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelTagCode.eq(channelTagCode));
+                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if(target.equals("title")){ // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));

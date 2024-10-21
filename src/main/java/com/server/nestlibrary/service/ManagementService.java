@@ -141,7 +141,7 @@ public class ManagementService {
                 .fetch();
         List<ChannelDTO> dto = new ArrayList<>();
         for (Management m : list){
-          Channel vo = channelService.findChannel(m.getChannelCode()) ;
+          Channel vo = channelService.findChannel(m.getChannel().getChannelCode()) ;
           dto.add(ChannelDTO.builder()
                     .channelCode(vo.getChannelCode())
                     .channelImg(vo.getChannelImgUrl())
