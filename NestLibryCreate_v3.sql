@@ -103,15 +103,14 @@ CREATE TABLE messages( -- 쪽지
     messages_content LONGTEXT, -- 쪽지 내용
     messages_sent_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- 쪽지를 보낸시간
     messages_read BOOLEAN, -- 쪽지 조회 여부 (알림기능용도)
-
     messages_from_user VARCHAR(50), -- 발신자 
-    messages_to_user VARCHAR(50) -- 수신자
+    messages_to_user VARCHAR(50), -- 수신자
+    messages_is_delete INT default(0) -- 삭제여부 수신자 삭제, 발신자 삭제
 );
 
 
-
--- select * from information_schema.table_constraints
--- where CONSTRAINT_SCHEMA = 'nest';
+select * from information_schema.table_constraints
+where CONSTRAINT_SCHEMA = 'nest';
 -- ALTER TABLE management DROP FOREIGN KEY management_ibfk_2;
 
 

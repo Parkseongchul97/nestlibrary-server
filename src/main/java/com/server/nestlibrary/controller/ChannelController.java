@@ -78,7 +78,6 @@ public class ChannelController {
                     .leftJoin(qPost).on(qPost.channel.eq(qChannel))
                     .where(qChannel.channelName.like("%" + keyword + "%"))
                     .groupBy(qChannel.channelCode)
-
                     .orderBy(qManagement.count().desc())
                     .orderBy(qPost.count().desc())
                     .offset(pageable.getOffset())
@@ -103,12 +102,6 @@ public class ChannelController {
 
 
         List<ChannelPostDTO> dtoList = new ArrayList<>();
-        // 뽑아낸 채널 리스트로 모든 채널을 돌면서
-        // 채널 1개당 게시글 10개씩 뽑고 -> 게시글 마다 게시글 dto로 만들어서
-        // - postDTO 만들어서
-        // 채널 + PostDTO 묶음 으로 dto 생성
-        // posts는 채널 수만큼 존재함
-
 
         for (int i = 0; i < channels.size(); i++) {
 
@@ -143,6 +136,7 @@ public class ChannelController {
                     .channelName(channels.get(i).getChannelName())
                     .channelCreatedAt(channels.get(i).getChannelCreatedAt())
                     .channelImg(channels.get(i).getChannelImgUrl())
+                    .host(managementService.findAdmin(channels.get(i).getChannelCode()).get(0))
                     .channelInfo(channels.get(i).getChannelInfo())
                     .allPost(postDtos)
                     .build();
@@ -150,35 +144,6 @@ public class ChannelController {
 
 
         }
-
-
-        // posts 각 채널당 1개씩 만듬
-        // 이제 이걸 postsDTO에 댓글과 함께 넣으면?
-
-
-
-
-     /*
-       for(Channel channel : channels) {
-
-           List<Post> posts = queryFactory.selectFrom(qPost)
-                   .join(qChannelTag).on(qPost.channelTag.eq(qChannelTag))
-                   .where(qPost.channel.channelCode.eq(channel.getChannelCode()))
-                   .orderBy(qPost.postCreatedAt.desc())
-                   .limit(10)
-                   .fetch();
-
-           ChannelPostDTO dto = ChannelPostDTO.builder()
-                   .channelCode(channel.getChannelCode())
-                   .channelName(channel.getChannelName())
-                   .channelCreatedAt(channel.getChannelCreatedAt())
-                   .channelImg(channel.getChannelImgUrl())
-                   .channelInfo(channel.getChannelInfo())
-                   .posts(postDtos)
-                   .build();
-           dtoList.add(dto);
-       }
-*/
 
         return ResponseEntity.ok(dtoList);
     }

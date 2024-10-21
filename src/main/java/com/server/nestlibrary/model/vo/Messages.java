@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor @AllArgsConstructor @Data @Builder
-public class Message {
+public class Messages {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,5 +34,8 @@ public class Message {
 
 	@Column(name = "messages_read")
 	private boolean messagesRead; // 읽은 여부
+	
+	@Column(name = "messages_is_delete")
+	private int messagesIsDelete; // 삭제 여부(수신자 삭제, 발신자 삭제)
 
 }
