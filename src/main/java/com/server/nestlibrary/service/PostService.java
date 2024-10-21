@@ -1,5 +1,6 @@
 package com.server.nestlibrary.service;
 
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.CommentDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
@@ -40,31 +41,60 @@ public class PostService {
 
     private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
+    private final QUser qUser = QUser.user;
 
     public Post postCodeByPost(int postCode){
         return postDAO.findById(postCode).orElse(null);
     }
+    public int allPostCount(int channelCode, String target, String keyword){
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                .where(qPost.channelCode.eq(channelCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
 
-    public int allPostCount(int channelCode){
-        // 문제 생기면 알려주세요 (2024.10.18)
-        return queryFactory.selectFrom(qPost)
-                .where(qPost.channel.channelCode.eq(channelCode))
-                .fetch().size();
+            }
+        }
+        return query.fetch().size();
+
     }
-    public int tagPostCount(int channelTagCode){
-        // 문제 생기면 알려주세요 (2024.10.18)
-        return queryFactory.selectFrom(qPost)
-                .where(qPost.channelTag.channelTagCode.eq(channelTagCode))
-                .fetch().size();
-
+    public int tagPostCount(int channelTagCode,String target, String keyword){
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                .where(qPost.channelTagCode.eq(channelTagCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
+            }
+        }
+        return query.fetch().size();
     }
     // 해당 채널의 전체 글
     public List<PostDTO> channelCodeByAllPost(int channelCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                    .where(qPost.channelCode.eq(channelCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
+            }
+        }
 
-        // 문제 생기면 알려주세요 (2024.10.18)
-        List<Post> voList =  queryFactory.selectFrom(qPost)
-                .where(qPost.channel.channelCode.eq(channelCode))
+        List<Post> voList =  query
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
                 .offset(paging.getOffset()) //
                 .limit(paging.getLimit()) //10개씩
@@ -98,8 +128,19 @@ public class PostService {
     public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
         // 문제 생기면 알려주세요 (2024.10.18)
         List<PostDTO> dtoList = new ArrayList<>();
-        List<Post> voList =  queryFactory.selectFrom(qPost)
-                .where(qPost.channelTag.channelTagCode.eq(channelTagCode))
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                .where(qPost.channelTagCode.eq(channelTagCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
+            }
+        }
+        List<Post> voList =  query
                 .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
                 .offset(paging.getOffset()) //
                 .limit(paging.getLimit())

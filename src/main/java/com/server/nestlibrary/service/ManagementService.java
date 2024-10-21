@@ -3,6 +3,7 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.server.nestlibrary.model.dto.ChannelDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
@@ -25,13 +26,12 @@ public class ManagementService {
     @Autowired
     private UserDAO userDAO;
 
-
+    @Autowired
+    private  ChannelService channelService;
     @Autowired
     private JPAQueryFactory queryFactory;
 
-    private final QPost qPost = QPost.post;
-    private final QUser qUser = QUser.user;
-    private final QChannel qChannel = QChannel.channel;
+
     private final QManagement qManagement = QManagement.management;
 
 
@@ -132,6 +132,28 @@ public class ManagementService {
         if(list.size() == 0)
         return null ;
         return list.get(0);
+    }
+
+    public  List<ChannelDTO> mySubscribe(){
+        List<Management> list =  queryFactory.selectFrom(qManagement)
+                .where(qManagement.userEmail.eq(getEmail()))
+                .where(qManagement.managementUserStatus.eq("sub"))
+                .fetch();
+        List<ChannelDTO> dto = new ArrayList<>();
+        for (Management m : list){
+          Channel vo = channelService.findChannel(m.getChannelCode()) ;
+          dto.add(ChannelDTO.builder()
+                    .channelCode(vo.getChannelCode())
+                    .channelImg(vo.getChannelImgUrl())
+                    .channelCreatedAt(vo.getChannelCreatedAt())
+                    .channelName(vo.getChannelName())
+                    .channelInfo(vo.getChannelInfo())
+                    .channelTag(channelService.tagList(vo.getChannelCode()))
+                    .host(findAdmin(vo.getChannelCode()).get(0))
+                    .favoriteCount(count(vo.getChannelCode()))
+                    .build());
+        }
+        return dto;
     }
 
     // 구독자 수

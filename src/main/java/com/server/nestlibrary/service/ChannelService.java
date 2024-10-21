@@ -12,8 +12,7 @@ import com.server.nestlibrary.repo.ChannelTagDAO;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,6 +30,7 @@ public class ChannelService {
     private ChannelTagDAO tagDAO;
     @Autowired
     private ManagementDAO managementDAO;
+    @Lazy
     @Autowired
     private  ManagementService managementService;
     @Autowired
@@ -179,7 +179,7 @@ public class ChannelService {
         for(ChannelTag tag : tagVoList){
            tagDTOList.add(channelTagAllPost(tag.getChannelTagCode()));
         }
-        int totalCount = postService.allPostCount(channelCode);
+        int totalCount = postService.allPostCount(channelCode,null,null);
         Paging paging = new Paging(1, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage()-1));
@@ -199,7 +199,7 @@ public class ChannelService {
     // 해당 채널의 게시판 태그별 게시글 정보
     public ChannelTagDTO channelTagAllPost(int channelTagCode){
         ChannelTag vo = tagDAO.findById(channelTagCode).get();
-        int totalCount = postService.tagPostCount(channelTagCode);
+        int totalCount = postService.tagPostCount(channelTagCode, null,null);
         Paging paging = new Paging(1, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage()-1));
