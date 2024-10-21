@@ -14,7 +14,10 @@ values("공지",  1),("일반",  1),("리뷰",  1);
 select * from comment;
 select * from management;
 select * from messages;
-select * from post where channel_code = 6; -- 22개
+select * 
+from post 
+where channel_code = 6; -- 22개
+
 select * from post where channel_code = 15; -- 182개
 select * from channel; -- 15
 

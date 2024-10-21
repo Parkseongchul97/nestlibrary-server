@@ -1,6 +1,10 @@
 package com.server.nestlibrary.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.UserDTO;
+import com.server.nestlibrary.model.vo.QPost;
+import com.server.nestlibrary.model.vo.QPostLike;
+import com.server.nestlibrary.model.vo.QUser;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.repo.UserDAO;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +16,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 public class UserService {
     @Autowired
     private UserDAO dao;
+
+    @Autowired
+    private JPAQueryFactory queryFactory;
+
+    private final QUser qUser = QUser.user;
 
     @Autowired
     private PasswordEncoder bcpe;
@@ -57,6 +68,7 @@ public class UserService {
         return null;
     }
     public User findUser(String userEmail){
+
         return dao.findById(userEmail).orElse(null);
     }
     // 닉네임 중복체크용 닉네임으로 유저 찾기
@@ -75,5 +87,10 @@ public class UserService {
                 .build();
 
         return userdto;
+    }
+    public List<User> findByNicknameUserList(String userNickname){
+            return queryFactory.selectFrom(qUser)
+                    .where(qUser.userNickname.containsIgnoreCase(userNickname))
+                    .fetch();
     }
 }
