@@ -162,6 +162,12 @@ public class ManagementService {
         return managementDAO.count(channelCode);
     }
 
+    public List<Integer> subs(){
+
+
+
+        return  null;
+    }
 
 }
 

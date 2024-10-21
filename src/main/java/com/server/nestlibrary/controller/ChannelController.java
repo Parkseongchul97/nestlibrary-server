@@ -78,7 +78,6 @@ public class ChannelController {
                     .leftJoin(qPost).on(qPost.channel.eq(qChannel))
                     .where(qChannel.channelName.like("%" + keyword + "%"))
                     .groupBy(qChannel.channelCode)
-
                     .orderBy(qManagement.count().desc())
                     .orderBy(qPost.count().desc())
                     .offset(pageable.getOffset())
@@ -453,7 +452,7 @@ public class ChannelController {
                     .fetch();
         }
 
-        log.info("흠 " + channels.size());
+
         List<ChannelPostDTO> dtoList = new ArrayList<>();
 
 
