@@ -36,11 +36,11 @@ public class UserService {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if(auth!= null && auth.isAuthenticated()){
-                log.info("auth >> " + auth);
+
 
                 User user = (User) auth.getPrincipal();
                 User result = dao.findById(user.getUserEmail()).get();
-                log.info("auth 유저 >> " + result);
+
                 return result;
             }
             return null;
@@ -91,6 +91,7 @@ public class UserService {
     public List<User> findByNicknameUserList(String userNickname){
             return queryFactory.selectFrom(qUser)
                     .where(qUser.userNickname.containsIgnoreCase(userNickname))
+                    .limit(10)
                     .fetch();
     }
 }
