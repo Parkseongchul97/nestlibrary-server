@@ -59,6 +59,17 @@ public class UserService {
 
         dao.save(vo);
     }
+
+
+    @Transactional
+    public void decodingPassword (User vo){
+        vo.setUserPassword(bcpe.encode(vo.getUserPassword()));
+        dao.save(vo);
+
+
+    }
+
+
     // 로그인
     public  User login(String id, String password){
         User user = dao.findById(id).orElseThrow(()-> new UsernameNotFoundException("User Not Found"));

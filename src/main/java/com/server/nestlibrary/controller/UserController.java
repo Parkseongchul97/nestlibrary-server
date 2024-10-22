@@ -196,6 +196,19 @@ public class UserController {
        return ResponseEntity.ok(kakaoService.getUserInfo(kakaoToken));
     }
 
+    @PutMapping("/private/user/password")
+   public ResponseEntity passwordUpdate (@RequestParam(name = "userEmail") String userEmail, @RequestParam(name = "userPassword") String userPassword){
+
+        log.info("아이디" + userEmail);
+        log.info("비밀번호" + userPassword);
+        User vo = userService.findUser(userEmail);
+        vo.setUserPassword(userPassword);
+
+        userService.decodingPassword(vo);
+
+        return ResponseEntity.ok(null);
+
+    }
 
 
 

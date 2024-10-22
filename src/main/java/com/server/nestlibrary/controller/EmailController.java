@@ -26,11 +26,38 @@ public class EmailController {
     @GetMapping("/code")
     public ResponseEntity sendEmail(@RequestParam("userEmail") String userEmail) {
         User user =  userService.findUser(userEmail);
+        log.info("유저정보 " + user);
             if (user == null)  // 해당 이메일로 가입된 유저가 없으면
                 return ResponseEntity.status(HttpStatus.OK).body(emailService.sendEmailCode(userEmail));
         // 이미 가입한 유저면 -1 리턴
         return ResponseEntity.status(HttpStatus.OK).body(-1);
     }
+
+    @GetMapping("/findPassword")
+    public ResponseEntity newPassword(@RequestParam("userEmail") String userEmail) {
+        User user =  userService.findUser(userEmail);
+        log.info("유저정보 " + user);
+        if (user == null) {
+            log.info("1번" );
+            return ResponseEntity.status(HttpStatus.OK).body(1);
+
+        } else if(user.getUserPassword() == null){
+            log.info("2번" );
+            return ResponseEntity.status(HttpStatus.OK).body(2);
+        } else {
+            log.info("3번" );
+            emailService.processPasswordReset(user);
+
+
+            return ResponseEntity.status(HttpStatus.OK).body(3);
+
+        }
+
+
+    }
+
+
+
     @PostMapping("/code")
     public ResponseEntity<Boolean> codeCheck(@RequestParam(name="code") int code) {
 

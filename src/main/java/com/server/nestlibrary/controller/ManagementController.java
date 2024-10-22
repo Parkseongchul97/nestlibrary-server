@@ -48,6 +48,10 @@ public class ManagementController {
     public ResponseEntity myChannel() {
         List<SubscribeChannelDTO> list = managementService.mySubscribe();
         log.info("유저가 구독중인 채널 : " + list);
+        if(list == null){
+
+            return ResponseEntity.ok(null);
+        }
         return ResponseEntity.ok(list);
     }
 
