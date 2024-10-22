@@ -4,6 +4,7 @@ package com.server.nestlibrary.service;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.ChannelDTO;
+import com.server.nestlibrary.model.dto.SubscribeChannelDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
@@ -134,15 +135,16 @@ public class ManagementService {
         return list.get(0);
     }
 
-    public  List<ChannelDTO> mySubscribe(){
+    public  List<SubscribeChannelDTO> mySubscribe(){
         List<Management> list =  queryFactory.selectFrom(qManagement)
                 .where(qManagement.userEmail.eq(getEmail()))
                 .where(qManagement.managementUserStatus.eq("sub"))
                 .fetch();
-        List<ChannelDTO> dto = new ArrayList<>();
+        List<SubscribeChannelDTO> listDTO = new ArrayList<>();
         for (Management m : list){
           Channel vo = channelService.findChannel(m.getChannel().getChannelCode()) ;
-          dto.add(ChannelDTO.builder()
+
+            SubscribeChannelDTO dto = SubscribeChannelDTO.builder().channelDTO(ChannelDTO.builder()
                     .channelCode(vo.getChannelCode())
                     .channelImg(vo.getChannelImgUrl())
                     .channelCreatedAt(vo.getChannelCreatedAt())
@@ -151,9 +153,10 @@ public class ManagementService {
                     .channelTag(channelService.tagList(vo.getChannelCode()))
                     .host(findAdmin(vo.getChannelCode()).get(0))
                     .favoriteCount(count(vo.getChannelCode()))
-                    .build());
+                    .build()).management(m).build();
+            listDTO.add(dto);
         }
-        return dto;
+        return listDTO;
     }
 
     // 구독자 수

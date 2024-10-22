@@ -1,6 +1,7 @@
 package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.ChannelDTO;
+import com.server.nestlibrary.model.dto.SubscribeChannelDTO;
 import com.server.nestlibrary.model.vo.Management;
 import com.server.nestlibrary.service.ManagementService;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class ManagementController {
     // 내가 구독중인 채널
     @GetMapping("/private/subscribe/channel")
     public ResponseEntity myChannel() {
-        List<ChannelDTO> list = managementService.mySubscribe();
+        List<SubscribeChannelDTO> list = managementService.mySubscribe();
         log.info("유저가 구독중인 채널 : " + list);
         return ResponseEntity.ok(list);
     }
