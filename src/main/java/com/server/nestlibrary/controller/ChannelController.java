@@ -2,6 +2,7 @@ package com.server.nestlibrary.controller;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
@@ -55,97 +56,81 @@ public class ChannelController {
     @Autowired
     private CommentService commentService;
 
+    private final QChannel qChannel = QChannel.channel;
+    private final QManagement qManagement = QManagement.management;
+    private final QPost qPost = QPost.post;
+    private final QChannelTag qChannelTag = QChannelTag.channelTag;
 
+
+    // 모든 채널 조회(메인)
     @GetMapping("/channel/main")
     public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "keyword", required = false) String keyword) {
 
         BooleanBuilder builder = new BooleanBuilder();
-        Pageable pageable = PageRequest.of(page - 1, 4);
-        QUser qUser = QUser.user;
-        QChannel qChannel = QChannel.channel;
-        QManagement qManagement = QManagement.management;
-        QPost qPost = QPost.post;
-        QChannelTag qChannelTag = QChannelTag.channelTag;
-
+        // 쿼리 반복부분
         List<Channel> channels = new ArrayList<>();
+        if (keyword != null && keyword != "") { // 검색어가 있는경우
+            BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
+            channels = channelJPAQuery(page).where(qChannel.channelName.like("%" + keyword + "%")).fetch();
+            builder.and(expression);
+        } else {  // 검색어가 없는경우
+            channels = channelJPAQuery(page).fetch();
+        }
+        List<ChannelPostDTO> dtoList = new ArrayList<>(); // 최종적으로 뽑을 dto리스트 생성
+        for (Channel c : channels) { // 채널 코드로 post vo list 10개
+            List<Post> posts = byChannelCode(c.getChannelCode());
+            List<PostDTO> postDTOs = new ArrayList<>();
+            for (Post p : posts) { // 포스트 vo -> dto 포장
+                postDTOs.add(changePostVoDTO(p));
+            }
+            dtoList.add(mainDTO(c,postDTOs));
+        }
+        return ResponseEntity.ok(dtoList);
+    }
+    // 구독 채널 조회 (메인)
+    // 시간나면 여기에 구독 여부까지 추가해야함!! 그거로 화인
+    @GetMapping("/private/channel/main")
+    public ResponseEntity myChannels(@RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "keyword", required = false) String keyword) {
 
-
+        BooleanBuilder builder = new BooleanBuilder();
+        Pageable pageable = PageRequest.of(page - 1, 4);;
+        List<Channel> channels = new ArrayList<>();
         if (keyword != null && keyword != "") {
             BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
             builder.and(expression);
-            channels = queryFactory.selectFrom(qChannel)
-                    .join(qManagement).on(qManagement.channel.eq(qChannel))
-                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
-                    .where(qChannel.channelName.like("%" + keyword + "%"))
-                    .groupBy(qChannel.channelCode)
-                    .orderBy(qManagement.count().desc())
-                    .orderBy(qPost.count().desc())
-                    .offset(pageable.getOffset())
-                    .limit(pageable.getPageSize())
-                    .fetch();
-
-
+            channels = channelJPAQuery(page).where(qChannel.channelName.like("%" + keyword + "%"))
+                                            .where(qManagement.managementUserStatus.eq("sub"))
+                                            .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail())).fetch();
         } else {
-            channels = queryFactory.selectFrom(qChannel)
-                    .join(qManagement).on(qManagement.channel.eq(qChannel))
-                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
-
-                    .groupBy(qChannel.channelCode)
-                    .orderBy(qManagement.count().desc())
-                    .orderBy(qPost.count().desc())
-                    .offset(pageable.getOffset())
-                    .limit(pageable.getPageSize())
-                    .fetch();
-
-
+            channels = channelJPAQuery(page)
+                        .where(qManagement.managementUserStatus.eq("sub"))
+                        .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail()))
+                        .fetch();
         }
-
-
-        List<ChannelPostDTO> dtoList = new ArrayList<>();
-
-        for (int i = 0; i < channels.size(); i++) {
-
-            List<Post> posts = queryFactory.selectFrom(qPost)
-                    .join(qChannelTag).on(qPost.channelTag.eq(qChannelTag))
-                    .where(qPost.channel.channelCode.eq(channels.get(i).getChannelCode()))
-                    .orderBy(qPost.postCreatedAt.desc())
-                    .limit(10)
-                    .fetch();
-            List<PostDTO> postDtos = new ArrayList<>();
-
-            for (int j = 0; j < posts.size(); j++) {
-
-                PostDTO postdto = PostDTO
-                        .builder()
-                        .postCode(posts.get(j).getPostCode())
-                        .postTitle(posts.get(j).getPostTitle())
-                        .postCreatedAt(posts.get(j).getPostCreatedAt())
-                        .postContent(posts.get(j).getPostContent())
-                        .postViews(posts.get(j).getPostViews())
-                        .channelTag(posts.get(j).getChannelTag())
-                        .channelCode(posts.get(j).getChannel().getChannelCode())
-                        .commentCount(commentService.commentCount(posts.get(j).getPostCode()))
-                        .user(userService.findDTO(posts.get(j).getUserEmail()))
-                        .build();
-
-                postDtos.add(postdto);
+        List<ChannelPostDTO> dtoList = new ArrayList<>(); // 최종적으로 뽑을 dto리스트 생성
+        for (Channel c : channels) { // 채널 코드로 post vo list 10개
+            List<Post> posts = byChannelCode(c.getChannelCode());
+            List<PostDTO> postDTOs = new ArrayList<>();
+            for (Post p : posts) { // 포스트 vo -> dto 포장
+                postDTOs.add(changePostVoDTO(p));
             }
-
-            ChannelPostDTO dto = ChannelPostDTO.builder()
-                    .channelCode(channels.get(i).getChannelCode())
-                    .channelName(channels.get(i).getChannelName())
-                    .channelCreatedAt(channels.get(i).getChannelCreatedAt())
-                    .channelImg(channels.get(i).getChannelImgUrl())
-                    .host(managementService.findAdmin(channels.get(i).getChannelCode()).get(0))
-                    .channelInfo(channels.get(i).getChannelInfo())
-                    .allPost(postDtos)
-                    .build();
-            dtoList.add(dto);
-
-
+            dtoList.add(mainDTO(c,postDTOs));
         }
-
         return ResponseEntity.ok(dtoList);
+    }
+    public PostDTO changePostVoDTO(Post vo){
+        return   PostDTO
+                .builder()
+                .postCode(vo.getPostCode())
+                .postTitle(vo.getPostTitle())
+                .postCreatedAt(vo.getPostCreatedAt())
+                .postContent(vo.getPostContent())
+                .postViews(vo.getPostViews())
+                .channelTag(vo.getChannelTag())
+                .channelCode(vo.getChannel().getChannelCode())
+                .commentCount(commentService.commentCount(vo.getPostCode()))
+                .user(userService.findDTO(vo.getUserEmail()))
+                .build();
     }
 
     // 채널정보 조회
@@ -211,7 +196,6 @@ public class ChannelController {
     // 채널 생성(프라이빗 추가)
     @PostMapping("/private/channel/create")
     public ResponseEntity createChannel(ChannelDTO dto) throws Exception {
-        log.info("채널 생성 ! " + dto);
         Channel channel = channelService.createChannel(Channel
                 .builder()
                 .channelName(dto.getChannelName())
@@ -329,18 +313,13 @@ public class ChannelController {
     // 채널 삭제
     @DeleteMapping("/private/channel/{channelCode}")
     public ResponseEntity removeChannel(@PathVariable(name = "channelCode") int channelCode) {
-
-        log.info("삭제 컨트롤러 " + channelCode);
         channelService.removeChannel(channelCode);
-
         return ResponseEntity.ok(null);
     }
 
     // 내 채널 정보
     @GetMapping("/private/channel/{userEmail}")
     public ResponseEntity myChannel(@PathVariable(name = "userEmail") String userEmail) {
-
-
         return ResponseEntity.ok(channelService.myChannel(userEmail));
     }
 
@@ -366,108 +345,38 @@ public class ChannelController {
             f.delete();
         }
     }
-
-
-    @GetMapping("/private/channel/main")
-    public ResponseEntity mychannels(@RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "keyword", required = false) String keyword) {
-
-        log.info("구독채널보기 ");
-        log.info("키워드" + keyword);
-        log.info("페이지" + page);
-        BooleanBuilder builder = new BooleanBuilder();
+    public JPAQuery<Channel> channelJPAQuery(int page){
         Pageable pageable = PageRequest.of(page - 1, 4);
-        QUser qUser = QUser.user;
-        QChannel qChannel = QChannel.channel;
-        QManagement qManagement = QManagement.management;
-        QPost qPost = QPost.post;
-        QChannelTag qChannelTag = QChannelTag.channelTag;
-
-        List<Channel> channels = new ArrayList<>();
-        log.info("로그인했다" + userService.getLoginUser());
-
-
-        if (keyword != null && keyword != "") {
-            BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
-            builder.and(expression);
-            channels = queryFactory.selectFrom(qChannel)
-                    .join(qManagement).on(qManagement.channel.eq(qChannel))
-                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
-                    .where(qChannel.channelName.like("%" + keyword + "%"))
-                    .where(qManagement.managementUserStatus.eq("sub"))
-                    .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail()))
-                    .groupBy(qChannel.channelCode)
-                    .orderBy(qManagement.count().desc())
-                    .orderBy(qPost.count().desc())
-                   .offset(pageable.getOffset())
-                    .limit(pageable.getPageSize())
-                    .fetch();
-
-
-        } else {
-            channels = queryFactory.selectFrom(qChannel)
-                    .join(qManagement).on(qManagement.channel.eq(qChannel))
-                    .leftJoin(qPost).on(qPost.channel.eq(qChannel))
-                    .where(qManagement.managementUserStatus.eq("sub"))
-                    .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail()))
-
-                    .groupBy(qChannel.channelCode)
-                    .orderBy(qManagement.count().desc())
-                    .orderBy(qPost.count().desc())
-                   .offset(pageable.getOffset())
-                   .limit(pageable.getPageSize())
-                    .fetch();
-        }
+        return queryFactory.selectFrom(qChannel)
+                .join(qManagement).on(qManagement.channel.eq(qChannel))
+                .leftJoin(qPost).on(qPost.channel.eq(qChannel))
+                .groupBy(qChannel.channelCode)
+                .orderBy(qManagement.count().desc())
+                .orderBy(qPost.count().desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+    }
+    public List<Post> byChannelCode(int channelCode){
+        return queryFactory.selectFrom(qPost)
+                .join(qChannelTag).on(qPost.channelTag.eq(qChannelTag))
+                .where(qPost.channel.channelCode.eq(channelCode))
+                .orderBy(qPost.postCreatedAt.desc())
+                .limit(10)
+                .fetch();
+    }
+    public ChannelPostDTO mainDTO(Channel c, List<PostDTO> dtos){
+        return   ChannelPostDTO.builder()
+                .channelCode(c.getChannelCode())
+                .channelName(c.getChannelName())
+                .channelCreatedAt(c.getChannelCreatedAt())
+                .channelImg(c.getChannelImgUrl())
+                .host(managementService.findAdmin(c.getChannelCode()).get(0))
+                .channelInfo(c.getChannelInfo())
+                .allPost(dtos)
+                .build();
+    }
 
 
-        List<ChannelPostDTO> dtoList = new ArrayList<>();
-
-
-
-            for (int i = 0; i < channels.size(); i++) {
-
-                List<Post> posts = queryFactory.selectFrom(qPost)
-                        .join(qChannelTag).on(qPost.channelTag.eq(qChannelTag))
-                        .where(qPost.channel.channelCode.eq(channels.get(i).getChannelCode()))
-                        .orderBy(qPost.postCreatedAt.desc())
-                        .limit(10)
-                        .fetch();
-                List<PostDTO> postDtos = new ArrayList<>();
-
-                for (int j = 0; j < posts.size(); j++) {
-
-                    PostDTO postdto = PostDTO
-                            .builder()
-                            .postCode(posts.get(j).getPostCode())
-                            .postTitle(posts.get(j).getPostTitle())
-                            .postCreatedAt(posts.get(j).getPostCreatedAt())
-                            .postContent(posts.get(j).getPostContent())
-                            .postViews(posts.get(j).getPostViews())
-                            .channelTag(posts.get(j).getChannelTag())
-                            .channelCode(posts.get(j).getChannel().getChannelCode())
-                            .commentCount(commentService.commentCount(posts.get(j).getPostCode()))
-                            .user(userService.findDTO(posts.get(j).getUserEmail()))
-                            .build();
-
-                    postDtos.add(postdto);
-                }
-
-                ChannelPostDTO dto = ChannelPostDTO.builder()
-                        .channelCode(channels.get(i).getChannelCode())
-                        .channelName(channels.get(i).getChannelName())
-                        .channelCreatedAt(channels.get(i).getChannelCreatedAt())
-                        .channelImg(channels.get(i).getChannelImgUrl())
-                        .channelInfo(channels.get(i).getChannelInfo())
-                        .allPost(postDtos)
-                        .build();
-                dtoList.add(dto);
-
-
-            }
-
-
-
-            return ResponseEntity.ok(dtoList);
-        }
     }
 
 
