@@ -59,7 +59,7 @@ public class UserController {
                     .userInfo(user.getUserInfo())
                     .userPoint(user.getUserPoint())
                     .build();
-            log.info("로그인 유저 : " + loginUser);
+
             return  ResponseEntity.ok(loginUser
                     );
         }
