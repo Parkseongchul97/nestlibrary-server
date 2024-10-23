@@ -84,6 +84,7 @@ public class ChannelController {
                 postDTOs.add(changePostVoDTO(p));
             }
             dtoList.add(mainDTO(c,postDTOs));
+
         }
         return ResponseEntity.ok(dtoList);
     }
@@ -147,18 +148,18 @@ public class ChannelController {
                 .host(managementService.findAdmin(channelCode).get(0))
                 .favoriteCount(managementService.count(channelCode))
                 .build();
-        log.info("채널정보 : " + dto);
+   
         return ResponseEntity.ok(dto);
     }
 
-    // 채널의 전체 게시판 조회
+ 
     @GetMapping("/{channelCode}")
     public ResponseEntity allPost(@PathVariable(name = "channelCode") int channelCode,
                                   @RequestParam(name = "page", defaultValue = "1") int page,
                                   @RequestParam(name = "target", defaultValue = "", required = false) String target,
                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
     ) {
-
+        log.info("전체글로옴");
         int totalCount = postService.allPostCount(channelCode, target, keyword);
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
@@ -170,6 +171,24 @@ public class ChannelController {
         return ResponseEntity.ok(postBorad);
     }
 
+    // 채널의 인기 게시판 조회
+    @GetMapping("/{channelCode}/best")
+    public ResponseEntity bestPost(@PathVariable(name = "channelCode") int channelCode,
+                                   @RequestParam(name = "page", defaultValue = "1") int page,
+                                   @RequestParam(name = "target", defaultValue = "", required = false) String target,
+                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
+    ) {
+        log.info("베스트로옴");
+        int totalCount = postService.allPostCount(channelCode, target, keyword);
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
+        // 전체 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
+        List<PostDTO> postList = postService.channelCodeByAllPost(channelCode, paging, target, keyword);
+        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
+        // 페이징도 같이 담긴걸로?
+        return ResponseEntity.ok(postBorad);
+    }
     // 채널의 세부탭 게시판 조회
     @GetMapping("/{channelCode}/{channelTagCode}")
     public ResponseEntity tagPost(@PathVariable(name = "channelCode") int channelCode, @PathVariable(required = false, name = "channelTagCode") int channelTagCode,
@@ -265,41 +284,21 @@ public class ChannelController {
     @PutMapping("/private/channel/channelImg")
     public ResponseEntity imgUpdate(ChannelDTO dto) throws Exception {
 
-
-        log.info("이미지 수정 dto " + dto);
-
-        //    채널코드로 db가서 이미지 url 추출
-        // 이미지가 안왔을때 기본 이미지 인지 , 기존 이미지 인지 구분을 해줘야함
-        // 기본이미지라면  파일 삭제만 해주고 null로
-        // 기존 이미지라면 아무것도 안함
-        // 업로드라면 이전 이미지가 있을 경우 없을 경우 체크 해서 삭제 업로드
-
-        // 기존 이미지 url
         String imgUrl = channelService.getUrl(dto.getChannelCode());
-        log.info("기존 url " + imgUrl);
         // 기본 프사 사용시
         if (dto.getChange() == -1) {
             // 기존 이미지가 있는 경우
             if (imgUrl != null) {
                 fileDelete(imgUrl, dto.getChannelCode());
                 channelService.imgUpdate(null, dto.getChannelCode());
-
                 //   // 기존 이미지가 있는 경우  없는경우
             } else {
                 channelService.imgUpdate(null, dto.getChannelCode());
             }
-
-
-            // 기존 프사 사용시
-
-
-            // 사진 변경시
         } else if (dto.getChange() == 1) {
-
             if (imgUrl != null) {
                 fileDelete(imgUrl, dto.getChannelCode());
                 channelService.imgUpdate(fileUpload(dto.getChannelImgUrl(), dto.getChannelCode()), dto.getChannelCode());
-
             } else {
                 channelService.imgUpdate(fileUpload(dto.getChannelImgUrl(), dto.getChannelCode()), dto.getChannelCode());
             }
@@ -371,6 +370,7 @@ public class ChannelController {
                 .channelCreatedAt(c.getChannelCreatedAt())
                 .channelImg(c.getChannelImgUrl())
                 .host(managementService.findAdmin(c.getChannelCode()).get(0))
+                .favoriteCount(managementService.count(c.getChannelCode()))
                 .channelInfo(c.getChannelInfo())
                 .allPost(dtos)
                 .build();

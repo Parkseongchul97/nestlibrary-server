@@ -33,7 +33,6 @@ public class MessagesController {
         Paging paging = new Paging(page, totalCount);
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
-        log.info("페이징" + paging);
         return  ResponseEntity.ok(MessageBoxDTO.builder().paging(paging).messagesDTOList(messagesService.notOpenMessages(paging, target, keyword)).build());
     }
     // 전체 메일 조회
@@ -46,7 +45,6 @@ public class MessagesController {
         Paging paging = new Paging(page, totalCount);
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
-        log.info("페이징" + paging);
         return  ResponseEntity.ok(MessageBoxDTO.builder().paging(paging).messagesDTOList(messagesService.findMyMessages(paging, target, keyword)).build());
     }
     // 내가 받은 메일 조회
@@ -78,7 +76,6 @@ public class MessagesController {
     public ResponseEntity findMessages(@PathVariable(name = "messagesCode") int messagesCode){
         // 해당 쪽지의 정보 자세히 뿌리기
         // 수신자인지 발신자인지 확인후 수신자가 확인하면 조회여부 변경
-        log.info("1개 조회 왔어용");
         return ResponseEntity.ok(messagesService.viewMessage(messagesCode));
     }
     // 내가 안읽은 메시지 숫자
@@ -106,8 +103,8 @@ public class MessagesController {
     // 쪽지 삭제
     @DeleteMapping("/private/messages/{messagesCode}")
     public ResponseEntity removeMessages(@PathVariable(name = "messagesCode") int messagesCode){
-        // 발신자인지 수신자인지 확인해서 messages_is_delete 변경, 만약 이미 messages_is_delete 가 반대에서 삭제한 경우
-        // delete 처리
+        // 발신자인지 수신자인지 확인해서 messages_is_delete 변경, 만약 이미 messages_is_delete 가 반대에서 삭제한 경우 그냥 삭제
+        messagesService.removeMessages(messagesCode);
         return ResponseEntity.ok(null);
     }
 
