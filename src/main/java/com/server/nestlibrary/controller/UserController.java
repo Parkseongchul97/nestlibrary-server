@@ -89,7 +89,7 @@ public class UserController {
     public ResponseEntity findUser(@RequestParam(name = "userEmail") String userEmail){
 
         User user =  userService.findUser(userEmail); // 있으면 중복 이메일
-
+        log.info("유저" + user);
         if (user == null){
             // 해당 이메일 유저 X
             return  ResponseEntity.ok(null);

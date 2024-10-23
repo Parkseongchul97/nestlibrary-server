@@ -87,6 +87,8 @@ public class ChannelController {
         }
         return ResponseEntity.ok(dtoList);
     }
+
+
     // 구독 채널 조회 (메인)
     // 시간나면 여기에 구독 여부까지 추가해야함!! 그거로 화인
     @GetMapping("/private/channel/main")
@@ -118,6 +120,7 @@ public class ChannelController {
         }
         return ResponseEntity.ok(dtoList);
     }
+
     public PostDTO changePostVoDTO(Post vo){
         return   PostDTO
                 .builder()
