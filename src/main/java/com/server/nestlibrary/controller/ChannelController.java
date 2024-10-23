@@ -1,14 +1,22 @@
 package com.server.nestlibrary.controller;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.EntityPath;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.service.*;
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.criteria.JpaExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -350,6 +358,64 @@ public class ChannelController {
     }
     public JPAQuery<Channel> channelJPAQuery(int page){
         Pageable pageable = PageRequest.of(page - 1, 4);
+
+
+
+
+       // 채널코드랑 구독자수를 가지고 있는거
+        JPAQuery<Tuple> subQuery = queryFactory
+                .select(qManagement.channel.channelCode, qManagement.count())
+                .from(qManagement)
+                .where(qManagement.managementUserStatus.eq("sub"))
+                .groupBy(qManagement.channel.channelCode);
+
+        ;
+        /*
+        * SELECT
+	channel_code, channel_name,
+    (SELECT count(*) FROM management WHERE management_user_status = 'sub' AND channel_code = c.channel_code GROUP BY channel_code) as sub_count,
+    (SELECT count(*) FROM post WHERE channel_code = c.channel_code GROUP BY channel_code) as post_count
+FROM channel c
+ORDER BY sub_count DESC, post_count ASC
+        * */
+        List<Tuple> channelQuery = queryFactory.select(qChannel.channelCode,
+                ExpressionUtils.as(JPAExpressions.select(qManagement.count())
+                        .from(qManagement)
+                        .where(qManagement.managementUserStatus.eq("sub"))
+                        .where(qManagement.channel.channelCode.eq(qChannel.channelCode))
+                        .groupBy(qManagement.channel.channelCode), "sub_count"),
+                ExpressionUtils.as(JPAExpressions.select(qPost.count())
+                        .from(qPost)
+                        .where(qPost.channel.channelCode.eq(qChannel.channelCode))
+                        .groupBy(qPost.channel.channelCode), "post_count")
+                ).from(qChannel).orderBy(Expressions.stringPath("sub_count").desc())
+                .orderBy(Expressions.stringPath("post_count").desc())
+                .fetch();
+
+      // 채널코드랑 게시물수를 가지고 있는거
+        JPAQuery<Tuple> postQuery = queryFactory
+                .select(qPost.channel.channelCode, qPost.count())
+                .from(qPost)
+                .groupBy(qPost.channel.channelCode);
+
+       // List<Channel> chanQuery = queryFactory
+         //       .selectFrom(qChannel)
+           //     .leftJoin(ExpressionUtils.as(JPAExpressions.select(qManagement.channel.channelCode, qManagement.count())
+             //           .from(qManagement)
+               //         .where(qManagement.managementUserStatus.eq("sub"))
+                //        .groupBy(qManagement.channel.channelCode), "subscribe"))
+
+//                .leftJoin(postQuery).on(qChannel.channelCode.eq())
+
+  //              .fetch();
+
+
+
+
+
+
+
+
         return queryFactory.selectFrom(qChannel)
                 .join(qManagement).on(qManagement.channel.eq(qChannel))
                 .leftJoin(qPost).on(qPost.channel.eq(qChannel))
