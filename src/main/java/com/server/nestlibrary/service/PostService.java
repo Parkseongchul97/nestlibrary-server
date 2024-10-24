@@ -124,6 +124,70 @@ public class PostService {
         return dtoList;
 
     }
+    // 인기글 카운트  
+    public int bestPostCount(int channelCode, String target, String keyword){
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                .where(qPost.channel.channelCode.eq(channelCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
+
+            }
+        }
+        return query.fetch().size();
+
+    }
+    // 해당 채널의 인기 글
+    public List<PostDTO> channelCodeByBestPost(int channelCode, Paging paging, String target, String keyword){
+        List<PostDTO> dtoList = new ArrayList<>();
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                .where(qPost.channel.channelCode.eq(channelCode));
+        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
+            if(target.equals("title")){ // 제목이 포함된게시글
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            }else if(target.equals("content")){// 내용이 포함된게시글
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            }else if(target.equals("user")){ // 작성자가
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
+            }
+        }
+
+        List<Post> voList =  query
+                .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
+                .offset(paging.getOffset()) //
+                .limit(paging.getLimit()) //10개씩
+                .fetch();
+        for(Post p : voList){
+            User userVo = userDAO.findById(p.getUserEmail()).get();
+            // 문제 생기면 알려주세요 (2024.10.18)
+            dtoList.add(PostDTO.builder()
+                    .postCreatedAt(p.getPostCreatedAt())
+                    .postTitle(p.getPostTitle())
+                    .postContent(p.getPostContent())
+                    .postCode(p.getPostCode())
+                    .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                    .channelCode(p.getChannel().getChannelCode())
+                    .postViews(p.getPostViews())
+                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
+                            .userImg(userVo.getUserImgUrl())
+                            .userEmail(userVo.getUserEmail()).build())
+                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
+                    .commentCount(commentService.commentCount(p.getPostCode()))
+                    .build());
+
+        }
+        if(dtoList.size() == 0){
+            return null;
+        }
+        return dtoList;
+
+    }
     // 채널 태그별 게시글
     public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
         // 문제 생기면 알려주세요 (2024.10.18)

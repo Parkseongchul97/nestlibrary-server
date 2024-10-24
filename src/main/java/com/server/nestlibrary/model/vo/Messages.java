@@ -34,8 +34,10 @@ public class Messages {
 
 	@Column(name = "messages_read")
 	private boolean messagesRead; // 읽은 여부
-	
-	@Column(name = "messages_is_delete")
-	private int messagesIsDelete; // 삭제 여부(수신자 삭제, 발신자 삭제)
 
+	@Column(name = "messages_from_delete")
+	private boolean messagesFromDelete; // 삭제 여부
+
+	@Column(name = "messages_to_delete")
+	private boolean messagesToDelete; // 삭제 여부
 }

@@ -25,7 +25,9 @@ public class MessagesDTO {
 
 	private boolean messagesRead; // 읽은 여부
 
-	private int messagesIsDelete; // 삭제 여부
+	private boolean messagesFromDelete; // 삭제 여부
+
+	private boolean messagesToDelete; // 삭제 여부
 
 	
 }

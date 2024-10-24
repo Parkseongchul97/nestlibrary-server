@@ -105,7 +105,8 @@ CREATE TABLE messages( -- 쪽지
     messages_read BOOLEAN, -- 쪽지 조회 여부 (알림기능용도)
     messages_from_user VARCHAR(50), -- 발신자 
     messages_to_user VARCHAR(50), -- 수신자
-    messages_is_delete INT default(0) -- 삭제여부 수신자 삭제, 발신자 삭제
+    messages_from_delete INT default(0), -- 삭제여부 수신자 삭제, 발신자 삭제
+     messages_to_delete INT default(0) -- 삭제여부 수신자 삭제, 발신자 삭제
 );
 
 
@@ -113,6 +114,6 @@ select * from information_schema.table_constraints
 where CONSTRAINT_SCHEMA = 'nest';
 -- ALTER TABLE management DROP FOREIGN KEY management_ibfk_2;
 
-
+-- alter table messages add column  messages_from_delete INT default(0)
 -- 쪽지는 관리 편하려고 참조 X  from , to 둘다 유저 eamil 참조
 

@@ -52,6 +52,7 @@ public class MessagesService {
         List<Messages> voList = messagesJPAQuery(paging, target, keyword)
                 .where(qMessages.messagesToUser.eq(email)) // 내가 수신자고
                 .where(qMessages.messagesRead.eq(false)) // 안읽은거만
+                .where(qMessages.messagesToDelete.eq(false)) // 삭제 안한거만
                 .fetch();
         List<MessagesDTO> dtoList = new ArrayList<>();
         for (Messages m : voList){
@@ -62,8 +63,10 @@ public class MessagesService {
     // 나의 모든 메일
     public List<MessagesDTO> findMyMessages(Paging paging,String target, String keyword){
        String email =  userService.getLoginUser().getUserEmail();
-        List<Messages> voList = messagesJPAQuery(paging, target, keyword).where(qMessages.messagesFromUser.eq(email)
-                        .or(qMessages.messagesToUser.eq(email))).fetch();
+        List<Messages> voList = messagesJPAQuery(paging, target, keyword)
+                .where(qMessages.messagesFromUser.eq(email).and(qMessages.messagesFromDelete.eq(false))
+                        .or(qMessages.messagesToUser.eq(email)).and(qMessages.messagesToDelete.eq(false)))
+                .fetch();
         List<MessagesDTO> dtoList = new ArrayList<>();
         for (Messages m : voList){
             dtoList.add(voMessagesDTO(m)) ;
@@ -73,7 +76,10 @@ public class MessagesService {
     //내가 받은 메일 목록 dto
     public List<MessagesDTO> findMyToMessages(Paging paging,String target, String keyword){
         String email =  userService.getLoginUser().getUserEmail();
-        List<Messages> voList = messagesJPAQuery(paging, target, keyword).where(qMessages.messagesToUser.eq(email)).fetch();
+        List<Messages> voList = messagesJPAQuery(paging, target, keyword)
+                .where(qMessages.messagesToUser.eq(email))
+                .where(qMessages.messagesToDelete.eq(false))
+                .fetch();
         List<MessagesDTO> dtoList = new ArrayList<>();
         for (Messages m : voList){
             dtoList.add(voMessagesDTO(m)) ;
@@ -83,7 +89,10 @@ public class MessagesService {
     //내가 보낸 메일 목록 dto
     public List<MessagesDTO> findMyFromMessages(Paging paging,String target, String keyword){
         String email =  userService.getLoginUser().getUserEmail();
-        List<Messages> voList = messagesJPAQuery(paging, target, keyword).where(qMessages.messagesFromUser.eq(email)).fetch();
+        List<Messages> voList = messagesJPAQuery(paging, target, keyword)
+                .where(qMessages.messagesFromUser.eq(email))
+                .where(qMessages.messagesFromDelete.eq(false))
+                .fetch();
         List<MessagesDTO> dtoList = new ArrayList<>();
         for (Messages m : voList){
             dtoList.add(voMessagesDTO(m)) ;
@@ -107,14 +116,16 @@ public class MessagesService {
     public List<Messages> allMessages(String target, String keyword){
         String email =  userService.getLoginUser().getUserEmail();
        return search(target,keyword)
-                .where(qMessages.messagesFromUser.eq(email).or(qMessages.messagesToUser.eq(email)))
+                .where(qMessages.messagesFromUser.eq(email).and(qMessages.messagesFromDelete.eq(false))
+                        .or(qMessages.messagesToUser.eq(email)).and(qMessages.messagesToDelete.eq(false)))
                 .fetch();
     }
     // 내 모든 발신 메시지 (카운트용)
     public List<Messages> fromMessages(String target, String keyword){
         String email =  userService.getLoginUser().getUserEmail(); // 내가
         return search(target,keyword)
-                .where(qMessages.messagesFromUser.eq(email)) // 수신자일때만
+                .where(qMessages.messagesFromUser.eq(email)) // 발신자일때만
+                .where(qMessages.messagesFromDelete.eq(false))// 발신자 삭제가 아닐때만
                 .fetch();
     }
     // 내 모든 수신 메시지 (카운트용)
@@ -122,6 +133,7 @@ public class MessagesService {
         String email =  userService.getLoginUser().getUserEmail();
         return  search(target,keyword)
                 .where(qMessages.messagesToUser.eq(email))
+                .where(qMessages.messagesToDelete.eq(false))// 수신자 삭제가 아닐때만
                 .fetch();
     }
     // 내가 안읽은 메시지(카운트용)
@@ -130,7 +142,31 @@ public class MessagesService {
         return search(target,keyword)
                 .where(qMessages.messagesToUser.eq(email))
                 .where(qMessages.messagesRead.eq(false))
+                .where(qMessages.messagesToDelete.eq(false))
                 .fetch();
+    }
+    // 쪽지 삭제
+    public void removeMessages(int messagesCode){
+        // 메시지 코드 받아온거로 사용자가 수신자인지 발신자인지 확인후
+        String email =  userService.getLoginUser().getUserEmail(); // 사용자
+        Messages messages = messagesDAO.findById(messagesCode).get(); // 삭제 예정 메시지
+        if(messages.getMessagesToUser().equals(email)){ // 수신자 삭제 상황이라면
+            if(messages.isMessagesFromDelete()){ // 이미 발신자도 삭제한 메일이면
+                messagesDAO.deleteById(messagesCode);
+            }else { // 아직 발신자는 삭제를 안했다면
+                messages.setMessagesToDelete(true);
+                messagesDAO.save(messages); // 수신자 삭제만 추가
+            }
+        }else{// 발신자 삭제 상황이라면
+            if(messages.isMessagesToDelete()){ // 이미 수신자도 삭제한 메일이면
+                messagesDAO.deleteById(messagesCode);
+            }else { // 아직 수신자는 삭제를 안했다면
+                messages.setMessagesFromDelete(true);
+                messagesDAO.save(messages); // 수신자 삭제만 추가
+            }
+
+        }
+        
     }
     // 페이징으로 쿼리 반환 페이징, 출력 조건만
     public JPAQuery<Messages> messagesJPAQuery(Paging paging, String target, String keyword){
@@ -158,6 +194,7 @@ public class MessagesService {
         User fromUser = userService.findUser(vo.getMessagesFromUser());
         User toUser = userService.findUser(vo.getMessagesToUser());
         fromUser.setUserPassword(null);
+
         toUser.setUserPassword(null);
         return MessagesDTO.builder()
                 .messagesCode(vo.getMessagesCode())
@@ -165,7 +202,7 @@ public class MessagesService {
                 .messagesTitle(vo.getMessagesTitle())
                 .messagesFromUser(fromUser)
                 .messagesToUser(toUser)
-                .messagesIsDelete(vo.getMessagesIsDelete())
+//                .messagesIsDelete(vo.getMessagesIsDelete())
                 .messagesRead(vo.isMessagesRead())
                 .messagesSentAt(vo.getMessagesSentAt())
                 .build();

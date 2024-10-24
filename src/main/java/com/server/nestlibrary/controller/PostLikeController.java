@@ -18,13 +18,13 @@ public class PostLikeController {
     @GetMapping("/private/state/{postCode}")
     public ResponseEntity likeState(@PathVariable(name = "postCode") int postCode){
         PostLike like = postLikeService.state(postCode);
-        log.info("좋아용 ? " + like);
+
         return ResponseEntity.ok(like);
     }
 
     @GetMapping("/private/like")
     public ResponseEntity like(@RequestBody PostLike vo){
-        log.info("받은 데이터 : " + vo);
+
         return ResponseEntity.ok(postLikeService.like(vo));
     }
 

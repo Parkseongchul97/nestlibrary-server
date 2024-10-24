@@ -13,10 +13,29 @@ values("공지",  1),("일반",  1),("리뷰",  1);
 
 select * from comment;
 select * from management;
-select * from messages;
+select * from messages -- 받은사람
+where messages_to_user = "asd";
+
+delete from messages
+where messages_code = 21;
+select * from messages -- 보낸사람
+where messages_from_user = "asd";
+-- 채널코드 6의 인기글
 select * 
 from post 
 where channel_code = 6; -- 22개
+
+
+SELECT 
+	post_title
+    post_views, 
+    likes, 
+    comments, 
+    (post_views * 0.5 + count(post_like_code) * 0.3 + count(comment_code) * 0.2) AS best 
+FROM posts 
+join post_like on (posts.post_code = post_like.post_code)
+join comment on (posts.post_code = comment.post_code)
+ORDER BY best DESC ;
 
 select * from post where channel_code = 15; -- 182개
 select * from channel; -- 15
@@ -37,7 +56,8 @@ values("제목1", "제목1", "asd",
  where post.channel_code = 15
  order by post_created_at desc
  limit 10;
- 
+ select * from post
+ where post_code = 95;
  select * from channel; -- 6번 - 원피스, 15번 - 채널 테스트 8
  select * from management;
  select * from management where management_user_status = 'sub'; -- channel_code, management_user_status : 'sub' 인 애들 
