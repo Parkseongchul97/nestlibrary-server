@@ -91,7 +91,7 @@ public class PostController {
                 .channelCode(chan.getChannelCode())
                 .channelName(chan.getChannelName())
                 .channelInfo(chan.getChannelInfo())
-                .channelImg(chan.getChannelImgUrl())
+                .channelImgUrl(chan.getChannelImgUrl())
                 .channelCreatedAt(chan.getChannelCreatedAt())
                 .channelTag(tags)
 //                .host(managementService.findHost(channelCode))

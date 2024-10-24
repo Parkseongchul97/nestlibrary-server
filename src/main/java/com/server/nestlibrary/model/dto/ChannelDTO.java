@@ -25,9 +25,9 @@ public class ChannelDTO {
 
 	private LocalDateTime channelCreatedAt; // 채널 생성일
 
-	private String channelImg; // 채널 대표 이미지 링크
+	private String channelImgUrl; // 채널 대표 이미지 링크
 
-	private MultipartFile channelImgUrl; // 파일
+	private MultipartFile channelImg; // 파일
 
 	private String channelInfo; // 채널소개
 

@@ -77,7 +77,7 @@ public class ChannelService {
                 .channelCode(vo.getChannelCode())
                 .channelName(vo.getChannelName())
                 .channelCreatedAt(vo.getChannelCreatedAt())
-                .channelImg(vo.getChannelImgUrl())
+                .channelImgUrl(vo.getChannelImgUrl())
                 .channelInfo(vo.getChannelInfo())
                 .channelTag(tags)
                 .favoriteCount(managementDAO.count(channelCode))
@@ -98,18 +98,20 @@ public class ChannelService {
         }
         return null; // 중복 X의 경우
     }
+
     // 채널 생성 메서드 (반환 : 채널)
     public Channel createChannel(Channel vo){
+
+        User user = userService.getLoginUser();
+        if(user.getUserPoint() < 3000 && vo.getChannelCode() == 0){
+            return null; // 포인트 부족
+        }
         Channel chan = channelDAO.save(vo);
         // 해당 채널에 게시판 태그가 0개면
         if(tagDAO.findByChannelCode(chan.getChannelCode()).size() == 0){
-            User user = userService.getLoginUser();
-            if(user.getUserPoint() < 3000){
-                return null; // 포인트 부족
-            }
             user.setUserPoint(user.getUserPoint()-3000);
             userDAO.save(user); // 포인트 소모
-            
+
             createDefaultTag(chan.getChannelCode()); // 기본 채널 3개 생성
             // 채널 관리탭에 호스트 추가 -> 여기 문제 생기면 알려주세요!! (2024.10.18)
             Management man = Management.builder()
@@ -122,6 +124,7 @@ public class ChannelService {
         }
         return chan;
     }
+
 
     // 기본채널 생성 메서드
     public void createDefaultTag(int ChannelCode){
@@ -189,7 +192,7 @@ public class ChannelService {
                 .channelCode(channelCode)
                 .channelInfo(vo.getChannelInfo())
                 .channelName(vo.getChannelName())
-                .channelImg(vo.getChannelImgUrl())
+                .channelImgUrl(vo.getChannelImgUrl())
                 .channelCreatedAt(vo.getChannelCreatedAt())
                 .favoriteCount(0)// 즐찾 숫자 추가
                 .channelTag(tagDTOList) // 태그 추가 + 태그 산하 게시글 추가
@@ -261,8 +264,8 @@ public class ChannelService {
 
        List<Integer> myCodes = managementDAO.myChannel(userEmail);
        List<Channel> myChan = new ArrayList<>();
-
-       if( myCodes != null) {
+      System.out.println("마이코드" + myCodes);
+       if( myCodes.size() > 0) {
            for (int i = 0; i < myCodes.size(); i++) {
 
                myChan.add(channelDAO.findById(myCodes.get(i)).get());

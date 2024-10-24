@@ -24,7 +24,7 @@ public class ChannelManagementDTO {
 
     private LocalDateTime channelCreatedAt;
 
-    private String channelImg; // 채널 대표 이미지 링크
+    private String channelImgUrl; // 채널 대표 이미지 링크
 
     private List<ChannelTag> channelTag = new ArrayList<>(); // 채널 내의 게시판 정보
 
