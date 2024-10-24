@@ -6,6 +6,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.ChannelDTO;
 import com.server.nestlibrary.model.dto.SubscribeChannelDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
+import com.server.nestlibrary.model.dto.UserRoleDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
@@ -165,6 +166,28 @@ public class ManagementService {
         return managementDAO.count(channelCode);
     }
 
+    public void changeGrade(UserRoleDTO userRoleDTO){
+
+        //
+        if(userRoleDTO.getManagementUserStatus() != null ) {
+            Management vo = Management
+                    .builder()
+                    .userEmail(userRoleDTO.getUserEmail())
+                    .managementUserStatus(userRoleDTO.getManagementUserStatus())
+                    .managementDeleteAt(null) // 이거에 현재 날짜 + banDate만큼 더 하는 식 필요
+                    .channel(channelService.findChannel(userRoleDTO.getChannelCode()))
+
+                    .build();
+
+        }
+
+    }
+
+    public List<Management> getGrade(String userEmail, int channelCode){
+
+
+        return managementDAO.findGrade(userEmail,channelCode);
+    }
 
 
 }

@@ -328,6 +328,14 @@ public class PostService {
         return null;
     }
 
+    // 포스트 코드로 채널 찾기
+    public int postCodeByChannel(int postCode){
+     Post vo =   postDAO.findById(postCode).get();
+     int channelCode = vo.getChannel().getChannelCode();
+        return  channelCode;
+
+    }
+
 
 
 

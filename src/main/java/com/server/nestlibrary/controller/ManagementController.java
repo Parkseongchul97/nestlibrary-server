@@ -2,6 +2,7 @@ package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.ChannelDTO;
 import com.server.nestlibrary.model.dto.SubscribeChannelDTO;
+import com.server.nestlibrary.model.dto.UserRoleDTO;
 import com.server.nestlibrary.model.vo.Management;
 import com.server.nestlibrary.service.ManagementService;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -54,6 +56,38 @@ public class ManagementController {
         }
         return ResponseEntity.ok(list);
     }
+
+    @PutMapping("/private/subscribe/role")
+      public ResponseEntity changeGrade (@RequestBody UserRoleDTO userRoleDTO){
+
+
+
+
+
+        int days = userRoleDTO.getBanDate();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime newDate = now.plusDays(days);
+
+        userRoleDTO.setManagementDeleteAt(newDate);
+
+
+
+        log.info("등급바꾸기 컨트롤러 " + userRoleDTO);
+
+        // 경우
+        //  sub or 아무것도 아닌 사람이 벤  => 그냥 management에 추가만 하면됨
+        // admin인 사람이 벤 => 그 사람이 어드민인 기록 삭제 후  ban 추가
+        //  ban인 사람이 벤 => 음 그냥 save하면 될거같은데 dao찾아서
+        // 일단 여기서 구한 값을 service로 넘겨주면?
+
+
+
+
+
+        return  ResponseEntity.ok(null);
+    }
+
+
 
 
 }

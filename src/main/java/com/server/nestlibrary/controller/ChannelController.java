@@ -373,6 +373,47 @@ public class ChannelController {
     }
 
 
+    //테스트
+    @GetMapping("/private/channel/{userEmail}/{postCode}")
+    public ResponseEntity setGrade(@PathVariable(name ="userEmail") String userEmail, @PathVariable(name = "postCode") int postCode){
+
+        // 포스트 코드를 받아서 무슨 채널인지 찾아야함
+       int channelCode =  postService.postCodeByChannel(postCode);
+
+        ChannelManagementDTO chanDto =  channelService.update(channelCode);
+        Management vo = new Management();
+
+        for(int i=0; i<chanDto.getAdminList().size(); i++){
+
+            if(chanDto.getAdminList().get(i).getUserEmail().equals(userEmail) && i == 0){
+                              vo.setManagementUserStatus("host");
+                              vo.setChannel(channelService.findChannel(channelCode));
+                              vo.setUserEmail(userEmail);
+
+                return ResponseEntity.ok(vo);
+
+            }else if(chanDto.getAdminList().get(i).getUserEmail().equals(userEmail)){
+                vo.setManagementUserStatus("admin");
+                vo.setChannel(channelService.findChannel(channelCode));
+                vo.setUserEmail(userEmail);
+
+
+                return ResponseEntity.ok(vo);
+            }
+        }
+
+        vo.setManagementUserStatus(null);
+        vo.setChannel(channelService.findChannel(channelCode));
+        vo.setUserEmail(userEmail);
+
+
+        return ResponseEntity.ok(vo);
+    }
+
+
+
+
+
     // 파일 업로드
     public String fileUpload(MultipartFile file, int channelCode) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {
@@ -394,6 +435,11 @@ public class ChannelController {
             f.delete();
         }
     }
+
+
+
+
+
     public JPAQuery<Tuple> channelJPAQuery(int page){
 
         Pageable pageable = PageRequest.of(page - 1, 4);
@@ -439,6 +485,9 @@ public class ChannelController {
                 .allPost(dtos)
                 .build();
     }
+
+
+
 
 
     }
