@@ -1,4 +1,7 @@
 select * from user;
+update user
+set user_point = 3000
+where user_email = "asd3";
 insert into user
 values("asd123@naver.com", "123", "커피왕", "대충이미지주소.jpg" , "반가월");
 
@@ -17,7 +20,7 @@ select * from messages -- 받은사람
 where messages_to_user = "asd";
 
 delete from messages
-where messages_code = 21;
+where messages_code = 35;
 select * from messages -- 보낸사람
 where messages_from_user = "asd";
 -- 채널코드 6의 인기글
@@ -108,19 +111,18 @@ values("제목1", "제목1", "asd",
  select * from channel join management using(channel_code);
  
  SELECT 
-    p.post_code,
-    p.post_title,
-    p.post_views AS 조회수,
-    COUNT(DISTINCT CASE WHEN c.comment_parents_code = 0 THEN c.comment_code END) AS 댓글수, 
-    COUNT(DISTINCT pl.post_like_code) AS 추천수,
-    (COUNT(DISTINCT CASE WHEN c.comment_parents_code = 0 THEN c.comment_code END) * 2 + COUNT(DISTINCT pl.post_like_code) * 5 + p.post_views) AS 점수
+    p.*,
+    u.*,
+    (COUNT(DISTINCT CASE WHEN c.comment_parents_code = 0 THEN c.comment_code END) * 2 + COUNT(DISTINCT pl.post_like_code) * 5 + p.post_views) AS best_score
 FROM post p
 LEFT JOIN comment c ON p.post_code = c.post_code
 LEFT JOIN post_like pl ON p.post_code = pl.post_code
+LEFT JOIN user u on(p.user_email = u.user_email)
 WHERE p.channel_code = 6
 GROUP BY p.post_code, p.post_title, p.post_views
-HAVING 점수 > 50
-ORDER BY 점수 DESC;
+HAVING best_score > 50
+ORDER BY post_created_at DESC
+limit ;
  
  
  

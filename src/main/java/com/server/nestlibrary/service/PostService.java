@@ -1,15 +1,14 @@
 package com.server.nestlibrary.service;
 
-import com.querydsl.core.Tuple;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.server.nestlibrary.model.dto.CommentDTO;
+import com.server.nestlibrary.model.dto.BoardDTO;
 import com.server.nestlibrary.model.dto.PostDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
@@ -20,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+@Slf4j
 @Service
 public class PostService {
 
@@ -119,6 +118,7 @@ public class PostService {
                                     .userEmail(userVo.getUserEmail()).build())
                     .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
                     .commentCount(commentService.commentCount(p.getPostCode()))
+                    .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
                     .build());
 
         }
@@ -128,33 +128,62 @@ public class PostService {
         return dtoList;
 
     }
-    // 인기글 카운트
-    public int bestPostCount(int channelCode, String target, String keyword){
-        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
-                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channel.channelCode.eq(channelCode));
-        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
-            if(target.equals("title")){ // 제목이 포함된게시글
-                query.where(qPost.postTitle.containsIgnoreCase(keyword));
-            }else if(target.equals("content")){// 내용이 포함된게시글
-                query.where(qPost.postContent.containsIgnoreCase(keyword));
-            }else if(target.equals("user")){ // 작성자가
-                query.where(qUser.userNickname.containsIgnoreCase(keyword));
 
-            }
-        }
-        return query.fetch().size();
-
-    }
     // 해당 채널의 인기 글
 
-    public List<PostDTO> channelCodeByBestPost(int channelCode, Paging paging, String target, String keyword) {
+    public BoardDTO channelCodeByBestPost(int channelCode, int page, String target, String keyword) {
+        List<Post> voList = bestPostVoList(channelCode,target,keyword);
+        int totalCount = voList.size();
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
+        log.info("인기페이징 상태 : " + paging);
+        int extraCount = paging.getTotalPage() % paging.getPageSize(); // 나머지 숫자
+        List<Post> pagingVoList = new ArrayList<>();
+        if(paging.getPage() == paging.getEndPage()){ // 마지막 페이지이면서
+            if(extraCount != 0){ // 딱떨어지지 않으면 마지막 페이지가
+                for(int i = paging.getOffset(); i < paging.getOffset()+extraCount; i++){
+                    pagingVoList.add(voList.get(i));
+                }
+            }else{
+                for(int i = paging.getOffset(); i < paging.getOffset()+paging.getPageSize(); i++){
+                    pagingVoList.add(voList.get(i));
+                }
+            }
+        }else{
+            for(int i = paging.getOffset(); i < paging.getOffset()+paging.getPageSize(); i++){
+                pagingVoList.add(voList.get(i));
+            }
+        }
         List<PostDTO> dtoList = new ArrayList<>();
-
+        for(Post p : pagingVoList){
+            User userVo = userDAO.findById(p.getUserEmail()).get();
+            dtoList.add(PostDTO.builder()
+                    .postCreatedAt(p.getPostCreatedAt())
+                    .postTitle(p.getPostTitle())
+                    .postContent(p.getPostContent())
+                    .postCode(p.getPostCode())
+                    .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                    .channelCode(p.getChannel().getChannelCode())
+                    .postViews(p.getPostViews())
+                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
+                            .userImgUrl(userVo.getUserImgUrl())
+                            .userEmail(userVo.getUserEmail()).build())
+                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
+                    .commentCount(commentService.commentCount(p.getPostCode()))
+                    .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
+                    .build());
+        }
+        if(dtoList.size() == 0) dtoList = null;
+        BoardDTO postBoard = BoardDTO.builder().postList(dtoList).paging(paging).build();
+        return postBoard;
+    }
+    public List<Post> bestPostVoList(int channelCode,  String target, String keyword){
+        List<PostDTO> dtoList = new ArrayList<>();
+        BooleanBuilder builder = new BooleanBuilder();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
                 .where(qPost.channel.channelCode.eq(channelCode));
-
         // 검색 조건 추가
         if (target != null && !target.isEmpty() && keyword != null && !keyword.isEmpty()) {
             if (target.equals("title")) {
@@ -165,12 +194,111 @@ public class PostService {
                 query.where(qUser.userNickname.containsIgnoreCase(keyword));
             }
         }
-
-        // 점수 계산을 위한 쿼리
-
-        return dtoList;
+        List<Post> voList = query.fetch();
+        List<Post> bestList = new ArrayList<>();
+        for(Post p : voList){ // 점수 계산
+            int bestPoint = postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2);
+            if(bestPoint > 50){
+                bestList.add(p);
+            }
+        }
+        return bestList;
     }
 
+    public BoardDTO channelTagByBestPost(int channelTagCode, int page, String target, String keyword) {
+        List<Post> voList = bestTagPostVoList(channelTagCode,target,keyword);
+        int totalCount = voList.size();
+        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        paging.setTotalPage(totalCount);
+        paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
+
+        int extraCount = paging.getTotalPage() % paging.getPageSize(); // 나머지 숫자
+        List<Post> pagingVoList = new ArrayList<>();
+        if(voList.size() != 0){
+        if(paging.getPage() == paging.getEndPage()){ // 마지막 페이지이면서
+            if(extraCount != 0){ // 딱떨어지지 않으면 마지막 페이지가
+                for(int i = paging.getOffset(); i < paging.getOffset()+extraCount; i++){
+                    pagingVoList.add(voList.get(i));
+                }
+            }else{
+                for(int i = paging.getOffset(); i < paging.getOffset()+paging.getPageSize(); i++){
+                    pagingVoList.add(voList.get(i));
+                }
+            }
+        }else{
+            for(int i = paging.getOffset(); i < paging.getOffset()+paging.getPageSize(); i++){
+                pagingVoList.add(voList.get(i));
+            }
+        }
+        }
+        List<PostDTO> dtoList = new ArrayList<>();
+        for(Post p : pagingVoList){
+            User userVo = userDAO.findById(p.getUserEmail()).get();
+            dtoList.add(PostDTO.builder()
+                    .postCreatedAt(p.getPostCreatedAt())
+                    .postTitle(p.getPostTitle())
+                    .postContent(p.getPostContent())
+                    .postCode(p.getPostCode())
+                    .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                    .channelCode(p.getChannel().getChannelCode())
+                    .postViews(p.getPostViews())
+                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
+                            .userImgUrl(userVo.getUserImgUrl())
+                            .userEmail(userVo.getUserEmail()).build())
+                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
+                    .commentCount(commentService.commentCount(p.getPostCode()))
+                            .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
+                    .build());
+        }
+        if(dtoList.size() == 0) dtoList = null;
+        BoardDTO postBoard = BoardDTO.builder().postList(dtoList).paging(paging).build();
+        return postBoard;
+    }
+    public List<Post> bestTagPostVoList(int channelTagCode, String target, String keyword){
+        List<PostDTO> dtoList = new ArrayList<>();
+        BooleanBuilder builder = new BooleanBuilder();
+        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
+        // 검색 조건 추가
+        if (target != null && !target.isEmpty() && keyword != null && !keyword.isEmpty()) {
+            if (target.equals("title")) {
+                query.where(qPost.postTitle.containsIgnoreCase(keyword));
+            } else if (target.equals("content")) {
+                query.where(qPost.postContent.containsIgnoreCase(keyword));
+            } else if (target.equals("user")) {
+                query.where(qUser.userNickname.containsIgnoreCase(keyword));
+            }
+        }
+        List<Post> voList = query.fetch();
+        List<Post> bestList = new ArrayList<>();
+        for(Post p : voList){ // 점수 계산
+            int bestPoint = postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2);
+            if(bestPoint > 50){
+                bestList.add(p);
+            }
+        }
+        return bestList;
+    }
+
+
+
+
+
+
+
+
+
+    public int postCommentCount(int postCode){
+        return queryFactory.selectFrom(qComment).where(qComment.postCode.eq(postCode)).fetch().size();
+    }
+    public int postViewCount(int postCode){
+        List<Integer> list =queryFactory.select(QPost.post.postViews).from(qPost).where(qPost.postCode.eq(postCode)).fetch();
+        return list.get(0);
+    }
+    public int postLikeCount(int postCode){
+        return queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postCode)).fetch().size();
+    }
 
 
 
@@ -212,6 +340,7 @@ public class PostService {
                             .userEmail(userVo.getUserEmail()).build())
                     .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
                     .commentCount(commentService.commentCount(p.getPostCode()))
+                            .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
                     .build());
 
         }
@@ -250,6 +379,7 @@ public class PostService {
                         .userEmail(user.getUserEmail()).build())
                 .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postCode)).fetch().size())
                 .commentCount(commentService.commentCount(postCode))
+                .bestPoint(postViewCount(vo.getPostCode()) + (postLikeCount(vo.getPostCode())*5) + (postCommentCount(vo.getPostCode())*2))
                 .build();
        // 작성자, 게시글 , 좋아요 숫자 리턴
 

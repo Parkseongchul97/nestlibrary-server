@@ -202,7 +202,6 @@ public class MessagesService {
                 .messagesTitle(vo.getMessagesTitle())
                 .messagesFromUser(fromUser)
                 .messagesToUser(toUser)
-//                .messagesIsDelete(vo.getMessagesIsDelete())
                 .messagesRead(vo.isMessagesRead())
                 .messagesSentAt(vo.getMessagesSentAt())
                 .build();

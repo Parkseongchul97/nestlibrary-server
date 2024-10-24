@@ -35,4 +35,6 @@ public class PostDTO {
     private int likeCount; // 좋아요 숫자
     
     private int commentCount; // 댓글 숫자
+
+    private int bestPoint;
 }

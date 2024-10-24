@@ -2,36 +2,24 @@ package com.server.nestlibrary.controller;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
-import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.service.*;
-import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.query.criteria.JpaExpression;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.net.Proxy;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -123,7 +111,6 @@ public class ChannelController {
     @GetMapping("/private/channel/main")
     public ResponseEntity myChannels(@RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "keyword", required = false) String keyword) {
 
-        BooleanBuilder builder = new BooleanBuilder();
         Pageable pageable = PageRequest.of(page - 1, 4);;
 
 
@@ -182,6 +169,7 @@ public class ChannelController {
                 .channelCode(vo.getChannel().getChannelCode())
                 .commentCount(commentService.commentCount(vo.getPostCode()))
                 .user(userService.findDTO(vo.getUserEmail()))
+                .bestPoint(postService.postViewCount(vo.getPostCode()) + (postService.postLikeCount(vo.getPostCode())*5) + (postService.postCommentCount(vo.getPostCode())*2))
                 .build();
     }
 
@@ -217,9 +205,9 @@ public class ChannelController {
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
         // 전체 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
         List<PostDTO> postList = postService.channelCodeByAllPost(channelCode, paging, target, keyword);
-        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
+        BoardDTO postBoard = BoardDTO.builder().postList(postList).paging(paging).build();
         // 페이징도 같이 담긴걸로?
-        return ResponseEntity.ok(postBorad);
+        return ResponseEntity.ok(postBoard);
     }
 
     // 채널의 인기 게시판 조회
@@ -228,17 +216,17 @@ public class ChannelController {
                                    @RequestParam(name = "page", defaultValue = "1") int page,
                                    @RequestParam(name = "target", defaultValue = "", required = false) String target,
                                    @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
+    ) {// 페이징도 같이 담긴걸로?
+        return ResponseEntity.ok(postService.channelCodeByBestPost(channelCode,page,target,keyword));
+    }
+    @GetMapping("/{channelCode}/{channelTagCode}/best")
+    public ResponseEntity bestTagPost(@PathVariable(name = "channelCode") int channelCode,
+                                      @PathVariable(name = "channelTagCode") int channelTagCode,
+                                   @RequestParam(name = "page", defaultValue = "1") int page,
+                                   @RequestParam(name = "target", defaultValue = "", required = false) String target,
+                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
     ) {
-        log.info("베스트로옴");
-        int totalCount = postService.allPostCount(channelCode, target, keyword);
-        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
-        paging.setTotalPage(totalCount);
-        paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
-        // 전체 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
-        List<PostDTO> postList = postService.channelCodeByAllPost(channelCode, paging, target, keyword);
-        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
-        // 페이징도 같이 담긴걸로?
-        return ResponseEntity.ok(postBorad);
+        return ResponseEntity.ok(postService.channelTagByBestPost(channelTagCode,page,target,keyword));
     }
     // 채널의 세부탭 게시판 조회
     @GetMapping("/{channelCode}/{channelTagCode}")
@@ -252,8 +240,9 @@ public class ChannelController {
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
         List<PostDTO> postList = postService.channelTagCodeByAllPost(channelTagCode, paging, target, keyword);
-        BoradDTO postBorad = BoradDTO.builder().postList(postList).paging(paging).build();
-        return ResponseEntity.ok(postBorad);
+        BoardDTO postBoard = BoardDTO.builder().postList(postList).paging(paging).build();
+        log.info("세부탭 페이징 상태 : " + paging);
+        return ResponseEntity.ok(postBoard);
     }
 
     // 채널 이름 중복 확인
@@ -416,7 +405,6 @@ public class ChannelController {
                 .limit(pageable.getPageSize());
 
         return channelQuery;
-
 
     }
     public List<Post> byChannelCode(int channelCode){
