@@ -23,7 +23,7 @@ public class ChannelPostDTO {
 
     private LocalDateTime channelCreatedAt; // 채널 생성일
 
-    private String channelImg; // 채널 대표 이미지 링크
+    private String channelImgUrl; // 채널 대표 이미지 링크
 
     private String channelInfo; // 채널소개
 

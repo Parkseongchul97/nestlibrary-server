@@ -140,7 +140,7 @@ public class ChannelController {
         Channel vo = channelService.findChannel(channelCode);
         ChannelDTO dto = ChannelDTO.builder()
                 .channelCode(channelCode)
-                .channelImg(vo.getChannelImgUrl())
+                .channelImgUrl(vo.getChannelImgUrl())
                 .channelCreatedAt(vo.getChannelCreatedAt())
                 .channelName(vo.getChannelName())
                 .channelInfo(vo.getChannelInfo())
@@ -226,7 +226,7 @@ public class ChannelController {
         }
         Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\channel\\" + String.valueOf(channel.getChannelCode()) + "\\");
         Files.createDirectories(directoryPath);
-        channel.setChannelImgUrl(fileUpload(dto.getChannelImgUrl(), channel.getChannelCode())); // 이미지 추가
+        channel.setChannelImgUrl(fileUpload(dto.getChannelImg(), channel.getChannelCode())); // 이미지 추가
         Channel result = channelService.createChannel(channel);
         return ResponseEntity.ok(result);
     }
@@ -297,9 +297,9 @@ public class ChannelController {
         } else if (dto.getChange() == 1) {
             if (imgUrl != null) {
                 fileDelete(imgUrl, dto.getChannelCode());
-                channelService.imgUpdate(fileUpload(dto.getChannelImgUrl(), dto.getChannelCode()), dto.getChannelCode());
+                channelService.imgUpdate(fileUpload(dto.getChannelImg(), dto.getChannelCode()), dto.getChannelCode());
             } else {
-                channelService.imgUpdate(fileUpload(dto.getChannelImgUrl(), dto.getChannelCode()), dto.getChannelCode());
+                channelService.imgUpdate(fileUpload(dto.getChannelImg(), dto.getChannelCode()), dto.getChannelCode());
             }
 
         }
@@ -367,7 +367,7 @@ public class ChannelController {
                 .channelCode(c.getChannelCode())
                 .channelName(c.getChannelName())
                 .channelCreatedAt(c.getChannelCreatedAt())
-                .channelImg(c.getChannelImgUrl())
+                .channelImgUrl(c.getChannelImgUrl())
                 .host(managementService.findAdmin(c.getChannelCode()).get(0))
                 .favoriteCount(managementService.count(c.getChannelCode()))
                 .channelInfo(c.getChannelInfo())

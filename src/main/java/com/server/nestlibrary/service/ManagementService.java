@@ -146,7 +146,7 @@ public class ManagementService {
 
             SubscribeChannelDTO dto = SubscribeChannelDTO.builder().channelDTO(ChannelDTO.builder()
                     .channelCode(vo.getChannelCode())
-                    .channelImg(vo.getChannelImgUrl())
+                    .channelImgUrl(vo.getChannelImgUrl())
                     .channelCreatedAt(vo.getChannelCreatedAt())
                     .channelName(vo.getChannelName())
                     .channelInfo(vo.getChannelInfo())
@@ -165,12 +165,7 @@ public class ManagementService {
         return managementDAO.count(channelCode);
     }
 
-    public List<Integer> subs(){
 
-
-
-        return  null;
-    }
 
 }
 
