@@ -1,5 +1,8 @@
 package com.server.nestlibrary.service;
 
+import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.CommentDTO;
@@ -42,6 +45,7 @@ public class PostService {
     private final QPostLike qPostLike = QPostLike.postLike;
     private final QPost qPost = QPost.post;
     private final QUser qUser = QUser.user;
+    private final QComment qComment = QComment.comment;
 
     public Post postCodeByPost(int postCode){
         return postDAO.findById(postCode).orElse(null);
@@ -111,7 +115,7 @@ public class PostService {
                             .channelCode(p.getChannel().getChannelCode())
                     .postViews(p.getPostViews())
                     .user(UserDTO.builder().userNickname(userVo.getUserNickname())
-                                    .userImg(userVo.getUserImgUrl())
+                                    .userImgUrl(userVo.getUserImgUrl())
                                     .userEmail(userVo.getUserEmail()).build())
                     .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
                     .commentCount(commentService.commentCount(p.getPostCode()))
@@ -124,7 +128,7 @@ public class PostService {
         return dtoList;
 
     }
-    // 인기글 카운트  
+    // 인기글 카운트
     public int bestPostCount(int channelCode, String target, String keyword){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
@@ -143,51 +147,34 @@ public class PostService {
 
     }
     // 해당 채널의 인기 글
-    public List<PostDTO> channelCodeByBestPost(int channelCode, Paging paging, String target, String keyword){
+
+    public List<PostDTO> channelCodeByBestPost(int channelCode, Paging paging, String target, String keyword) {
         List<PostDTO> dtoList = new ArrayList<>();
+
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
                 .where(qPost.channel.channelCode.eq(channelCode));
-        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
-            if(target.equals("title")){ // 제목이 포함된게시글
+
+        // 검색 조건 추가
+        if (target != null && !target.isEmpty() && keyword != null && !keyword.isEmpty()) {
+            if (target.equals("title")) {
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
-            }else if(target.equals("content")){// 내용이 포함된게시글
+            } else if (target.equals("content")) {
                 query.where(qPost.postContent.containsIgnoreCase(keyword));
-            }else if(target.equals("user")){ // 작성자가
+            } else if (target.equals("user")) {
                 query.where(qUser.userNickname.containsIgnoreCase(keyword));
             }
         }
 
-        List<Post> voList =  query
-                .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-                .offset(paging.getOffset()) //
-                .limit(paging.getLimit()) //10개씩
-                .fetch();
-        for(Post p : voList){
-            User userVo = userDAO.findById(p.getUserEmail()).get();
-            // 문제 생기면 알려주세요 (2024.10.18)
-            dtoList.add(PostDTO.builder()
-                    .postCreatedAt(p.getPostCreatedAt())
-                    .postTitle(p.getPostTitle())
-                    .postContent(p.getPostContent())
-                    .postCode(p.getPostCode())
-                    .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
-                    .channelCode(p.getChannel().getChannelCode())
-                    .postViews(p.getPostViews())
-                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
-                            .userImg(userVo.getUserImgUrl())
-                            .userEmail(userVo.getUserEmail()).build())
-                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
-                    .commentCount(commentService.commentCount(p.getPostCode()))
-                    .build());
+        // 점수 계산을 위한 쿼리
 
-        }
-        if(dtoList.size() == 0){
-            return null;
-        }
         return dtoList;
-
     }
+
+
+
+
+
     // 채널 태그별 게시글
     public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword){
         // 문제 생기면 알려주세요 (2024.10.18)
@@ -221,7 +208,7 @@ public class PostService {
                             .channelCode(p.getChannel().getChannelCode())
                     .postViews(p.getPostViews())
                     .user(UserDTO.builder().userNickname(userVo.getUserNickname())
-                            .userImg(userVo.getUserImgUrl())
+                            .userImgUrl(userVo.getUserImgUrl())
                             .userEmail(userVo.getUserEmail()).build())
                     .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
                     .commentCount(commentService.commentCount(p.getPostCode()))
@@ -259,13 +246,13 @@ public class PostService {
                 .channelCode(vo.getChannel().getChannelCode())
                 .postViews(vo.getPostViews())
                 .user(UserDTO.builder().userNickname(user.getUserNickname())
-                        .userImg(user.getUserImgUrl())
+                        .userImgUrl(user.getUserImgUrl())
                         .userEmail(user.getUserEmail()).build())
                 .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postCode)).fetch().size())
                 .commentCount(commentService.commentCount(postCode))
                 .build();
        // 작성자, 게시글 , 좋아요 숫자 리턴
-        
+
         return dto;
     }
     // 게시글 작성,수정
@@ -340,7 +327,6 @@ public class PostService {
         }
         return null;
     }
-
 
 
 

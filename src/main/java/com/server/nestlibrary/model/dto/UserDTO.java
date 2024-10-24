@@ -20,8 +20,8 @@ public class UserDTO {
     private String userNickname; // 닉네임
 
 
-    private MultipartFile userImgUrl; // 프로필 사진
-    private String userImg;
+    private MultipartFile userImg; // 프로필 사진
+    private String userImgUrl;
 
 
     private int userPoint; // 유저 포인트

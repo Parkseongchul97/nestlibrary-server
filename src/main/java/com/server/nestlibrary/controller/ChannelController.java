@@ -278,10 +278,8 @@ public class ChannelController {
         Path directoryPath = Paths.get("\\\\\\\\192.168.10.51\\\\nest\\\\channel\\" + String.valueOf(channel.getChannelCode()) + "\\");
         Files.createDirectories(directoryPath);
         channel.setChannelImgUrl(fileUpload(dto.getChannelImg(), channel.getChannelCode())); // 이미지 추가
-
         Channel result = channelService.createChannel(channel);
-
-        return ResponseEntity.ok(channel);
+        return ResponseEntity.ok(result);
     }
 
     // 채널 태그 추가

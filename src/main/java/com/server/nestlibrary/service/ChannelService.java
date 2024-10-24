@@ -11,6 +11,7 @@ import com.server.nestlibrary.repo.ChannelDAO;
 import com.server.nestlibrary.repo.ChannelTagDAO;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ChannelService {
     @Autowired
@@ -101,9 +103,8 @@ public class ChannelService {
 
     // 채널 생성 메서드 (반환 : 채널)
     public Channel createChannel(Channel vo){
-
         User user = userService.getLoginUser();
-        if(user.getUserPoint() < 3000 && vo.getChannelCode() == 0){
+        if(user.getUserPoint() < 3000 && vo.getChannelCode()==0){
             return null; // 포인트 부족
         }
         Channel chan = channelDAO.save(vo);

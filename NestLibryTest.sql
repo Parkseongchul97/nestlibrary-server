@@ -29,13 +29,55 @@ where channel_code = 6; -- 22개
 SELECT 
 	post_title
     post_views, 
-    likes, 
-    comments, 
+    post_like_code, 
+    comment_code, 
     (post_views * 0.5 + count(post_like_code) * 0.3 + count(comment_code) * 0.2) AS best 
-FROM posts 
-join post_like on (posts.post_code = post_like.post_code)
-join comment on (posts.post_code = comment.post_code)
+FROM post 
+join post_like on (post.post_code = post_like.post_code)
+join comment on (post.post_code = comment.post_code)
+group by post_like_code, comment_code, post_views
 ORDER BY best DESC ;
+
+select  post.post_code, post_views, count(*),  count(post_like_code)
+from post
+left join post_like on (post.post_code = post_like.post_code)
+left join comment on (post.post_code = comment.post_code)
+where post.channel_code = 6
+group by post.post_code, post_views, comment_code, post_like_code;
+
+-- 채널 6의 댓글수 
+select post_code, post_title, count(post_code) as "댓글수"
+from comment
+join post USING (post_code)
+where channel_code = 6
+group by post_code;
+
+-- 채널 6의 게시글의 추천수
+SELECT p.post_code,p.post_title, COUNT(pl.post_like_code) AS like_count
+FROM post p
+JOIN post_like pl ON p.post_code = pl.post_code
+where channel_code = 6
+GROUP BY p.post_code
+ORDER BY like_count DESC;
+
+SELECT p.post_code ,p.post_title,
+	p.post_views as 조회수,
+    COUNT(DISTINCT c.comment_code) AS 댓글수, 
+    COUNT(DISTINCT pl.post_like_code) AS 추천수,
+    (COUNT(DISTINCT c.comment_code) * 2 + COUNT(DISTINCT pl.post_like_code) *5 + p.post_views) 점수
+FROM post p
+LEFT JOIN comment c ON p.post_code = c.post_code
+LEFT JOIN post_like pl ON p.post_code = pl.post_code
+WHERE p.channel_code = 6
+GROUP BY p.post_code, p.post_title, p.post_views
+ORDER BY 6 desc;
+
+select * 
+from channel
+left join post on(channel.channel_code = post.channel_code)
+left join post_like on (post.post_code = post_like.post_code)
+left join comment on (post.post_code = comment.post_code);
+
 
 select * from post where channel_code = 15; -- 182개
 select * from channel; -- 15
@@ -64,3 +106,31 @@ values("제목1", "제목1", "asd",
  
  select * from channel left join management using(channel_code);
  select * from channel join management using(channel_code);
+ 
+ SELECT 
+    p.post_code,
+    p.post_title,
+    p.post_views AS 조회수,
+    COUNT(DISTINCT CASE WHEN c.comment_parents_code = 0 THEN c.comment_code END) AS 댓글수, 
+    COUNT(DISTINCT pl.post_like_code) AS 추천수,
+    (COUNT(DISTINCT CASE WHEN c.comment_parents_code = 0 THEN c.comment_code END) * 2 + COUNT(DISTINCT pl.post_like_code) * 5 + p.post_views) AS 점수
+FROM post p
+LEFT JOIN comment c ON p.post_code = c.post_code
+LEFT JOIN post_like pl ON p.post_code = pl.post_code
+WHERE p.channel_code = 6
+GROUP BY p.post_code, p.post_title, p.post_views
+HAVING 점수 > 50
+ORDER BY 점수 DESC;
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
