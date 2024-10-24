@@ -228,7 +228,6 @@ public class ChannelController {
         Files.createDirectories(directoryPath);
         channel.setChannelImgUrl(fileUpload(dto.getChannelImgUrl(), channel.getChannelCode())); // 이미지 추가
         Channel result = channelService.createChannel(channel);
-        log.info("message : " + channel);
         return ResponseEntity.ok(result);
     }
 

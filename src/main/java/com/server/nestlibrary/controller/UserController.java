@@ -114,7 +114,7 @@ public class UserController {
         // 이미지 변경여부 -1(변경X), 0(변경), 1(이미지 삭제)
         if(dto.getChangeImg()== 0){// 변경하는경우 기존 id의 저장된 파일 삭제후 새로운 파일 업로드하고 저장
             fileDelete(auth.getUserImgUrl(), auth.getUserEmail());
-            vo.setUserImgUrl(fileUpload(dto.getUserImgUrl(), auth.getUserEmail()));
+            vo.setUserImgUrl(fileUpload(dto.getUserImg(), auth.getUserEmail()));
             vo.setUserPoint(vo.getUserPoint()-100); // 이미지변경했으니 포인트 차감
         } else if (dto.getChangeImg()==  1) { // 이미지 삭제후 저장
             fileDelete(auth.getUserImgUrl(), auth.getUserEmail());

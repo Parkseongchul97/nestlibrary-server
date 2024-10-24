@@ -94,7 +94,7 @@ public class CommentController {
                 .commentCode(c.getCommentCode())
                 .commentCreatedAt(c.getCommentCreatedAt())
                 .postCode(c.getPostCode())
-                .user(UserDTO.builder().userEmail(vo.getUserEmail()).userNickname(vo.getUserNickname()).userImg(vo.getUserImgUrl()).build())
+                .user(UserDTO.builder().userEmail(vo.getUserEmail()).userNickname(vo.getUserNickname()).userImgUrl(vo.getUserImgUrl()).build())
                 .commentContent((c.getCommentContent())).build();
     }
 }

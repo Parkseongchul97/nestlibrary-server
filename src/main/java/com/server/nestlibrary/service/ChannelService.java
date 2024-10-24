@@ -100,13 +100,14 @@ public class ChannelService {
     }
     // 채널 생성 메서드 (반환 : 채널)
     public Channel createChannel(Channel vo){
+
+        User user = userService.getLoginUser();
+        if(user.getUserPoint() < 3000){
+            return null; // 포인트 부족
+        }
         Channel chan = channelDAO.save(vo);
         // 해당 채널에 게시판 태그가 0개면
         if(tagDAO.findByChannelCode(chan.getChannelCode()).size() == 0){
-            User user = userService.getLoginUser();
-            if(user.getUserPoint() < 3000){
-                return null; // 포인트 부족
-            }
             user.setUserPoint(user.getUserPoint()-3000);
             userDAO.save(user); // 포인트 소모
             

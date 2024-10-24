@@ -57,7 +57,7 @@ public class ManagementService {
             User vo = userDAO.findById(m.getUserEmail()).get();
             userList.add(UserDTO.builder()
                             .userEmail(vo.getUserEmail())
-                            .userImg(vo.getUserImgUrl())
+                            .userImgUrl(vo.getUserImgUrl())
                             .userNickname(vo.getUserNickname())
                             .build());
         }
