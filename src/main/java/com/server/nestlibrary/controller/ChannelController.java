@@ -75,15 +75,35 @@ public class ChannelController {
     public ResponseEntity allChannel(@RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "keyword", required = false) String keyword) {
 
         BooleanBuilder builder = new BooleanBuilder();
-        // 쿼리 반복부분
-        List<Channel> channels = new ArrayList<>();
-        if (keyword != null && keyword != "") { // 검색어가 있는경우
-            BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
-            channels = channelJPAQuery(page).where(qChannel.channelName.like("%" + keyword + "%")).fetch();
-            builder.and(expression);
-        } else {  // 검색어가 없는경우
-            channels = channelJPAQuery(page).fetch();
+        // 임시
+        Pageable pageable = PageRequest.of(page - 1, 4);
+        List<Tuple> channelQuery = new ArrayList<>();
+        if(keyword != null && keyword != "") {
+
+            channelQuery = channelJPAQuery(page).where(qChannel.channelName.like("%" + keyword + "%")).fetch();
+        }else {
+
+            channelQuery = channelJPAQuery(page).fetch();
+
+
         }
+            List<Integer> channelCodes = new ArrayList<>();
+
+          for(int i=0; i< channelQuery.size(); i++){
+
+              channelCodes.add(channelQuery.get(i).get(0, Integer.class));
+          }
+
+
+
+        List<Channel> channels = new ArrayList<>();
+
+        for(int i=0; i<channelCodes.size(); i++){
+
+            channels.add(channelService.findChannel(channelCodes.get(i))) ;
+        }
+
+
         List<ChannelPostDTO> dtoList = new ArrayList<>(); // 최종적으로 뽑을 dto리스트 생성
         for (Channel c : channels) { // 채널 코드로 post vo list 10개
             List<Post> posts = byChannelCode(c.getChannelCode());
@@ -104,20 +124,40 @@ public class ChannelController {
 
         BooleanBuilder builder = new BooleanBuilder();
         Pageable pageable = PageRequest.of(page - 1, 4);;
-        List<Channel> channels = new ArrayList<>();
-        if (keyword != null && keyword != "") {
-            BooleanExpression expression = qChannel.channelName.like("%" + keyword + "%");
-            builder.and(expression);
-            channels = channelJPAQuery(page).where(qChannel.channelName.like("%" + keyword + "%"))
-                                            .where(qManagement.managementUserStatus.eq("sub"))
-                                            .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail())).fetch();
-        } else {
-            channels = channelJPAQuery(page)
-                        .where(qManagement.managementUserStatus.eq("sub"))
-                        .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail()))
-                        .fetch();
+
+
+        List<Tuple> channelQuery = new ArrayList<>();
+
+     if(keyword != null && keyword != ""){
+         channelJPAQuery(page).where(qChannel.channelName.like("%" + keyword + "%"))
+                 .where(qManagement.managementUserStatus.eq("sub"))
+                 .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail())).fetch();
+     }else {
+         channelJPAQuery(page)
+                 .where(qManagement.managementUserStatus.eq("sub"))
+                 .where(qManagement.userEmail.eq(userService.getLoginUser().getUserEmail()))
+                 .fetch();
+
+     }
+
+        List<Integer> channelCodes = new ArrayList<>();
+
+        for(int i=0; i< channelQuery.size(); i++){
+
+            channelCodes.add(channelQuery.get(i).get(0, Integer.class));
         }
+
+        List<Channel> channels = new ArrayList<>();
+
+        for(int i=0; i<channelCodes.size(); i++){
+
+            channels.add(channelService.findChannel(channelCodes.get(i))) ;
+        }
+
+
         List<ChannelPostDTO> dtoList = new ArrayList<>(); // 최종적으로 뽑을 dto리스트 생성
+
+
         for (Channel c : channels) { // 채널 코드로 post vo list 10개
             List<Post> posts = byChannelCode(c.getChannelCode());
             List<PostDTO> postDTOs = new ArrayList<>();
@@ -356,29 +396,13 @@ public class ChannelController {
             f.delete();
         }
     }
-    public JPAQuery<Channel> channelJPAQuery(int page){
+    public JPAQuery<Tuple> channelJPAQuery(int page){
+
         Pageable pageable = PageRequest.of(page - 1, 4);
 
 
 
-
-       // 채널코드랑 구독자수를 가지고 있는거
-        JPAQuery<Tuple> subQuery = queryFactory
-                .select(qManagement.channel.channelCode, qManagement.count())
-                .from(qManagement)
-                .where(qManagement.managementUserStatus.eq("sub"))
-                .groupBy(qManagement.channel.channelCode);
-
-        ;
-        /*
-        * SELECT
-	channel_code, channel_name,
-    (SELECT count(*) FROM management WHERE management_user_status = 'sub' AND channel_code = c.channel_code GROUP BY channel_code) as sub_count,
-    (SELECT count(*) FROM post WHERE channel_code = c.channel_code GROUP BY channel_code) as post_count
-FROM channel c
-ORDER BY sub_count DESC, post_count ASC
-        * */
-        List<Tuple> channelQuery = queryFactory.select(qChannel.channelCode,
+        JPAQuery<Tuple> channelQuery = queryFactory.select(qChannel.channelCode,
                 ExpressionUtils.as(JPAExpressions.select(qManagement.count())
                         .from(qManagement)
                         .where(qManagement.managementUserStatus.eq("sub"))
@@ -390,40 +414,12 @@ ORDER BY sub_count DESC, post_count ASC
                         .groupBy(qPost.channel.channelCode), "post_count")
                 ).from(qChannel).orderBy(Expressions.stringPath("sub_count").desc())
                 .orderBy(Expressions.stringPath("post_count").desc())
-                .fetch();
-
-      // 채널코드랑 게시물수를 가지고 있는거
-        JPAQuery<Tuple> postQuery = queryFactory
-                .select(qPost.channel.channelCode, qPost.count())
-                .from(qPost)
-                .groupBy(qPost.channel.channelCode);
-
-       // List<Channel> chanQuery = queryFactory
-         //       .selectFrom(qChannel)
-           //     .leftJoin(ExpressionUtils.as(JPAExpressions.select(qManagement.channel.channelCode, qManagement.count())
-             //           .from(qManagement)
-               //         .where(qManagement.managementUserStatus.eq("sub"))
-                //        .groupBy(qManagement.channel.channelCode), "subscribe"))
-
-//                .leftJoin(postQuery).on(qChannel.channelCode.eq())
-
-  //              .fetch();
-
-
-
-
-
-
-
-
-        return queryFactory.selectFrom(qChannel)
-                .join(qManagement).on(qManagement.channel.eq(qChannel))
-                .leftJoin(qPost).on(qPost.channel.eq(qChannel))
-                .groupBy(qChannel.channelCode)
-                .orderBy(qManagement.count().desc())
-                .orderBy(qPost.count().desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
+
+        return channelQuery;
+
+
     }
     public List<Post> byChannelCode(int channelCode){
         return queryFactory.selectFrom(qPost)
