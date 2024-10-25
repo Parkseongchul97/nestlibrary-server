@@ -197,9 +197,15 @@ public class ManagementService {
         return managementDAO.findGrade(userEmail,channelCode);
     }
 
-    public void setRole(Management vo){
 
-        managementDAO.save(vo);
+
+
+
+
+
+    public Management setRole(Management vo){
+
+      return managementDAO.save(vo);
 
     }
 

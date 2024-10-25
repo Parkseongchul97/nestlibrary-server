@@ -67,76 +67,46 @@ public class ManagementController {
         return ResponseEntity.ok(list);
     }
 
-    // 유저 등급 변환
-    @PutMapping("/private/subscribe/role")
-      public ResponseEntity changeGrade (@RequestBody UserRoleDTO userRoleDTO){
-        int days = userRoleDTO.getBanDate()-1;
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime newDate = now.plusDays(days);
-        userRoleDTO.setManagementDeleteAt(newDate);
-        log.info("바꿀값" + userRoleDTO);
 
-      Management vo = userGrade(userRoleDTO.getChannelCode(), userRoleDTO.getUserEmail());
-       log.info("바꾸기전 " + vo);
-      // 벤할껀데 관리자면
-        if(vo != null) {
-            if (userRoleDTO.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("admin")) {
-                log.info("벤할껀데 관리자");
-                vo.setManagementUserStatus("ban");
-                vo.setManagementDeleteAt(newDate);
-                managementService.setRole(vo);
-                return ResponseEntity.ok(vo);
-            }
-            // 벤 기간 연장시
-            if (userRoleDTO.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("ban") &&userRoleDTO.getBanDate() != -1) {
-                log.info("벤할껀데 이미벤");
-                vo.setManagementDeleteAt(vo.getManagementDeleteAt().plusDays(userRoleDTO.getBanDate()));
-                managementService.setRole(vo);
-                return ResponseEntity.ok(vo);
-            }
-            // 벤을 풀꺼면
-            if(userRoleDTO.getBanDate() == -1 &&  vo.getManagementUserStatus().equals("ban")){
-                managementService.removeRole(vo);
-                return ResponseEntity.ok(vo);
-            }
-           // 관리자 박탈
-            if(userRoleDTO.getManagementUserStatus().equals("admin") && vo.getManagementUserStatus().equals("admin")){
+   @PostMapping("/private/role")
+   public  ResponseEntity addRole(@RequestBody ManagementDTO dto){
+           
+           dto.setManagementDeleteAt(LocalDateTime.now().plusDays(dto.getBanDate()-1));
+           Management vo  = userGrade( dto.getChannelCode(), dto.getUserEmail());
 
-                managementService.removeRole(vo);
+       if( vo != null){ // 이미 관리 정보가 있음
+           // 관리자를 벤
+           if (dto.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("admin")) {
+               vo.setManagementUserStatus("ban");
+               vo.setManagementDeleteAt(dto.getManagementDeleteAt());
+               managementService.setRole(vo);
+               return ResponseEntity.ok(vo);
+               // 2번 벤
+           } else if (dto.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("ban") &&dto.getBanDate() != -1) {
+               vo.setManagementDeleteAt(vo.getManagementDeleteAt().plusDays(dto.getBanDate()-1));
+               managementService.setRole(vo);
+               return ResponseEntity.ok(vo);
+           }else{// 호스트 이양
+               return ResponseEntity.ok(null);
+           }
+       }else {// 그냥 추가
+               return  ResponseEntity.ok(managementService.setRole(Management.builder()
+                       .channel(channelService.findChannel(dto.getChannelCode()))
+                       .managementDeleteAt(dto.getManagementDeleteAt() != null? dto.getManagementDeleteAt() : null)
+                       .managementUserStatus(dto.getManagementUserStatus())
+                       .userEmail(dto.getUserEmail())
+                       .build()));
 
-            }
+       }
 
 
+   }
 
-        }else if (userRoleDTO.getManagementUserStatus().equals("ban") &&  vo == null){
-            log.info("벤할껀데 구독자 or 일반인");
-            Management m = new Management();
-            m.setUserEmail(userRoleDTO.getUserEmail());
-            m.setManagementDeleteAt(userRoleDTO.getManagementDeleteAt());
-            m.setManagementUserStatus("ban");
-            m.setChannel(channelService.findChannel(userRoleDTO.getChannelCode()));
-            managementService.setRole(m);
-
-            return  ResponseEntity.ok(m);
-        }
-
-
-        if(userRoleDTO.getManagementUserStatus().equals("admin") && vo == null){
-          log.info("관리자");
-          Management m = new Management();
-          m.setUserEmail(userRoleDTO.getUserEmail());
-          m.setManagementUserStatus("admin");
-          m.setChannel(channelService.findChannel(userRoleDTO.getChannelCode()));
-          managementService.setRole(m);
-          return  ResponseEntity.ok(m);
-      }
-
-
-
-
-
-        return  ResponseEntity.ok(null);
-    }
+   @DeleteMapping("/private/role/{managementCode}")
+   public ResponseEntity removeRole(@PathVariable(name = "managementCode") int managementCode) {
+        managementService.remove(managementCode);
+      return ResponseEntity.ok(null);
+   }
 
     @GetMapping("/grade/{channelCode}/{userEmail}")
     public ResponseEntity targetUserGrade(@PathVariable(name = "channelCode") int channelCode, @PathVariable(name = "userEmail")String userEmail) {
