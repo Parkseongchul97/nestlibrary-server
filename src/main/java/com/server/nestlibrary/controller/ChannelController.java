@@ -397,15 +397,12 @@ public class ChannelController {
                 vo.setChannel(channelService.findChannel(channelCode));
                 vo.setUserEmail(userEmail);
 
-
                 return ResponseEntity.ok(vo);
             }
         }
-
         vo.setManagementUserStatus(null);
         vo.setChannel(channelService.findChannel(channelCode));
         vo.setUserEmail(userEmail);
-
 
         return ResponseEntity.ok(vo);
     }
