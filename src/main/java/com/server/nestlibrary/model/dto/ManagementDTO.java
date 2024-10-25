@@ -2,9 +2,14 @@ package com.server.nestlibrary.model.dto;
 
 import com.server.nestlibrary.model.vo.Channel;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@AllArgsConstructor@NoArgsConstructor@Builder@Data
 public class ManagementDTO {
 
     private int managementCode;  //채널 관리 코드
