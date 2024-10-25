@@ -67,14 +67,46 @@ public class ManagementController {
         return ResponseEntity.ok(list);
     }
 
-    @PutMapping("/private/subscribe/role")
-      public ResponseEntity changeGrade (@RequestBody UserRoleDTO userRoleDTO){
-        int days = userRoleDTO.getBanDate();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime newDate = now.plusDays(days);
-        userRoleDTO.setManagementDeleteAt(newDate);
-        return  ResponseEntity.ok(null);
-    }
+
+   @PostMapping("/private/role")
+   public  ResponseEntity addRole(@RequestBody ManagementDTO dto){
+           
+           dto.setManagementDeleteAt(LocalDateTime.now().plusDays(dto.getBanDate()-1));
+           Management vo  = userGrade( dto.getChannelCode(), dto.getUserEmail());
+
+       if( vo != null){ // 이미 관리 정보가 있음
+           // 관리자를 벤
+           if (dto.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("admin")) {
+               vo.setManagementUserStatus("ban");
+               vo.setManagementDeleteAt(dto.getManagementDeleteAt());
+               managementService.setRole(vo);
+               return ResponseEntity.ok(vo);
+               // 2번 벤
+           } else if (dto.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("ban") &&dto.getBanDate() != -1) {
+               vo.setManagementDeleteAt(vo.getManagementDeleteAt().plusDays(dto.getBanDate()-1));
+               managementService.setRole(vo);
+               return ResponseEntity.ok(vo);
+           }else{// 호스트 이양
+               return ResponseEntity.ok(null);
+           }
+       }else {// 그냥 추가
+               return  ResponseEntity.ok(managementService.setRole(Management.builder()
+                       .channel(channelService.findChannel(dto.getChannelCode()))
+                       .managementDeleteAt(dto.getManagementDeleteAt() != null? dto.getManagementDeleteAt() : null)
+                       .managementUserStatus(dto.getManagementUserStatus())
+                       .userEmail(dto.getUserEmail())
+                       .build()));
+
+       }
+
+
+   }
+
+   @DeleteMapping("/private/role/{managementCode}")
+   public ResponseEntity removeRole(@PathVariable(name = "managementCode") int managementCode) {
+        managementService.remove(managementCode);
+      return ResponseEntity.ok(null);
+   }
 
     @GetMapping("/grade/{channelCode}/{userEmail}")
     public ResponseEntity targetUserGrade(@PathVariable(name = "channelCode") int channelCode, @PathVariable(name = "userEmail")String userEmail) {

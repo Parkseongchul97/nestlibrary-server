@@ -20,5 +20,7 @@ public class ManagementDTO {
 
     private int channelCode;
 
+    private int banDate;
+
     private String userEmail; // 해당 유저 FOREIGN_KEY
 }

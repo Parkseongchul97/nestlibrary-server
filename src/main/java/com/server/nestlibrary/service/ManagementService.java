@@ -173,7 +173,7 @@ public class ManagementService {
 
         return managementDAO.count(channelCode);
     }
-
+/*
     public void changeGrade(UserRoleDTO userRoleDTO){
 
         //
@@ -189,12 +189,30 @@ public class ManagementService {
 
         }
 
-    }
+    }*/
 
     public List<Management> getGrade(String userEmail, int channelCode){
 
 
         return managementDAO.findGrade(userEmail,channelCode);
+    }
+
+
+
+
+
+
+
+    public Management setRole(Management vo){
+
+      return managementDAO.save(vo);
+
+    }
+
+    public void removeRole(Management vo){
+
+        managementDAO.deleteById(vo.getManagementCode());
+
     }
 
 

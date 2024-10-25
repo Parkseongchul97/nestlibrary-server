@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Data
 public class UserRoleDTO {
 
+
     private String userEmail;
     private String managementUserStatus;
     private int channelCode;
