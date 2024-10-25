@@ -3,10 +3,7 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.server.nestlibrary.model.dto.ChannelDTO;
-import com.server.nestlibrary.model.dto.SubscribeChannelDTO;
-import com.server.nestlibrary.model.dto.UserDTO;
-import com.server.nestlibrary.model.dto.UserRoleDTO;
+import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
@@ -35,6 +32,17 @@ public class ManagementService {
 
 
     private final QManagement qManagement = QManagement.management;
+
+    public List<Management> findChannelManagement(int channelCode){
+        return queryFactory.select(qManagement)
+                .where(qManagement.channel.channelCode.eq(channelCode))
+                .orderBy(
+                        Expressions.numberTemplate(Integer.class,
+                                        "case when {0} = {1} then {2} else {3} end",
+                                        qManagement.managementUserStatus, "host", 1, 2)
+                                .asc()
+                ).fetch();
+    }
 
 
 

@@ -1,10 +1,13 @@
 package com.server.nestlibrary.controller;
 
-import com.server.nestlibrary.model.dto.ChannelDTO;
-import com.server.nestlibrary.model.dto.SubscribeChannelDTO;
-import com.server.nestlibrary.model.dto.UserRoleDTO;
+import com.server.nestlibrary.model.dto.*;
+import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.Management;
+import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.service.ChannelService;
 import com.server.nestlibrary.service.ManagementService;
+import com.server.nestlibrary.service.PostService;
+import com.server.nestlibrary.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -22,6 +26,12 @@ public class ManagementController {
 
     @Autowired
     private ManagementService managementService;
+    @Autowired
+    private PostService postService;
+    @Autowired
+    private ChannelService channelService;
+    @Autowired
+    private UserService userService;
 
      // 구독하기
     @PostMapping("private/subscribe")
@@ -59,35 +69,49 @@ public class ManagementController {
 
     @PutMapping("/private/subscribe/role")
       public ResponseEntity changeGrade (@RequestBody UserRoleDTO userRoleDTO){
-
-
-
-
-
         int days = userRoleDTO.getBanDate();
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime newDate = now.plusDays(days);
-
         userRoleDTO.setManagementDeleteAt(newDate);
-
-
-
-        log.info("등급바꾸기 컨트롤러 " + userRoleDTO);
-
-        // 경우
-        //  sub or 아무것도 아닌 사람이 벤  => 그냥 management에 추가만 하면됨
-        // admin인 사람이 벤 => 그 사람이 어드민인 기록 삭제 후  ban 추가
-        //  ban인 사람이 벤 => 음 그냥 save하면 될거같은데 dao찾아서
-        // 일단 여기서 구한 값을 service로 넘겨주면?
-
-
-
-
-
         return  ResponseEntity.ok(null);
     }
 
+    @GetMapping("/{channelCode}/{userEmail}")
+    public ResponseEntity targetUserGrade(@PathVariable(name = "channelCode") int channelCode, @PathVariable(name = "userEmail")String userEmail) {
 
-
-
+        return  ResponseEntity.ok(userGrade(channelCode,userEmail));
+    }
+    // 포스트 코드로 해당 채널의 나의 등급
+    @GetMapping("/private/grade/{postCode}")
+    public ResponseEntity findUserGrade(@PathVariable(name = "postCode") int postCode) {
+        // 포스트 코드를 받아서 무슨 채널인지 찾아야함
+        Channel chan = channelService.findChannel(postService.postCodeByChannel(postCode));
+        // 없으면 null 반환 있으면 등급반환
+        return ResponseEntity.ok(userGrade(chan.getChannelCode(),channelService.getLoginUser()));
+    }
+    // 채널코드, 유저 이메일 받아서 메니지먼트 객체 반환
+    public Management userGrade(int channelCode, String userEmail){
+        List<Management> channelList = managementService.findChannelManagement(channelCode);
+            List<Management> myList = new ArrayList<>();
+                for(Management m : channelList){
+                if (m.getUserEmail().equals(userEmail)){
+                    myList.add(m);
+                }
+            }if(myList.size()== 0){
+                return null;
+            }
+                for (Management m: myList){
+                    if(m.getManagementUserStatus().equals("host")) return m;
+                    else if(m.getManagementUserStatus().equals("ban")) return m;
+                    else if(m.getManagementUserStatus().equals("admin")) return m;
+                 }
+                return null;
+        }
 }
+
+
+
+
+
+
+
