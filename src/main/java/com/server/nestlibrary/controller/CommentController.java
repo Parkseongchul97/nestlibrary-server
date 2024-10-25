@@ -3,10 +3,10 @@ package com.server.nestlibrary.controller;
 import com.server.nestlibrary.model.dto.CommentDTO;
 import com.server.nestlibrary.model.dto.CommentListDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
-import com.server.nestlibrary.model.vo.Comment;
-import com.server.nestlibrary.model.vo.Paging;
-import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.service.CommentService;
+import com.server.nestlibrary.service.PostService;
+import com.server.nestlibrary.service.PushService;
 import com.server.nestlibrary.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,22 +27,41 @@ public class CommentController {
     private CommentService commentService;
     @Autowired
     private  UserService userService;
+    @Autowired
+    private PostService postService;
+    @Autowired
+    private PushService pushService;
 
 
     // 댓글 추가
     @PostMapping("/private/comment")
     public ResponseEntity addComment(@RequestBody Comment vo){
         vo.setCommentCreatedAt(LocalDateTime.now());
-
         Comment com = commentService.addComment(vo);
-        log.info("체크 " + com);
-        if(com != null ){
+        if(com.getCommentParentsCode() == 0){ // 게시글 주인에게 알림
 
-            return ResponseEntity.ok(com);
+            Post post = postService.postCodeByPost(com.getPostCode()); // 게시글 주인
+            if(!userService.getLoginUser().getUserEmail().equals(post.getUserEmail()))// 내글에 내댓글 아니면
+            pushService.savePush(Push.builder()
+                    .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
+                    .pushMassage("게시글 " + post.getPostTitle() + "에 새로운 댓글이 달렸습니다!")
+                    .postCode(post.getPostCode()) // 주소링크용 링크용 글코드
+                    .userEmail(post.getUserEmail()) // 대상유저
+
+                    .build()) ;
+        }else{ // 부모 댓글 주인에게 알림
+            Comment comment = commentService.findComment(com.getCommentParentsCode()); // 상위 댓글 주인
+            if(!userService.getLoginUser().getUserEmail().equals(comment.getUserEmail()))// 내댓글에 내댓글 아니면
+            pushService.savePush(Push.builder()
+                    .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
+                    .pushMassage("댓글 " + comment.getCommentContent() + "에 새로운 댓글이 달렸습니다!")
+                    .postCode(comment.getPostCode()) // 주소링크용
+                    .userEmail(comment.getUserEmail()) // 대상유저
+                    .build());
+
         }
 
-
-        return   ResponseEntity.ok("실패");
+        return ResponseEntity.ok(com);
     }
 
     // 댓글 수정
