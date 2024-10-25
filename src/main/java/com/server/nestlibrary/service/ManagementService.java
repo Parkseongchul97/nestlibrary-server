@@ -34,14 +34,16 @@ public class ManagementService {
     private final QManagement qManagement = QManagement.management;
 
     public List<Management> findChannelManagement(int channelCode){
-        return queryFactory.select(qManagement)
-                .where(qManagement.channel.channelCode.eq(channelCode))
-                .orderBy(
-                        Expressions.numberTemplate(Integer.class,
-                                        "case when {0} = {1} then {2} else {3} end",
-                                        qManagement.managementUserStatus, "host", 1, 2)
-                                .asc()
-                ).fetch();
+
+       List<Management> list = queryFactory.selectFrom(qManagement)
+               .where(qManagement.channel.channelCode.eq(channelCode))
+
+
+               .fetch();
+
+
+
+        return  list;
     }
 
 
@@ -173,7 +175,7 @@ public class ManagementService {
 
         return managementDAO.count(channelCode);
     }
-
+/*
     public void changeGrade(UserRoleDTO userRoleDTO){
 
         //
@@ -189,12 +191,24 @@ public class ManagementService {
 
         }
 
-    }
+    }*/
 
     public List<Management> getGrade(String userEmail, int channelCode){
 
 
         return managementDAO.findGrade(userEmail,channelCode);
+    }
+
+    public void setRole(Management vo){
+
+        managementDAO.save(vo);
+
+    }
+
+    public void removeRole(Management vo){
+
+        managementDAO.deleteById(vo.getManagementCode());
+
     }
 
 
