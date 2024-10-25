@@ -82,21 +82,32 @@ public class ManagementController {
         if(vo != null) {
             if (userRoleDTO.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("admin")) {
                 log.info("벤할껀데 관리자");
-
-
-
                 vo.setManagementUserStatus("ban");
                 vo.setManagementDeleteAt(newDate);
                 managementService.setRole(vo);
                 return ResponseEntity.ok(vo);
             }
-            // 벤할껀데 이미 벤이면
-            if (userRoleDTO.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("ban")) {
+            // 벤 기간 연장시
+            if (userRoleDTO.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("ban") &&userRoleDTO.getBanDate() != -1) {
                 log.info("벤할껀데 이미벤");
                 vo.setManagementDeleteAt(vo.getManagementDeleteAt().plusDays(userRoleDTO.getBanDate()));
                 managementService.setRole(vo);
                 return ResponseEntity.ok(vo);
             }
+            // 벤을 풀꺼면
+            if(userRoleDTO.getBanDate() == -1 &&  vo.getManagementUserStatus().equals("ban")){
+                managementService.removeRole(vo);
+                return ResponseEntity.ok(vo);
+            }
+           // 관리자 박탈
+            if(userRoleDTO.getManagementUserStatus().equals("admin") && vo.getManagementUserStatus().equals("admin")){
+
+                managementService.removeRole(vo);
+
+            }
+
+
+
         }else if (userRoleDTO.getManagementUserStatus().equals("ban") &&  vo == null){
             log.info("벤할껀데 구독자 or 일반인");
             Management m = new Management();
@@ -117,7 +128,7 @@ public class ManagementController {
           m.setManagementUserStatus("admin");
           m.setChannel(channelService.findChannel(userRoleDTO.getChannelCode()));
           managementService.setRole(m);
-          return  ResponseEntity.ok(null);
+          return  ResponseEntity.ok(m);
       }
 
 
