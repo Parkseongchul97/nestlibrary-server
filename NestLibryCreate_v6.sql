@@ -42,6 +42,11 @@ CREATE TABLE management( --  채널 관리
 ALTER TABLE management ADD  FOREIGN KEY (user_email) REFERENCES user(user_email)
  ON DELETE CASCADE
  ON UPDATE CASCADE; -- 채널관리 -> 유저  참조
+ 
+ ALTER TABLE management ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE;
+ 
 ALTER TABLE channel_tag ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code)
  ON DELETE CASCADE
  ON UPDATE CASCADE; -- 채널태그 -> 채널 참조
@@ -109,11 +114,20 @@ CREATE TABLE messages( -- 쪽지
      messages_to_delete INT default(0) -- 삭제여부 수신자 삭제, 발신자 삭제
 );
 
+CREATE TABLE push( -- 알림
+	push_code INT AUTO_INCREMENT PRIMARY KEY, -- 쪽지 코드
+	user_email VARCHAR(50), -- 알림 대상자
+    post_code int, -- 링크용 글코드
+    push_massage TEXT, -- 푸쉬알람 메시지
+    push_created_at DATETIME DEFAULT CURRENT_TIMESTAMP -- 알림 생성 시간
+    -- isRead boolean default(false)   -- // 읽었냐?
+);
 
 select * from information_schema.table_constraints
 where CONSTRAINT_SCHEMA = 'nest';
--- ALTER TABLE management DROP FOREIGN KEY management_ibfk_2;
+ALTER TABLE push drop column isRead;
 
 -- alter table messages add column  messages_from_delete INT default(0)
 -- 쪽지는 관리 편하려고 참조 X  from , to 둘다 유저 eamil 참조
+select * from push;
 
