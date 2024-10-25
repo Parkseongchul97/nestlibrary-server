@@ -7,6 +7,7 @@ import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ManagementService {
 
@@ -35,15 +37,11 @@ public class ManagementService {
 
     public List<Management> findChannelManagement(int channelCode){
 
-       List<Management> list = queryFactory.selectFrom(qManagement)
-               .where(qManagement.channel.channelCode.eq(channelCode))
+        List<Management> list =  queryFactory.selectFrom(qManagement)
+                .where(qManagement.channel.channelCode.eq(channelCode))
+                .fetch();
 
-
-               .fetch();
-
-
-
-        return  list;
+        return list;
     }
 
 

@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
+@AllArgsConstructor@NoArgsConstructor@Builder@Data
 public class ManagementDTO {
 
     private int managementCode;  //채널 관리 코드

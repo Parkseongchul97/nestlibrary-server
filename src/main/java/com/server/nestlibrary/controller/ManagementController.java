@@ -127,19 +127,18 @@ public class ManagementController {
         return  ResponseEntity.ok(null);
     }
 
-    @GetMapping("/{channelCode}/{userEmail}")
+    @GetMapping("/grade/{channelCode}/{userEmail}")
     public ResponseEntity targetUserGrade(@PathVariable(name = "channelCode") int channelCode, @PathVariable(name = "userEmail")String userEmail) {
 
         return  ResponseEntity.ok(userGrade(channelCode,userEmail));
     }
     // 포스트 코드로 해당 채널의 나의 등급
-    @GetMapping("/private/grade/{postCode}")
-    public ResponseEntity findUserGrade(@PathVariable(name = "postCode") int postCode) {
+    @GetMapping("/private/grade/{channelCode}")
+    public ResponseEntity findUserGrade(@PathVariable(name = "channelCode") int channelCode) {
         // 포스트 코드를 받아서 무슨 채널인지 찾아야함
-        Channel chan = channelService.findChannel(postService.postCodeByChannel(postCode));
-        // 없으면 null 반환 있으면 등급반환
 
-        return ResponseEntity.ok(userGrade(chan.getChannelCode(),channelService.getLoginUser()));
+        // 없으면 null 반환 있으면 등급반환
+        return ResponseEntity.ok(userGrade(channelCode ,channelService.getLoginUser()) );
     }
     // 채널코드, 유저 이메일 받아서 메니지먼트 객체 반환
     public Management userGrade(int channelCode, String userEmail){
