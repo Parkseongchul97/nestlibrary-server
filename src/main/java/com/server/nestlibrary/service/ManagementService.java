@@ -44,6 +44,9 @@ public class ManagementService {
         return list;
     }
 
+    public Management findManagement (int managementCode){
+        return managementDAO.findById(managementCode).orElse(null);
+    }
 
 
 
