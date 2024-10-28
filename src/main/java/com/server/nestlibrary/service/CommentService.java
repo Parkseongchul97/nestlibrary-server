@@ -46,9 +46,9 @@ public class CommentService {
     // 댓글 추가
     public Comment addComment(Comment vo) {
        // 댓글로 -> 포스트 -> 채널코드
-        log.info("작성 댓글 정보 : " + vo);
+
         Post postVo = postService.postCodeByPost(vo.getPostCode());
-        log.info("postVO" + postVo);
+
         // 문제 생기면 알려주세요 (2024.10.18)
         if(managementService.findBan(postVo.getChannel().getChannelCode())!=null){
             // 해당 채널의 블랙리스트인경우

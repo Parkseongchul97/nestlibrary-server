@@ -33,7 +33,7 @@ public class PushService {
 
     // 알람추가
     public Push savePush(Push vo){
-        log.info("브이오 : " + vo);
+
         return pushDAO.save(vo);
     }
     // 알람 삭제
