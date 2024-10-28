@@ -111,7 +111,7 @@ CREATE TABLE messages( -- 쪽지
     messages_from_user VARCHAR(50), -- 발신자 
     messages_to_user VARCHAR(50), -- 수신자
     messages_from_delete INT default(0), -- 삭제여부 수신자 삭제, 발신자 삭제
-     messages_to_delete INT default(0) -- 삭제여부 수신자 삭제, 발신자 삭제
+	messages_to_delete INT default(0) -- 삭제여부 수신자 삭제, 발신자 삭제
 );
 
 CREATE TABLE push( -- 알림
@@ -130,4 +130,24 @@ ALTER TABLE push drop column isRead;
 -- alter table messages add column  messages_from_delete INT default(0)
 -- 쪽지는 관리 편하려고 참조 X  from , to 둘다 유저 eamil 참조
 select * from push;
+
+-- 알림 삭제
+CREATE EVENT remove_push
+ON SCHEDULE EVERY 5 minute
+DO
+  DELETE FROM push
+  WHERE push_created_at IS NOT NULL
+    AND push_created_at < NOW() - INTERVAL 3 day;
+    
+-- 벤 삭제    
+CREATE EVENT remove_ban
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_DATE + INTERVAL 1 DAY
+DO
+  DELETE FROM management
+  WHERE management_delete_at IS NOT NULL
+    AND management_delete_at <= NOW()
+    AND management_user_status = "ban";
+    
+    SHOW EVENTS ;  
 
