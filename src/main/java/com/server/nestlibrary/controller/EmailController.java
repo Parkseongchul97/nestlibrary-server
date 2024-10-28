@@ -22,7 +22,7 @@ public class EmailController {
     private EmailService emailService;
 
 
-
+ // 신규 가입시
     @GetMapping("/code")
     public ResponseEntity sendEmail(@RequestParam("userEmail") String userEmail) {
         User user =  userService.findUser(userEmail);
@@ -32,6 +32,18 @@ public class EmailController {
         // 이미 가입한 유저면 -1 리턴
         return ResponseEntity.status(HttpStatus.OK).body(-1);
     }
+
+  // 채널삭제시 이메일 인증 할때
+  // 신규 가입시
+  @GetMapping("/private/code")
+  public ResponseEntity sendCode(@RequestParam("userEmail") String userEmail) {
+        return ResponseEntity.status(HttpStatus.OK).body(emailService.sendEmailCode(userEmail));
+
+  }
+
+
+
+
 
     @GetMapping("/findPassword")
     public ResponseEntity newPassword(@RequestParam("userEmail") String userEmail) {
@@ -55,7 +67,6 @@ public class EmailController {
 
 
     }
-
 
 
     @PostMapping("/code")

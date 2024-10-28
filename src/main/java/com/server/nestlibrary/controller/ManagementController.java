@@ -70,7 +70,7 @@ public class ManagementController {
 
    @PostMapping("/private/role")
    public  ResponseEntity addRole(@RequestBody ManagementDTO dto){
-           
+
            dto.setManagementDeleteAt(LocalDateTime.now().plusDays(dto.getBanDate()-1));
            Management vo  = userGrade( dto.getChannelCode(), dto.getUserEmail());
 
@@ -87,6 +87,16 @@ public class ManagementController {
                managementService.setRole(vo);
                return ResponseEntity.ok(vo);
            }else{// 호스트 이양
+               //예전 호스트 정보
+               log.info("여기까지오나?" + dto);
+             UserDTO oldHost = managementService.findAdmin(dto.getChannelCode()).get(0);
+              Management oldVo = userGrade(dto.getChannelCode(), oldHost.getUserEmail());
+              //예전 호스트 삭제
+               managementService.remove(oldVo.getManagementCode());
+              // 신규 호스트
+              vo.setManagementUserStatus("host");
+              managementService.setRole(vo);
+
                return ResponseEntity.ok(null);
            }
        }else {// 그냥 추가
