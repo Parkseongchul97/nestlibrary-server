@@ -284,37 +284,27 @@ public class PostService {
 
 
     public int postPage(int postCode){
+        log.info("화면에서 받아온 코드 : " + postCode);
         Post vo = findByPostCode(postCode);
-        log.info("내가 선택한 포스트" + vo);
 
+        log.info("잘들어왔는지 확인 : " + vo.getPostCode());
         List<Post> list =  queryFactory
                 .selectFrom(qPost)
                 .where(qPost.channel.channelCode.eq(vo.getChannel().getChannelCode()))
                 .orderBy(qPost.postCreatedAt.desc()).fetch();
+        log.info("해당 채널 모든글 숫자 : " + list.size());
 
-        int num = 0;
-        for(int i = list.size() - 1; i >= 0; i--){
+        log.info("해당 채널 모든글 숫자 : " + list.size());
 
-            if (list.get(i).getPostCode()== postCode){
-                log.info("일치!!");
-                num = i;
-
-            }
-        }
-        log.info("i값 : " + num);
-        if((list.size() - 1) % 10 != 0){ // 전체 게시글 숫자가 0으로 안떨어지면
-
-            num = num/100+1;
-            log.info("이 게시글은 인덱스번호로 : " + num);
-        }else{
-
-            num = num/100;
-            log.info("이 게시글은 인덱스번호로 : " + num);
-        }
+        int index = list.indexOf(vo);
 
 
+        log.info("해당포스트 인덳스 "  + index);
+        int pageNum = index / 10 + (index % 10 == 0 ? 0 : 1);
+        log.info(postCode + " 게시글의 페이지  번호 : " + pageNum);
 
-        return num ;
+
+        return pageNum;
     }
 
 
@@ -383,6 +373,7 @@ public class PostService {
 
     }
     public Post findByPostCode(int postCode){
+
         return postDAO.findById(postCode).orElse(null);
     }
 

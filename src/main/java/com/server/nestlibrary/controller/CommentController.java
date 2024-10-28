@@ -86,7 +86,7 @@ public class CommentController {
     // 게시글 댓글 전체 보여주기 <- 페이징 처리 추가(부모댓글 숫자에 따라서)
     @GetMapping("/post/{postCode}/comment")
     public ResponseEntity viewComment(@PathVariable(name = "postCode")int postCode,@RequestParam(name = "comment_page" ,defaultValue = "1")int commentPage){
-        log.info("페이지 : " + commentPage);
+
         int totalCount = commentService.getTopCommentCount(postCode); // 총 상위댓글 숫자
         Paging paging = new Paging(commentPage, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
