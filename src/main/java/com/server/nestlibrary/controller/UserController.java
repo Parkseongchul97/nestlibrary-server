@@ -49,7 +49,6 @@ public class UserController {
 
         if(user != null){ // 회원이 있을시
             String token = tokenProvider.create(user); // 토큰 발행
-            log.info("token : " + token);
             user.setUserPassword(null);
             LoginUserDTO loginUser =  LoginUserDTO.builder()
                     .token(token)
@@ -63,7 +62,6 @@ public class UserController {
             return  ResponseEntity.ok(loginUser
                     );
         }
-        log.info("user : " + user);
         return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
 
@@ -89,7 +87,6 @@ public class UserController {
     public ResponseEntity findUser(@RequestParam(name = "userEmail") String userEmail){
 
         User user =  userService.findUser(userEmail); // 있으면 중복 이메일
-        log.info("유저" + user);
         if (user == null){
             // 해당 이메일 유저 X
             return  ResponseEntity.ok(null);
@@ -100,7 +97,6 @@ public class UserController {
 
     @PutMapping("/private/user/update")
     public  ResponseEntity updateUser(UserDTO dto) throws Exception {
-        log.info("디티오 : " + dto);
         User auth = userService.getLoginUser();
         User vo = new User()
                 .builder()
@@ -110,7 +106,6 @@ public class UserController {
                 .userInfo(dto.getUserInfo())
                 .userPoint( auth.getUserPoint())
                 .build();
-        log.info("변경전 유저" +vo );
         // 이미지 변경여부 -1(변경X), 0(변경), 1(이미지 삭제)
         if(dto.getChangeImg()== 0){// 변경하는경우 기존 id의 저장된 파일 삭제후 새로운 파일 업로드하고 저장
             fileDelete(auth.getUserImgUrl(), auth.getUserEmail());
@@ -151,19 +146,18 @@ public class UserController {
         User user = userService.findByNickname(nickname); // 있으면 중복 닉네임
         try {
         if (user == null) {
-            log.info("true 리턴");
+
             return ResponseEntity.ok(true); // 중복이 아님
         } else{
             User auth = userService.findUser(userEmail); // 로그인 유저 정보
-            log.info("로그인 유저 : " + auth);
+
         if (auth != null) {  // 중복이지만 업데이트 상황 (로그인 유저가 있음)
                 if (auth.getUserNickname().equals(nickname)) {// 로그인한 기존 회원의 닉네임과 변경사항이 같으면
-                    log.info("true 리턴");
+
                     return ResponseEntity.ok(true); // 기존 닉네임과 동일함
                 }
             }
 
-        log.info("false 리턴");
         return ResponseEntity.ok(false); // 닉네임이 중복임
             }
         } catch (Exception e) {

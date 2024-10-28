@@ -3,12 +3,11 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.server.nestlibrary.model.dto.ChannelDTO;
-import com.server.nestlibrary.model.dto.SubscribeChannelDTO;
-import com.server.nestlibrary.model.dto.UserDTO;
+import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.ManagementDAO;
 import com.server.nestlibrary.repo.UserDAO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ManagementService {
 
@@ -35,6 +35,18 @@ public class ManagementService {
 
     private final QManagement qManagement = QManagement.management;
 
+    public List<Management> findChannelManagement(int channelCode){
+
+        List<Management> list =  queryFactory.selectFrom(qManagement)
+                .where(qManagement.channel.channelCode.eq(channelCode))
+                .fetch();
+
+        return list;
+    }
+
+    public Management findManagement (int managementCode){
+        return managementDAO.findById(managementCode).orElse(null);
+    }
 
 
 
@@ -164,7 +176,47 @@ public class ManagementService {
 
         return managementDAO.count(channelCode);
     }
+/*
+    public void changeGrade(UserRoleDTO userRoleDTO){
 
+        //
+        if(userRoleDTO.getManagementUserStatus() != null ) {
+            Management vo = Management
+                    .builder()
+                    .userEmail(userRoleDTO.getUserEmail())
+                    .managementUserStatus(userRoleDTO.getManagementUserStatus())
+                    .managementDeleteAt(null) // 이거에 현재 날짜 + banDate만큼 더 하는 식 필요
+                    .channel(channelService.findChannel(userRoleDTO.getChannelCode()))
+
+                    .build();
+
+        }
+
+    }*/
+
+    public List<Management> getGrade(String userEmail, int channelCode){
+
+
+        return managementDAO.findGrade(userEmail,channelCode);
+    }
+
+
+
+
+
+
+
+    public Management setRole(Management vo){
+
+      return managementDAO.save(vo);
+
+    }
+
+    public void removeRole(Management vo){
+
+        managementDAO.deleteById(vo.getManagementCode());
+
+    }
 
 
 }

@@ -362,6 +362,11 @@ public class ChannelController {
     }
 
 
+
+
+
+
+
     // 파일 업로드
     public String fileUpload(MultipartFile file, int channelCode) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {
@@ -383,6 +388,11 @@ public class ChannelController {
             f.delete();
         }
     }
+
+
+
+
+
     public JPAQuery<Tuple> channelJPAQuery(int page){
 
         Pageable pageable = PageRequest.of(page - 1, 4);
@@ -427,6 +437,9 @@ public class ChannelController {
                 .allPost(dtos)
                 .build();
     }
+
+
+
 
 
     }

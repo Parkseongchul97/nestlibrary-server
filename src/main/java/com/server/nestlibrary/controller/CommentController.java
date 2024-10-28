@@ -3,11 +3,8 @@ package com.server.nestlibrary.controller;
 import com.server.nestlibrary.model.dto.CommentDTO;
 import com.server.nestlibrary.model.dto.CommentListDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
-import com.server.nestlibrary.model.vo.Comment;
-import com.server.nestlibrary.model.vo.Paging;
-import com.server.nestlibrary.model.vo.User;
-import com.server.nestlibrary.service.CommentService;
-import com.server.nestlibrary.service.UserService;
+import com.server.nestlibrary.model.vo.*;
+import com.server.nestlibrary.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,22 +24,49 @@ public class CommentController {
     private CommentService commentService;
     @Autowired
     private  UserService userService;
+    @Autowired
+    private PostService postService;
+    @Autowired
+    private PushService pushService;
+    @Autowired
+    private ChannelService channelService;
 
 
     // 댓글 추가
     @PostMapping("/private/comment")
     public ResponseEntity addComment(@RequestBody Comment vo){
         vo.setCommentCreatedAt(LocalDateTime.now());
-
+        log.info("입력값 " + vo);
         Comment com = commentService.addComment(vo);
-        log.info("체크 " + com);
-        if(com != null ){
+        log.info("결과 " + com);
+        if(com.getCommentParentsCode() == 0){ // 게시글 주인에게 알림
 
-            return ResponseEntity.ok(com);
+            Post post = postService.postCodeByPost(com.getPostCode()); // 게시글 주인
+
+            if(!userService.getLoginUser().getUserEmail().equals(post.getUserEmail()))// 내글에 내댓글 아니면
+            pushService.savePush(Push.builder()
+                    .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
+                    .pushMassage("게시글 " + post.getPostTitle() + "에 새로운 댓글이 달렸습니다!")
+                    .postCode(post.getPostCode()) // 주소링크용 링크용 글코드
+                    .channelCode(post.getChannel().getChannelCode())
+                    .userEmail(post.getUserEmail()) // 대상유저
+
+                    .build()) ;
+        }else{ // 부모 댓글 주인에게 알림
+            Comment comment = commentService.findComment(com.getCommentParentsCode()); // 상위 댓글 주인
+            Post post = postService.postCodeByPost(com.getPostCode());
+            if(!userService.getLoginUser().getUserEmail().equals(comment.getUserEmail()))// 내댓글에 내댓글 아니면
+            pushService.savePush(Push.builder()
+                    .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
+                    .pushMassage("댓글 " + comment.getCommentContent() + "에 새로운 댓글이 달렸습니다!")
+                    .postCode(comment.getPostCode()) // 주소링크용
+                    .channelCode(post.getChannel().getChannelCode())
+                    .userEmail(comment.getUserEmail()) // 대상유저
+                    .build());
+
         }
 
-
-        return   ResponseEntity.ok("실패");
+        return ResponseEntity.ok(com);
     }
 
     // 댓글 수정
@@ -61,10 +85,10 @@ public class CommentController {
 
     // 게시글 댓글 전체 보여주기 <- 페이징 처리 추가(부모댓글 숫자에 따라서)
     @GetMapping("/post/{postCode}/comment")
-    public ResponseEntity viewComment(@PathVariable(name = "postCode")int postCode,@RequestParam(name = "page" ,defaultValue = "1")int page){
-
+    public ResponseEntity viewComment(@PathVariable(name = "postCode")int postCode,@RequestParam(name = "comment_page" ,defaultValue = "1")int commentPage){
+        log.info("페이지 : " + commentPage);
         int totalCount = commentService.getTopCommentCount(postCode); // 총 상위댓글 숫자
-        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        Paging paging = new Paging(commentPage, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage()-1));
         List<Comment> allComment = commentService.getTopComment(postCode, paging);
