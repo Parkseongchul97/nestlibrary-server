@@ -92,6 +92,7 @@ public class UserService {
 
         UserDTO userdto = UserDTO
                 .builder()
+                .userEmail(user.getUserEmail())
                 .userNickname(user.getUserNickname())
                 .userImgUrl(user.getUserImgUrl())
 
