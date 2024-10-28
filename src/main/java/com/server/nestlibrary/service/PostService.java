@@ -283,7 +283,39 @@ public class PostService {
 
 
 
+    public int postPage(int postCode){
+        Post vo = findByPostCode(postCode);
+        log.info("내가 선택한 포스트" + vo);
 
+        List<Post> list =  queryFactory
+                .selectFrom(qPost)
+                .where(qPost.channel.channelCode.eq(vo.getChannel().getChannelCode()))
+                .orderBy(qPost.postCreatedAt.desc()).fetch();
+
+        int num = 0;
+        for(int i = list.size() - 1; i >= 0; i--){
+
+            if (list.get(i).getPostCode()== postCode){
+                log.info("일치!!");
+                num = i;
+
+            }
+        }
+        log.info("i값 : " + num);
+        if((list.size() - 1) % 10 != 0){ // 전체 게시글 숫자가 0으로 안떨어지면
+
+            num = num/100+1;
+            log.info("이 게시글은 인덱스번호로 : " + num);
+        }else{
+
+            num = num/100;
+            log.info("이 게시글은 인덱스번호로 : " + num);
+        }
+
+
+
+        return num ;
+    }
 
 
 

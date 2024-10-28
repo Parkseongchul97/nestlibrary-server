@@ -24,6 +24,9 @@ public class Push {
     @Column(name = "post_code")
     private int postCode;
 
+    @Column(name = "channel_code")
+    private int channelCode;
+
     @Column(name ="push_created_at")
     private LocalDateTime pushCreatedAt; // 알림 생성 시간
 
