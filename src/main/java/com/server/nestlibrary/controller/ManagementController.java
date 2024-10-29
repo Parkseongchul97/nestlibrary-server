@@ -1,10 +1,7 @@
 package com.server.nestlibrary.controller;
 
 import com.server.nestlibrary.model.dto.*;
-import com.server.nestlibrary.model.vo.Channel;
-import com.server.nestlibrary.model.vo.Management;
-import com.server.nestlibrary.model.vo.Push;
-import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -268,6 +265,25 @@ public class ManagementController {
         return  ResponseEntity.ok(null);
     }
 
+    //유저관리페이지에서 글 확인
+    @GetMapping("/private/management/{channelCode}/{userNickname}")
+    public  ResponseEntity channelPost(@PathVariable(name = "channelCode") int channelCode,
+                                       @PathVariable(name = "userNickname") String userNickname
+                                       ){
+
+        log.info(userNickname);
+        log.info("채널코드 " + channelCode);
+        List<PostDTO> postDto = new ArrayList<>();
+        if( !userNickname.equals("undefined")) {
+          postDto = postService.channelCodeByAllPost(channelCode, null, "user", userNickname);
+        } else {
+
+            postDto = postService.channelCodeByAllPost(channelCode, null, null, null);
+        }
+
+        return  ResponseEntity.ok(postDto);
+    }
+
     // 채널코드, 유저 이메일 받아서 메니지먼트 객체 반환
     public Management userGrade(int channelCode, String userEmail){
         List<Management> channelList = managementService.findChannelManagement(channelCode);
@@ -286,6 +302,7 @@ public class ManagementController {
                  }
                 return null;
         }
+
 }
 
 

@@ -97,11 +97,24 @@ public class PostService {
             }
         }
 
-        List<Post> voList =  query
-                .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-                .offset(paging.getOffset()) //
-                .limit(paging.getLimit()) //10개씩
-                .fetch();
+        List<Post> voList = new ArrayList<>();
+        if(paging != null ) {
+           voList = query
+                    .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
+                    .offset(paging.getOffset()) //
+                    .limit(paging.getLimit()) //10개씩
+                    .fetch();
+
+        }else {
+            voList = query
+                    .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
+
+
+                    .fetch();
+
+
+        }
+
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
             // 문제 생기면 알려주세요 (2024.10.18)
