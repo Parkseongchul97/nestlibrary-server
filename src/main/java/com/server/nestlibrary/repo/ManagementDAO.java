@@ -13,7 +13,7 @@ public interface ManagementDAO extends JpaRepository<Management, Integer> {
    @Query(value = "SELECT count(*) FROM management WHERE channel_code =:channelCode AND  management_user_status = 'sub'", nativeQuery = true)
     int count(@Param("channelCode") int channelcode);
 
-   @Query(value = "SELECT channel_code FROM management WHERE user_email = :userEmail AND management_user_status = 'host' ", nativeQuery = true)
+   @Query(value = "SELECT channel_code FROM management WHERE user_email = :userEmail AND (management_user_status = 'host' OR management_user_status = 'admin') ", nativeQuery = true)
     List<Integer> myChannel ( @Param("userEmail") String userEmail);
 
    @Query(value = "SELECT * FROM management WHERE user_email= :userEmail AND channel_code = :channelCode" , nativeQuery = true)

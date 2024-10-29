@@ -34,7 +34,7 @@ public class EmailController {
     }
 
   // 채널삭제시 이메일 인증 할때
-  // 신규 가입시
+
   @GetMapping("/private/code")
   public ResponseEntity sendCode(@RequestParam("userEmail") String userEmail) {
         return ResponseEntity.status(HttpStatus.OK).body(emailService.sendEmailCode(userEmail));

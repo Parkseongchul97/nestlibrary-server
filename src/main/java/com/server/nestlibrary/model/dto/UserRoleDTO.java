@@ -23,6 +23,7 @@ public class UserRoleDTO {
     private  String userImgUrl;
     private int postCount;
     private int commentCount;
+    private int managementCode;
 
 
 }

@@ -90,8 +90,9 @@ public class ManagementController {
                log.info("여기까지오나?" + dto);
              UserDTO oldHost = managementService.findAdmin(dto.getChannelCode()).get(0);
               Management oldVo = userGrade(dto.getChannelCode(), oldHost.getUserEmail());
-              //예전 호스트 삭제
-               managementService.remove(oldVo.getManagementCode());
+              // 예전 호스트를 어드민으로 바꾸고
+               oldVo.setManagementUserStatus("admin");
+               managementService.setRole(oldVo);
               // 신규 호스트
               vo.setManagementUserStatus("host");
               managementService.setRole(vo);
@@ -155,6 +156,7 @@ public class ManagementController {
                           .userNickname(userList.get(i).getUserNickname())
                           .managementUserStatus(vo != null ? vo.getManagementUserStatus() : null)
                           .managementDeleteAt(vo != null ? vo.getManagementDeleteAt() : null)
+                          .managementCode(vo != null ? vo.getManagementCode() :  0)
                           .commentCount( commentService.userCommentCount(channelCode,userList.get(i).getUserEmail()) )
                           .postCount(postService.userPostCount(channelCode,userList.get(i).getUserEmail()))
                           .build();
@@ -179,6 +181,7 @@ public class ManagementController {
                           .userNickname(adminList.get(i).getUserNickname())
                           .managementUserStatus(vo.getManagementUserStatus())
                           .managementDeleteAt(vo.getManagementDeleteAt())
+                          .managementCode(vo.getManagementCode())
                           .commentCount( commentService.userCommentCount(channelCode,adminList.get(i).getUserEmail()) )
                           .postCount(postService.userPostCount(channelCode,adminList.get(i).getUserEmail()))
                           .build();
@@ -199,6 +202,7 @@ public class ManagementController {
                           .userNickname(banList.get(i).getUserNickname())
                           .managementUserStatus(vo.getManagementUserStatus())
                           .managementDeleteAt(vo.getManagementDeleteAt())
+                          .managementCode(vo.getManagementCode())
                           .commentCount(commentService.userCommentCount(channelCode,banList.get(i).getUserEmail()))
                           .postCount(postService.userPostCount(channelCode,banList.get(i).getUserEmail()))
                           .build();
