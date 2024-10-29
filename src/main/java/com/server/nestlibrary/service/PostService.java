@@ -282,28 +282,25 @@ public class PostService {
     }
 
 
-
+    // 알림 포스트 페이지 알아내는 메서드
     public int postPage(int postCode){
-        log.info("화면에서 받아온 코드 : " + postCode);
         Post vo = findByPostCode(postCode);
-
-        log.info("잘들어왔는지 확인 : " + vo.getPostCode());
+        // 삭제된 게시글이라면
+        if(vo == null)return -1;
         List<Post> list =  queryFactory
                 .selectFrom(qPost)
                 .where(qPost.channel.channelCode.eq(vo.getChannel().getChannelCode()))
                 .orderBy(qPost.postCreatedAt.desc()).fetch();
-        log.info("해당 채널 모든글 숫자 : " + list.size());
-
-        log.info("해당 채널 모든글 숫자 : " + list.size());
-
-        int index = list.indexOf(vo);
-
-
-        log.info("해당포스트 인덳스 "  + index);
-        int pageNum = index / 10 + (index % 10 == 0 ? 0 : 1);
-        log.info(postCode + " 게시글의 페이지  번호 : " + pageNum);
-
-
+        int index = list.indexOf(vo) +1;
+        // 인덱스 +1 = 해당 채널의 게시글중 N번째 게시글 /10 *10
+        if(index == 0){
+            // 몬가 문제생긴경우
+            return -1;
+        }
+        ;
+        // 전체(25) % 10 = 0이면  전체 / 10 아니면 (전체 /10) + 1
+        int pageNum = (int) Math.ceil(index / 10 );
+        if(index % 10 != 0)pageNum++;
         return pageNum;
     }
 
@@ -385,7 +382,8 @@ public class PostService {
                 .set(qPost.postViews, qPost.postViews.add(1))
                 .where(qPost.postCode.eq(postCode))
                 .execute();
-        Post vo = postDAO.findById(postCode).get();
+        Post vo = postDAO.findById(postCode).orElse(null);
+        if(vo == null)return null;
         // 게시글 좋아요 숫자 확인
         // 문제 생기면 알려주세요 (2024.10.18)
         User user = userDAO.findById(vo.getUserEmail()).get();
