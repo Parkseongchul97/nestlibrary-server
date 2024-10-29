@@ -79,28 +79,30 @@ public class ManagementController {
            dto.setManagementDeleteAt(LocalDateTime.now().plusDays(dto.getBanDate()-1));
            Management vo  = userGrade( dto.getChannelCode(), dto.getUserEmail());
           DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy MM dd");
-
+       Channel chan = channelService.findChannel(dto.getChannelCode());
        if( vo != null){ // 이미 관리 정보가 있음
            // 관리자를 벤
            if (dto.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("admin")) {
+
                vo.setManagementUserStatus("ban");
                vo.setManagementDeleteAt(dto.getManagementDeleteAt());
                managementService.setRole(vo);
                pushService.savePush(Push.builder()
                        .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
-                       .pushMassage(channelService.findChannel(dto.getChannelCode()).getChannelName() + "채널에서 "+ dto.getManagementDeleteAt().format(formatter) +"까지 차단 되었습니다")
+                       .pushMassage(chan.getChannelName() + "채널에서 "+ dto.getManagementDeleteAt().format(formatter) +"까지 차단 되었습니다")
                        .userEmail(dto.getUserEmail()) // 대상유저
+                       .channelCode(chan.getChannelCode())
                        .build());
                return ResponseEntity.ok(vo);
                // 2번 벤
            } else if (dto.getManagementUserStatus().equals("ban") && vo.getManagementUserStatus().equals("ban") &&dto.getBanDate() != -1) {
                vo.setManagementDeleteAt(vo.getManagementDeleteAt().plusDays(dto.getBanDate()-1));
                managementService.setRole(vo);
-
                pushService.savePush(Push.builder()
                        .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
-                       .pushMassage(channelService.findChannel(dto.getChannelCode()).getChannelName() + "채널에서 "+ vo.getManagementDeleteAt().format(formatter) +"까지 차단 되었습니다")
+                       .pushMassage(chan.getChannelName() + "채널에서 "+ vo.getManagementDeleteAt().format(formatter) +"까지 차단 되었습니다")
                        .userEmail(dto.getUserEmail()) // 대상유저
+                       .channelCode(chan.getChannelCode())
                        .build());
 
                return ResponseEntity.ok(vo);
@@ -116,8 +118,9 @@ public class ManagementController {
               managementService.setRole(vo);
                pushService.savePush(Push.builder()
                        .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
-                       .pushMassage(channelService.findChannel(dto.getChannelCode()).getChannelName() + "채널의 호스트로 등록되었습니다")
+                       .pushMassage(chan.getChannelName() + "채널의 호스트로 등록되었습니다")
                        .userEmail(dto.getUserEmail()) // 대상유저
+                       .channelCode(chan.getChannelCode())
                        .build());
 
 
@@ -125,10 +128,12 @@ public class ManagementController {
            }
        }else {// 그냥 추가
                 if(dto.getManagementUserStatus().equals("admin")){
+
                     pushService.savePush(Push.builder()
                             .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
-                            .pushMassage(channelService.findChannel(dto.getChannelCode()).getChannelName() + "채널의 관리자로 등록되었습니다.")
+                            .pushMassage(chan.getChannelName() + "채널의 관리자로 등록되었습니다.")
                             .userEmail(dto.getUserEmail()) // 대상유저
+                            .channelCode(chan.getChannelCode())
                             .build());
                 }else{
 
@@ -136,12 +141,13 @@ public class ManagementController {
                     Date date = Date.from(dto.getManagementDeleteAt().atZone(zoneId).toInstant());
                     pushService.savePush(Push.builder()
                             .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
-                            .pushMassage(channelService.findChannel(dto.getChannelCode()).getChannelName() + "채널에서 "+ dto.getManagementDeleteAt().format(formatter) +"까지 차단 되었습니다")
+                            .pushMassage(chan.getChannelName() + "채널에서 "+ dto.getManagementDeleteAt().format(formatter) +"까지 차단 되었습니다")
                             .userEmail(dto.getUserEmail()) // 대상유저
+                            .channelCode(chan.getChannelCode())
                             .build());
                 }
                return  ResponseEntity.ok(managementService.setRole(Management.builder()
-                       .channel(channelService.findChannel(dto.getChannelCode()))
+                       .channel(chan)
                        .managementDeleteAt(dto.getBanDate() != 0 ? dto.getManagementDeleteAt() : null)
                        .managementUserStatus(dto.getManagementUserStatus())
                        .userEmail(dto.getUserEmail())
@@ -156,10 +162,12 @@ public class ManagementController {
    public ResponseEntity removeRole(@PathVariable(name = "managementCode") int managementCode) {
         Management vo = managementService.findManagement(managementCode);
         if(vo.getManagementUserStatus().equals("ban")){
+            Channel chan = channelService.findChannel(vo.getChannel().getChannelCode());
             pushService.savePush(Push.builder()
                     .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
-                    .pushMassage(channelService.findChannel(vo.getChannel().getChannelCode()).getChannelName() + "채널에서 차단 해제 되었습니다")
+                    .pushMassage(chan.getChannelName() + "채널에서 차단 해제 되었습니다")
                     .userEmail(vo.getUserEmail()) // 대상유저
+                    .channelCode(chan.getChannelCode())
                     .build());
         }
         managementService.remove(managementCode);
