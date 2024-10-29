@@ -159,5 +159,11 @@ public class CommentService {
                 .fetch();
     }
 
+    // 댓글수
+    public  int userCommentCount(int channelCode, String userEmail){
+
+        return commentDAO.commentCount(userEmail,channelCode);
+    }
+
 
 }

@@ -4,10 +4,7 @@ import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.Channel;
 import com.server.nestlibrary.model.vo.Management;
 import com.server.nestlibrary.model.vo.User;
-import com.server.nestlibrary.service.ChannelService;
-import com.server.nestlibrary.service.ManagementService;
-import com.server.nestlibrary.service.PostService;
-import com.server.nestlibrary.service.UserService;
+import com.server.nestlibrary.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,6 +29,8 @@ public class ManagementController {
     private ChannelService channelService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private CommentService commentService;
 
      // 구독하기
     @PostMapping("private/subscribe")
@@ -102,7 +101,7 @@ public class ManagementController {
        }else {// 그냥 추가
                return  ResponseEntity.ok(managementService.setRole(Management.builder()
                        .channel(channelService.findChannel(dto.getChannelCode()))
-                       .managementDeleteAt(dto.getManagementDeleteAt() != null? dto.getManagementDeleteAt() : null)
+                       .managementDeleteAt(dto.getBanDate() != 0 ? dto.getManagementDeleteAt() : null)
                        .managementUserStatus(dto.getManagementUserStatus())
                        .userEmail(dto.getUserEmail())
                        .build()));
@@ -131,6 +130,91 @@ public class ManagementController {
         // 없으면 null 반환 있으면 등급반환
         return ResponseEntity.ok(userGrade(channelCode ,channelService.getLoginUser()) );
     }
+
+    @GetMapping("private/management/user")
+    public ResponseEntity userManagement(@RequestParam(name = "channelCode" , required = false)Integer channelCode,
+                                         @RequestParam(name = "userNickname" ,required = false)String userNickname,
+                                         @RequestParam(name = "managementUserStatus" , required = false)String managementUserStatus){
+        // 채널내의 등급
+        // 클라이언트에서 채널코드와 등급을 주거나 채널코드와 닉네임을 주거나인데
+        // 1. 서비스의 모든 유저중 검색된 유저  리스트
+        log.info("여기까지오나? " + channelCode + userNickname + managementUserStatus);
+
+          if(userNickname != null){
+              List<User> userList = userService.findByNicknameUserList(userNickname);
+              List<UserRoleDTO> userRoleDTOList = new ArrayList<>();
+
+             if(userList.size() == 0) {
+
+                 return ResponseEntity.ok(null);
+             }
+              for(int i=0; i<userList.size(); i++) {
+                  Management vo = userGrade(channelCode, userList.get(i).getUserEmail());
+                  UserRoleDTO userRoleDTO = UserRoleDTO.builder()
+                          .userEmail(userList.get(i).getUserEmail())
+                          .userNickname(userList.get(i).getUserNickname())
+                          .managementUserStatus(vo != null ? vo.getManagementUserStatus() : null)
+                          .managementDeleteAt(vo != null ? vo.getManagementDeleteAt() : null)
+                          .commentCount( commentService.userCommentCount(channelCode,userList.get(i).getUserEmail()) )
+                          .postCount(postService.userPostCount(channelCode,userList.get(i).getUserEmail()))
+                          .build();
+
+                  userRoleDTOList.add(userRoleDTO);
+              }
+              return  ResponseEntity.ok(userRoleDTOList);
+
+
+
+
+          }else if(managementUserStatus.equals("admin")){
+
+            log.info("admin으로 오냐?");
+              List<UserDTO> adminList =    managementService.findAdmin(channelCode);
+              List<UserRoleDTO> userRoleDTOList = new ArrayList<>();
+
+              for(int i=0; i<adminList.size(); i++) {
+                  Management vo = userGrade(channelCode, adminList.get(i).getUserEmail());
+                  UserRoleDTO userRoleDTO = UserRoleDTO.builder()
+                          .userEmail(adminList.get(i).getUserEmail())
+                          .userNickname(adminList.get(i).getUserNickname())
+                          .managementUserStatus(vo.getManagementUserStatus())
+                          .managementDeleteAt(vo.getManagementDeleteAt())
+                          .commentCount( commentService.userCommentCount(channelCode,adminList.get(i).getUserEmail()) )
+                          .postCount(postService.userPostCount(channelCode,adminList.get(i).getUserEmail()))
+                          .build();
+
+                  userRoleDTOList.add(userRoleDTO);
+              }
+              return  ResponseEntity.ok(userRoleDTOList);
+
+          }else   if(managementUserStatus.equals("ban")){
+
+              List<User> banList =    managementService.bans(channelCode);
+              List<UserRoleDTO> userRoleDTOList = new ArrayList<>();
+
+              for(int i=0; i<banList.size(); i++) {
+                  Management vo = userGrade(channelCode, banList.get(i).getUserEmail());
+                  UserRoleDTO userRoleDTO = UserRoleDTO.builder()
+                          .userEmail(banList.get(i).getUserEmail())
+                          .userNickname(banList.get(i).getUserNickname())
+                          .managementUserStatus(vo.getManagementUserStatus())
+                          .managementDeleteAt(vo.getManagementDeleteAt())
+                          .commentCount(commentService.userCommentCount(channelCode,banList.get(i).getUserEmail()))
+                          .postCount(postService.userPostCount(channelCode,banList.get(i).getUserEmail()))
+                          .build();
+
+                  userRoleDTOList.add(userRoleDTO);
+              }
+              return  ResponseEntity.ok(userRoleDTOList);
+          }
+
+
+
+
+
+        return  ResponseEntity.ok(null);
+    }
+
     // 채널코드, 유저 이메일 받아서 메니지먼트 객체 반환
     public Management userGrade(int channelCode, String userEmail){
         List<Management> channelList = managementService.findChannelManagement(channelCode);

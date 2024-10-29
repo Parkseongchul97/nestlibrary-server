@@ -466,6 +466,12 @@ public class PostService {
 
     }
 
+    //해당 채널 게시글 수
+    public int userPostCount(int channelCode, String userEmail){
+
+        return postDAO.postCount(channelCode,userEmail);
+    }
+
 
 
 

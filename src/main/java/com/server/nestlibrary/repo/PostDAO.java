@@ -21,5 +21,9 @@ public interface PostDAO extends JpaRepository<Post, Integer> {
             "HAVING bestScore > 50 " +
             "ORDER BY p.postCreatedAt DESC" ,nativeQuery = true)
     List<Post> findBestPosts(@Param("channelCode") int channelCode);
+
+
+    @Query(value = "SELECT count(*) FROM post WHERE user_email= :userEmail AND channel_code = :channelCode", nativeQuery = true)
+    int postCount (@Param("channelCode") int channelCode, @Param("userEmail")String userEmail);
 }
 

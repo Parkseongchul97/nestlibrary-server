@@ -16,9 +16,13 @@ public class UserRoleDTO {
 
     private String userEmail;
     private String managementUserStatus;
+    private String userNickname;
     private int channelCode;
     private LocalDateTime managementDeleteAt;
     private int banDate;
+    private  String userImgUrl;
+    private int postCount;
+    private int commentCount;
 
 
 }
