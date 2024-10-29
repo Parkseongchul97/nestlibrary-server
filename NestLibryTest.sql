@@ -122,7 +122,7 @@ WHERE p.channel_code = 6
 GROUP BY p.post_code, p.post_title, p.post_views
 HAVING best_score > 50
 ORDER BY post_created_at DESC
-limit ;
+limit 1 ;
  
  
  
