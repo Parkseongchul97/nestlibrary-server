@@ -25,5 +25,11 @@ public interface PostDAO extends JpaRepository<Post, Integer> {
 
     @Query(value = "SELECT count(*) FROM post WHERE user_email= :userEmail AND channel_code = :channelCode", nativeQuery = true)
     int postCount (@Param("channelCode") int channelCode, @Param("userEmail")String userEmail);
+
+
+    @Query(value = "SELECT * FROM post WHERE user_email= :userEmail " +
+            "ORDER BY post_created_at DESC" +
+            " LIMIT 10",nativeQuery = true)
+    List<Post> emailByPost(@Param("userEmail") String userEmail);
 }
 

@@ -506,6 +506,40 @@ public class PostService {
         return postDAO.postCount(channelCode,userEmail);
     }
 
+    //해당 유저의 최신글 10개
+    public List<PostDTO> emailByPost(String userEmail){
+     List<Post> postList =   postDAO.emailByPost(userEmail);
+        List<PostDTO> dtoList = new ArrayList<>();
+        User user = userDAO.findById(userEmail).get();
+        if(postList.size() == 0){
+            return null;
+        } else {
+            for(int i=0; i<postList.size(); i++){
+
+                PostDTO dto = PostDTO.builder()
+                        .postCreatedAt(postList.get(i).getPostCreatedAt())
+                        .postTitle(postList.get(i).getPostTitle())
+                        .postContent(postList.get(i).getPostContent())
+                        .postCode(postList.get(i).getPostCode())
+                        .channelTag(tagDAO.findById(postList.get(i).getChannelTag().getChannelTagCode()).get())
+                        .channelCode(postList.get(i).getChannel().getChannelCode())
+                        .postViews(postList.get(i).getPostViews())
+                        .user(UserDTO.builder().userNickname(user.getUserNickname())
+                                .userImgUrl(user.getUserImgUrl())
+                                .userEmail(user.getUserEmail()).build())
+                        .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postList.get(i).getPostCode())).fetch().size())
+                        .commentCount(commentService.commentCount(postList.get(i).getPostCode()))
+                        .bestPoint(postViewCount(postList.get(i).getPostCode()) + (postLikeCount(postList.get(i).getPostCode())*5) + (postCommentCount(postList.get(i).getPostCode())*2))
+                        .build();
+                dtoList.add(dto);
+            }
+            return dtoList;
+        }
+
+
+
+    }
+
 
 
 

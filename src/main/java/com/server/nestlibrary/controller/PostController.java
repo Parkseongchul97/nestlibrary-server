@@ -146,6 +146,14 @@ public class PostController {
         return ResponseEntity.ok(null);
     }
 
+    @GetMapping("/post/user/{userEmail}")
+    public  ResponseEntity userPost(@PathVariable(name = "userEmail") String userEmail){
+
+        return ResponseEntity.ok(postService.emailByPost(userEmail));
+    }
+
+
+
 
 
 
