@@ -2,15 +2,9 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.server.nestlibrary.model.dto.ChannelManagementDTO;
-import com.server.nestlibrary.model.dto.ChannelPostDTO;
-import com.server.nestlibrary.model.dto.ChannelTagDTO;
-import com.server.nestlibrary.model.dto.UserDTO;
+import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
-import com.server.nestlibrary.repo.ChannelDAO;
-import com.server.nestlibrary.repo.ChannelTagDAO;
-import com.server.nestlibrary.repo.ManagementDAO;
-import com.server.nestlibrary.repo.UserDAO;
+import com.server.nestlibrary.repo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -21,9 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,9 +32,13 @@ public class ChannelService {
     private  ManagementService managementService;
     @Autowired
     private UserService userService;
-
+    @Autowired
+    private PostDAO postDAO;
     @Autowired
     private UserDAO userDAO;
+    @Autowired
+    private CommentDAO commentDAO;
+    @Lazy
     @Autowired
     private  PostService postService;
 
@@ -279,6 +276,67 @@ public class ChannelService {
            return null;
        }
 
+    }
+    //
+    public List<MostChannelDTO> favoriteChannel(String userEmail){
+        HashMap<Integer, Integer> map = new HashMap<>();
+        // 맵에다가 채널코드 : 댓글수 + 포스트 수 넣고 오름 차순 정렬후 높은 채널코드 3개만 뽑아서 그거로
+        // userRole을 만들기?
+        // 우선 글을 쓴 채널 코드 목록이 필요
+        List<Integer> manList = postService.findChannelCode(userEmail);
+        // 각 채널 코드들로 이 사람이 작성한 글과 댓글 수를 기록
+
+        // 채널코드들로 작성글 수 기록
+        if(manList.size() != 0){
+            for(int i=0; i<manList.size(); i++ ){
+
+                 map.put(manList.get(i),postDAO.postCount( manList.get(i) , userEmail) + commentDAO.commentCount(userEmail,manList.get(i)));
+            }
+
+
+
+            List<Map.Entry<Integer, Integer>> sortedEntries = map.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())
+                    .collect(Collectors.toList());
+
+            log.info("값" + sortedEntries);
+            // 이제 여기서
+            List<Integer> favoriteCode = new ArrayList<>();
+            for(int i=0;  i<sortedEntries.size(); i++){
+
+                favoriteCode.add(sortedEntries.get(i).getKey());
+
+
+            }
+
+            List<MostChannelDTO> mostList = new ArrayList<>();
+
+            for(int i=0; i<favoriteCode.size(); i++){
+
+                if( i < 3) {
+
+
+                    MostChannelDTO dto = MostChannelDTO
+
+                            .builder()
+                            .channelCode(favoriteCode.get(i))
+                            .channelName(channelDAO.findById(favoriteCode.get(i)).get().getChannelName())
+                            .postCount(postDAO.postCount(favoriteCode.get(i), userEmail))
+                            .commentCount(commentDAO.commentCount(userEmail, favoriteCode.get(i)))
+                            .build();
+
+                    mostList.add(dto);
+                }
+
+            }
+
+
+        return mostList;
+        }
+
+
+        return null;
     }
 
 

@@ -39,6 +39,9 @@ public class PostService {
     private ChannelTagDAO tagDAO;
 
     @Autowired
+    private  ChannelDAO channelDAO;
+
+    @Autowired
     private JPAQueryFactory queryFactory;
 
     private final QPostLike qPostLike = QPostLike.postLike;
@@ -524,6 +527,7 @@ public class PostService {
                         .channelTag(tagDAO.findById(postList.get(i).getChannelTag().getChannelTagCode()).get())
                         .channelCode(postList.get(i).getChannel().getChannelCode())
                         .postViews(postList.get(i).getPostViews())
+                        .channelName(channelDAO.findById(postList.get(i).getChannel().getChannelCode()).get().getChannelName())
                         .user(UserDTO.builder().userNickname(user.getUserNickname())
                                 .userImgUrl(user.getUserImgUrl())
                                 .userEmail(user.getUserEmail()).build())
@@ -538,6 +542,11 @@ public class PostService {
 
 
 
+    }
+
+    public List<Integer> findChannelCode(String userEmail){
+
+       return postDAO.findChannelCode(userEmail);
     }
 
 

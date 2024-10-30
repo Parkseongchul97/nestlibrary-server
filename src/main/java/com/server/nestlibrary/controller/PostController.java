@@ -52,7 +52,7 @@ public class PostController {
         return ResponseEntity.ok(dto);
     }
 
-    @GetMapping("/private/page/{postCode}")
+    @GetMapping("/page/{postCode}")
     public ResponseEntity getPage(@PathVariable(name = "postCode")int postCode){
 
         // 작성자 정보, 게시글, 좋아요 숫자 가지고있는 DTO 리턴
@@ -151,6 +151,17 @@ public class PostController {
 
         return ResponseEntity.ok(postService.emailByPost(userEmail));
     }
+
+
+    @GetMapping("/user/favorite/{userEmail}")
+    public ResponseEntity favoriteChannel(@PathVariable(name = "userEmail")String userEmail){
+
+
+
+        return  ResponseEntity.ok(channelService.favoriteChannel(userEmail));
+
+    }
+
 
 
 

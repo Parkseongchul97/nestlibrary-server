@@ -5,6 +5,7 @@ import com.server.nestlibrary.model.dto.LoginUserDTO;
 import com.server.nestlibrary.model.dto.UserDTO;
 import com.server.nestlibrary.model.vo.User;
 import com.server.nestlibrary.service.KakaoService;
+import com.server.nestlibrary.service.PostService;
 import com.server.nestlibrary.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -203,6 +204,7 @@ public class UserController {
         return ResponseEntity.ok(null);
 
     }
+
 
 
 

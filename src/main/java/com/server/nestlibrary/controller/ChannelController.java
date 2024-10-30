@@ -367,6 +367,8 @@ public class ChannelController {
 
 
 
+
+
     // 파일 업로드
     public String fileUpload(MultipartFile file, int channelCode) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {

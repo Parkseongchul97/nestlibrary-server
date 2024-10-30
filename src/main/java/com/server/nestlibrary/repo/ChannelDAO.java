@@ -17,4 +17,5 @@ public interface ChannelDAO extends JpaRepository<Channel, Integer>, QuerydslPre
 
     @Query(value = "SELECT channel_code FROM channel ", nativeQuery = true)
     List<Integer> findAllChannelCode();
+
 }

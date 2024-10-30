@@ -9,6 +9,6 @@ public interface CommentDAO extends JpaRepository<Comment, Integer> {
 
 
 
-    @Query(value = "SELECT count(*) from comment p join post USING (post_code) WHERE p.user_email =:userEmail AND channel_code= :channelCode" , nativeQuery = true)
+    @Query(value = "SELECT count(*) from comment p join post USING (post_code) WHERE p.user_email =:userEmail AND channel_code= :channelCode AND comment_content IS NOT null" , nativeQuery = true)
     int commentCount(@Param("userEmail")String userEmail, @Param("channelCode")int channelCode);
 }
