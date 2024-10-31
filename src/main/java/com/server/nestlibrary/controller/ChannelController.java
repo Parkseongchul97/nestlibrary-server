@@ -191,6 +191,11 @@ public class ChannelController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/channel/announcement/{channelCode}")
+    public ResponseEntity channelAnnouncement(@PathVariable(name = "channelCode") int channelCode) {
+        return ResponseEntity.ok(postService.channelAnnouncement(channelCode));
+    }
+
  
     @GetMapping("/{channelCode}")
     public ResponseEntity allPost(@PathVariable(name = "channelCode") int channelCode,
@@ -198,7 +203,6 @@ public class ChannelController {
                                   @RequestParam(name = "target", defaultValue = "", required = false) String target,
                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
     ) {
-        log.info("전체글로옴");
         int totalCount = postService.allPostCount(channelCode, target, keyword);
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
@@ -241,7 +245,6 @@ public class ChannelController {
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
         List<PostDTO> postList = postService.channelTagCodeByAllPost(channelTagCode, paging, target, keyword);
         BoardDTO postBoard = BoardDTO.builder().postList(postList).paging(paging).build();
-        log.info("세부탭 페이징 상태 : " + paging);
         return ResponseEntity.ok(postBoard);
     }
 

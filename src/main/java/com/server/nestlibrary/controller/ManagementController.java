@@ -54,14 +54,12 @@ public class ManagementController {
      //  구독중인지
     @GetMapping("/private/subscribe/{channelCode}")
     public ResponseEntity check(@PathVariable  (name="channelCode") int channelCode) {
-        log.info("구독 체크 왔다");
             return ResponseEntity.ok(managementService.check(channelCode));
     }
     // 내가 구독중인 채널
     @GetMapping("/private/subscribe/channel")
     public ResponseEntity myChannel() {
         List<SubscribeChannelDTO> list = managementService.mySubscribe();
-        log.info("유저가 구독중인 채널 : " + list);
         if(list == null){
 
             return ResponseEntity.ok(null);
