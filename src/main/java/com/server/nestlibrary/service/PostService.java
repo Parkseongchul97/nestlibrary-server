@@ -459,7 +459,9 @@ public class PostService {
                 .postCode(p.getPostCode())
                 .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
                 .channelCode(p.getChannel().getChannelCode())
+                .channelName(p.getChannel().getChannelName())
                 .postViews(p.getPostViews())
+
                 .user(UserDTO.builder().userNickname(userVo.getUserNickname())
                         .userImgUrl(userVo.getUserImgUrl())
                         .userEmail(userVo.getUserEmail()).build())
@@ -468,12 +470,13 @@ public class PostService {
                 .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode()) * 5) + (postCommentCount(p.getPostCode()) * 2))
                 .build();
 
-    public List<Integer> findChannelCode(String userEmail){
 
-       return postDAO.findChannelCode(userEmail);
     }
 
 
 
+    public List<Integer> findChannelCode(String userEmail){
 
+        return postDAO.findChannelCode(userEmail);
+    }
 }
