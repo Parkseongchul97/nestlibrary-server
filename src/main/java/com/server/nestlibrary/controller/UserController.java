@@ -205,6 +205,17 @@ public class UserController {
 
     }
 
+    //
+    @GetMapping("/user/userInfo/{userEmail}")
+    public  ResponseEntity userPage(@PathVariable(name = "userEmail")String userEmail){
+
+
+
+        return ResponseEntity.ok(userService.findUser(userEmail));
+
+
+    }
+
 
 
 

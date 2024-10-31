@@ -513,7 +513,7 @@ public class PostService {
     public List<PostDTO> emailByPost(String userEmail){
      List<Post> postList =   postDAO.emailByPost(userEmail);
         List<PostDTO> dtoList = new ArrayList<>();
-        User user = userDAO.findById(userEmail).get();
+        User user = userDAO.findById(userEmail).orElse(null);
         if(postList.size() == 0){
             return null;
         } else {
