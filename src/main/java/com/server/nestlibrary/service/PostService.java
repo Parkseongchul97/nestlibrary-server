@@ -45,6 +45,7 @@ public class PostService {
     private final QPost qPost = QPost.post;
     private final QUser qUser = QUser.user;
     private final QComment qComment = QComment.comment;
+    private final QChannelTag qChannelTag = QChannelTag.channelTag;
 
     public Post postCodeByPost(int postCode){
         return postDAO.findById(postCode).orElse(null);
@@ -81,6 +82,20 @@ public class PostService {
         }
         return query.fetch().size();
     }
+
+    public List<PostDTO> channelAnnouncement (int channelCode){
+       List<Post> voList =  queryFactory.selectFrom(qPost)
+                .join(qChannelTag).on(qPost.channelTag.channelTagCode.eq(qChannelTag.channelTagCode))
+                .where(qPost.channelTag.channelTagName.eq("공지"))
+                .where(qPost.channel.channelCode.eq(channelCode))
+                .orderBy(qPost.postCreatedAt.desc())
+                .limit(3).fetch();
+       List<PostDTO> dtoList = new ArrayList<>();
+       for (Post p : voList){
+           dtoList.add(postVoChangeDTO(p));
+       }
+        return dtoList;
+    }
     // 해당 채널의 전체 글
     public List<PostDTO> channelCodeByAllPost(int channelCode, Paging paging, String target, String keyword){
         List<PostDTO> dtoList = new ArrayList<>();
@@ -96,7 +111,6 @@ public class PostService {
                 query.where(qUser.userNickname.containsIgnoreCase(keyword));
             }
         }
-
         List<Post> voList = new ArrayList<>();
         if(paging != null ) {
            voList = query
@@ -104,36 +118,13 @@ public class PostService {
                     .offset(paging.getOffset()) //
                     .limit(paging.getLimit()) //10개씩
                     .fetch();
-
         }else {
             voList = query
                     .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-
-
                     .fetch();
-
-
         }
-
         for(Post p : voList){
-            User userVo = userDAO.findById(p.getUserEmail()).get();
-            // 문제 생기면 알려주세요 (2024.10.18)
-            dtoList.add(PostDTO.builder()
-                    .postCreatedAt(p.getPostCreatedAt())
-                    .postTitle(p.getPostTitle())
-                    .postContent(p.getPostContent())
-                    .postCode(p.getPostCode())
-                            .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
-                            .channelCode(p.getChannel().getChannelCode())
-                    .postViews(p.getPostViews())
-                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
-                                    .userImgUrl(userVo.getUserImgUrl())
-                                    .userEmail(userVo.getUserEmail()).build())
-                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
-                    .commentCount(commentService.commentCount(p.getPostCode()))
-                    .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
-                    .build());
-
+            dtoList.add(postVoChangeDTO(p));
         }
         if(dtoList.size() == 0){
             return null;
@@ -143,7 +134,6 @@ public class PostService {
     }
 
     // 해당 채널의 인기 글
-
     public BoardDTO channelCodeByBestPost(int channelCode, int page, String target, String keyword) {
         List<Post> voList = bestPostVoList(channelCode,target,keyword);
         int totalCount = voList.size();
@@ -170,30 +160,13 @@ public class PostService {
         }
         List<PostDTO> dtoList = new ArrayList<>();
         for(Post p : pagingVoList){
-            User userVo = userDAO.findById(p.getUserEmail()).get();
-            dtoList.add(PostDTO.builder()
-                    .postCreatedAt(p.getPostCreatedAt())
-                    .postTitle(p.getPostTitle())
-                    .postContent(p.getPostContent())
-                    .postCode(p.getPostCode())
-                    .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
-                    .channelCode(p.getChannel().getChannelCode())
-                    .postViews(p.getPostViews())
-                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
-                            .userImgUrl(userVo.getUserImgUrl())
-                            .userEmail(userVo.getUserEmail()).build())
-                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
-                    .commentCount(commentService.commentCount(p.getPostCode()))
-                    .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
-                    .build());
+            dtoList.add(postVoChangeDTO(p));
         }
         if(dtoList.size() == 0) dtoList = null;
         BoardDTO postBoard = BoardDTO.builder().postList(dtoList).paging(paging).build();
         return postBoard;
     }
     public List<Post> bestPostVoList(int channelCode,  String target, String keyword){
-        List<PostDTO> dtoList = new ArrayList<>();
-        BooleanBuilder builder = new BooleanBuilder();
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
                 .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
                 .where(qPost.channel.channelCode.eq(channelCode));
@@ -247,21 +220,7 @@ public class PostService {
         List<PostDTO> dtoList = new ArrayList<>();
         for(Post p : pagingVoList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
-            dtoList.add(PostDTO.builder()
-                    .postCreatedAt(p.getPostCreatedAt())
-                    .postTitle(p.getPostTitle())
-                    .postContent(p.getPostContent())
-                    .postCode(p.getPostCode())
-                    .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
-                    .channelCode(p.getChannel().getChannelCode())
-                    .postViews(p.getPostViews())
-                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
-                            .userImgUrl(userVo.getUserImgUrl())
-                            .userEmail(userVo.getUserEmail()).build())
-                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
-                    .commentCount(commentService.commentCount(p.getPostCode()))
-                            .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
-                    .build());
+            dtoList.add(postVoChangeDTO(p));
         }
         if(dtoList.size() == 0) dtoList = null;
         BoardDTO postBoard = BoardDTO.builder().postList(dtoList).paging(paging).build();
@@ -359,22 +318,7 @@ public class PostService {
         // 문제 생기면 알려주세요 (2024.10.18)
         for(Post p : voList){
             User userVo = userDAO.findById(p.getUserEmail()).get();
-            dtoList.add(PostDTO.builder()
-                    .postCreatedAt(p.getPostCreatedAt())
-                    .postTitle(p.getPostTitle())
-                    .postContent(p.getPostContent())
-                    .postCode(p.getPostCode())
-                            .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
-                            .channelCode(p.getChannel().getChannelCode())
-                    .postViews(p.getPostViews())
-                    .user(UserDTO.builder().userNickname(userVo.getUserNickname())
-                            .userImgUrl(userVo.getUserImgUrl())
-                            .userEmail(userVo.getUserEmail()).build())
-                    .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
-                    .commentCount(commentService.commentCount(p.getPostCode()))
-                            .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode())*5) + (postCommentCount(p.getPostCode())*2))
-                    .build());
-
+            dtoList.add(postVoChangeDTO(p));
         }
         if(dtoList.size() == 0){
             return null;
@@ -397,27 +341,7 @@ public class PostService {
                 .execute();
         Post vo = postDAO.findById(postCode).orElse(null);
         if(vo == null)return null;
-        // 게시글 좋아요 숫자 확인
-        // 문제 생기면 알려주세요 (2024.10.18)
-        User user = userDAO.findById(vo.getUserEmail()).get();
-        PostDTO dto = PostDTO.builder()
-                .postCreatedAt(vo.getPostCreatedAt())
-                .postTitle(vo.getPostTitle())
-                .postContent(vo.getPostContent())
-                .postCode(postCode)
-                .channelTag(tagDAO.findById(vo.getChannelTag().getChannelTagCode()).get())
-                .channelCode(vo.getChannel().getChannelCode())
-                .postViews(vo.getPostViews())
-                .user(UserDTO.builder().userNickname(user.getUserNickname())
-                        .userImgUrl(user.getUserImgUrl())
-                        .userEmail(user.getUserEmail()).build())
-                .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postCode)).fetch().size())
-                .commentCount(commentService.commentCount(postCode))
-                .bestPoint(postViewCount(vo.getPostCode()) + (postLikeCount(vo.getPostCode())*5) + (postCommentCount(vo.getPostCode())*2))
-                .build();
-       // 작성자, 게시글 , 좋아요 숫자 리턴
-
-        return dto;
+        return postVoChangeDTO(vo);
     }
     // 게시글 작성,수정
     public Post savePost (Post vo){
@@ -515,23 +439,7 @@ public class PostService {
             return null;
         } else {
             for(int i=0; i<postList.size(); i++){
-
-                PostDTO dto = PostDTO.builder()
-                        .postCreatedAt(postList.get(i).getPostCreatedAt())
-                        .postTitle(postList.get(i).getPostTitle())
-                        .postContent(postList.get(i).getPostContent())
-                        .postCode(postList.get(i).getPostCode())
-                        .channelTag(tagDAO.findById(postList.get(i).getChannelTag().getChannelTagCode()).get())
-                        .channelCode(postList.get(i).getChannel().getChannelCode())
-                        .postViews(postList.get(i).getPostViews())
-                        .user(UserDTO.builder().userNickname(user.getUserNickname())
-                                .userImgUrl(user.getUserImgUrl())
-                                .userEmail(user.getUserEmail()).build())
-                        .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(postList.get(i).getPostCode())).fetch().size())
-                        .commentCount(commentService.commentCount(postList.get(i).getPostCode()))
-                        .bestPoint(postViewCount(postList.get(i).getPostCode()) + (postLikeCount(postList.get(i).getPostCode())*5) + (postCommentCount(postList.get(i).getPostCode())*2))
-                        .build();
-                dtoList.add(dto);
+                dtoList.add(postVoChangeDTO(postList.get(i)));
             }
             return dtoList;
         }
@@ -539,7 +447,25 @@ public class PostService {
 
 
     }
+    public PostDTO postVoChangeDTO (Post p) {
+        User userVo = userDAO.findById(p.getUserEmail()).get();
+        return PostDTO.builder()
+                .postCreatedAt(p.getPostCreatedAt())
+                .postTitle(p.getPostTitle())
+                .postContent(p.getPostContent())
+                .postCode(p.getPostCode())
+                .channelTag(tagDAO.findById(p.getChannelTag().getChannelTagCode()).get())
+                .channelCode(p.getChannel().getChannelCode())
+                .postViews(p.getPostViews())
+                .user(UserDTO.builder().userNickname(userVo.getUserNickname())
+                        .userImgUrl(userVo.getUserImgUrl())
+                        .userEmail(userVo.getUserEmail()).build())
+                .likeCount(queryFactory.selectFrom(qPostLike).where(qPostLike.postCode.eq(p.getPostCode())).fetch().size())
+                .commentCount(commentService.commentCount(p.getPostCode()))
+                .bestPoint(postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode()) * 5) + (postCommentCount(p.getPostCode()) * 2))
+                .build();
 
+    }
 
 
 
