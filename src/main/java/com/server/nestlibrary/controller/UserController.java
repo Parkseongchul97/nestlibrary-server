@@ -207,10 +207,11 @@ public class UserController {
     //
     @GetMapping("/user/userInfo/{userEmail}")
     public  ResponseEntity userPage(@PathVariable(name = "userEmail")String userEmail){
+        User user = userService.findUser(userEmail);
+        user.setUserPassword(null);
 
 
-
-        return ResponseEntity.ok(userService.findUser(userEmail));
+        return ResponseEntity.ok(user);
 
 
     }
