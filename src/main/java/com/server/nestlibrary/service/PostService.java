@@ -1,6 +1,7 @@
 package com.server.nestlibrary.service;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.BoardDTO;
@@ -146,7 +147,7 @@ public class PostService {
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
-        log.info("인기페이징 상태 : " + paging);
+
         int extraCount = paging.getTotalPage() % paging.getPageSize(); // 나머지 숫자
         List<Post> pagingVoList = new ArrayList<>();
         if (paging.getPage() == paging.getEndPage()) { // 마지막 페이지이면서
@@ -354,13 +355,18 @@ public class PostService {
     public Post savePost(Post vo) {
         if (vo.getPostCode() == 0) {
             // 수정이아니라 작성의 경우에만
-            // 추가조건 : 도배방지 같은 제목 내용 나우랑 최근글 페이징 해오는거 비교
             vo.setPostCreatedAt(LocalDateTime.now());
-            User user = userDAO.findById(getEmail()).get();
+
+            // 30분으로 도배글 채크
+            if(spamCheck(vo.getChannel().getChannelCode(),vo.getPostTitle())){
+                // 게시글 작성시 50포인트 추가
+                User user = userDAO.findById(getEmail()).get();
             user.setUserPoint(user.getUserPoint() + 50);
-            // 게시글 작성시 50포인트 추가
             userDAO.save(user);
             return postDAO.save(vo);
+            }else{
+                return null;
+            }
         } else {
             // 수정일땐 시간 원래 시간 다시 넣기
             Post post = postDAO.findById(vo.getPostCode()).get();
@@ -375,6 +381,35 @@ public class PostService {
         }
 
     }
+
+    public boolean spamCheck(int channelCode, String keyword) {
+        List<PostDTO> dtoList = new ArrayList<>();
+        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+        BooleanExpression timeCondition = qPost.postCreatedAt.after(thirtyMinutesAgo);
+        List<Post> spamList = queryFactory.selectFrom(qPost)
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
+                .where(qPost.channel.channelCode.eq(channelCode))
+                .where(timeCondition)
+                .where(qPost.postTitle.containsIgnoreCase(keyword)).fetch();
+        if(spamList.size() != 0){
+            return false;
+        }return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // 게시글 삭제
     public void removePost(int postCode) {

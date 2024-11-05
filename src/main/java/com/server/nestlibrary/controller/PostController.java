@@ -62,12 +62,15 @@ public class PostController {
     @PostMapping("/private/post")
     public ResponseEntity addPost(@RequestBody Post vo){
         Management ban = managementService.findBan(vo.getChannel().getChannelCode());
-        log.info("게시글 내용 : "  + vo);
         if(ban != null){ // 내가 벤당했다면 벤정보 리턴
             return ResponseEntity.ok(ban);
         }
         // 작성자 50포인트
         Post post = postService.savePost(vo);
+        // 게시글 작성하는데 작성실패(도배글)
+        if(post == null){
+            return ResponseEntity.ok(null);
+        }
         return ResponseEntity.ok(post);
     }
 
