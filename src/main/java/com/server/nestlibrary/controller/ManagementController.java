@@ -274,9 +274,9 @@ public class ManagementController {
     //유저관리페이지에서 글 확인
     @GetMapping("/private/management/{channelCode}/{userNickname}")
     public  ResponseEntity channelPost(@PathVariable(name = "channelCode") int channelCode,
-                                       @PathVariable(name = "userNickname") String userNickname
+                                       @PathVariable(name = "userNickname" , required = false) String userNickname
                                        ){
-
+         log.info(userNickname);
 
         List<PostDTO> postDto = new ArrayList<>();
         if( !userNickname.equals("undefined")) {
