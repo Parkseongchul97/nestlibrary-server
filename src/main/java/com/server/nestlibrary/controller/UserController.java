@@ -80,7 +80,6 @@ public class UserController {
                 .userPassword(dto.getUserPassword())
                 .userNickname(dto.getUserNickname())
                 .build();
-        System.out.println(vo);
         userService.registerUser(vo);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
