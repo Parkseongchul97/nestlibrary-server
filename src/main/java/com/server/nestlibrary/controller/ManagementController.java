@@ -277,8 +277,7 @@ public class ManagementController {
                                        @PathVariable(name = "userNickname") String userNickname
                                        ){
 
-        log.info(userNickname);
-        log.info("채널코드 " + channelCode);
+
         List<PostDTO> postDto = new ArrayList<>();
         if( !userNickname.equals("undefined")) {
           postDto = postService.channelCodeByAllPost(channelCode, null, "user", userNickname);

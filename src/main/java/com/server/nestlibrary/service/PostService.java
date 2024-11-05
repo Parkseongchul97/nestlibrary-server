@@ -458,6 +458,7 @@ public class PostService {
 
     }
 
+
     public PostDTO postVoChangeDTO(Post p) {
         User userVo = userDAO.findById(p.getUserEmail()).get();
         return PostDTO.builder()

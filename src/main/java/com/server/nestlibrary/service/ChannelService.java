@@ -262,7 +262,7 @@ public class ChannelService {
 
        List<Integer> myCodes = managementDAO.myChannel(userEmail);
        List<Channel> myChan = new ArrayList<>();
-      System.out.println("마이코드" + myCodes);
+
        if( myCodes.size() > 0) {
            for (int i = 0; i < myCodes.size(); i++) {
 
