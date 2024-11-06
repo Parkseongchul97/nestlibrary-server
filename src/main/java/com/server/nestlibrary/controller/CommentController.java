@@ -39,6 +39,9 @@ public class CommentController {
         Comment com = commentService.addComment(vo);
         if(com.getCommentParentsCode() == 0){ // 게시글 주인에게 알림
             Post post = postService.postCodeByPost(com.getPostCode()); // 게시글 주인
+            if(post.getUserEmail()== null){
+                return ResponseEntity.ok(com);
+            }
             if(!userService.getLoginUser().getUserEmail().equals(post.getUserEmail()))// 내글에 내댓글 아니면
             pushService.savePush(Push.builder()
                     .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
@@ -50,6 +53,9 @@ public class CommentController {
         }else{ // 부모 댓글 주인에게 알림
             Comment comment = commentService.findComment(com.getCommentParentsCode()); // 상위 댓글 주인
             Post post = postService.postCodeByPost(com.getPostCode());
+            if(comment.getUserEmail()== null){
+                return ResponseEntity.ok(com);
+            }
             if(!userService.getLoginUser().getUserEmail().equals(comment.getUserEmail()))// 내댓글에 내댓글 아니면
             pushService.savePush(Push.builder()
                     .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
@@ -108,12 +114,23 @@ public class CommentController {
     }
 
     public CommentDTO commentDetail(Comment c){
+        if(c.getUserEmail() == null){
+            return CommentDTO.builder()
+                    .commentCode(c.getCommentCode())
+                    .commentCreatedAt(c.getCommentCreatedAt())
+                    .postCode(c.getPostCode())
+                    .user(null)
+                    .commentContent((c.getCommentContent())).build();
+        }
         User vo = userService.findUser(c.getUserEmail());
-        return CommentDTO.builder()
-                .commentCode(c.getCommentCode())
-                .commentCreatedAt(c.getCommentCreatedAt())
-                .postCode(c.getPostCode())
-                .user(UserDTO.builder().userEmail(vo.getUserEmail()).userNickname(vo.getUserNickname()).userImgUrl(vo.getUserImgUrl()).build())
-                .commentContent((c.getCommentContent())).build();
+            return CommentDTO.builder()
+                    .commentCode(c.getCommentCode())
+                    .commentCreatedAt(c.getCommentCreatedAt())
+                    .postCode(c.getPostCode())
+                    .user(UserDTO.builder().userEmail(vo.getUserEmail()).userNickname(vo.getUserNickname()).userImgUrl(vo.getUserImgUrl()).build())
+                    .commentContent((c.getCommentContent())).build();
+
+
+
     }
 }

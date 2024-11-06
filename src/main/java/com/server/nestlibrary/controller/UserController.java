@@ -204,14 +204,39 @@ public class UserController {
 
 
     }
+    // 유저탈퇴
     @DeleteMapping("/private/user/remove")
     public ResponseEntity removeUser (){
+        User user = userService.getLoginUser();
+        folderDelete(user.getUserEmail());
         userService.removeUser();
         return ResponseEntity.ok(null);
 
     }
 
+    public boolean folderDelete(String userEmail) {
+        String path = "\\\\192.168.10.51\\nest\\channel\\" + userEmail;
+        File folder = new File(path); //
+        try {
+            while (folder.exists()) { // 폴더가 존재한다면
+                File[] listFiles = folder.listFiles();
 
+                for (File file : listFiles) { // 폴더 내 파일을 반복시켜서 삭제
+                    file.delete();
+                }
+
+                if (listFiles.length == 0 && folder.isDirectory()) { // 하위 파일이 없는지와 폴더인지 확인 후 폴더 삭제
+                    folder.delete();
+                }
+
+
+            }
+        }
+        catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
 
 
 
