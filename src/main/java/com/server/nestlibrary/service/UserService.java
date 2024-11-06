@@ -2,13 +2,11 @@ package com.server.nestlibrary.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.UserDTO;
-import com.server.nestlibrary.model.vo.QPost;
-import com.server.nestlibrary.model.vo.QPostLike;
-import com.server.nestlibrary.model.vo.QUser;
-import com.server.nestlibrary.model.vo.User;
+import com.server.nestlibrary.model.vo.*;
 import com.server.nestlibrary.repo.UserDAO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +21,21 @@ import java.util.List;
 public class UserService {
     @Autowired
     private UserDAO dao;
+    @Lazy
+    @Autowired
+    private MessagesService messagesService;
+    
+    @Autowired
+    private PostService postService;
+    @Lazy
+    @Autowired
+    private ManagementService managementService;
+    @Lazy
+    @Autowired
+    private ChannelService channelService;
+    @Lazy
+    @Autowired
+    private CommentService commentService;
 
     @Autowired
     private JPAQueryFactory queryFactory;
@@ -105,5 +118,27 @@ public class UserService {
                     .where(qUser.userNickname.containsIgnoreCase(userNickname))
                     .limit(10)
                     .fetch();
+    }
+    // 회원 탈퇴
+    public void removeUser(){
+        User user = getLoginUser();
+        // 쪽지, 댓글, 호스트 채널은 따로 조회후 삭제
+        // 내 쪽지
+        List<Messages> myMessages = messagesService.allMessages(null, null);
+        for(Messages m : myMessages){
+            messagesService.removeMessages(m.getMessagesCode());
+        }
+        // 내 댓글
+        List<Comment> myCommentList = commentService.getMyComment(user.getUserEmail());
+        for(Comment c : myCommentList){
+            commentService.removeComment(c.getCommentCode());
+        }
+        // 내 호스트 채널
+        List<Management> myHostChannel = managementService.myManagement();
+        for (Management m : myHostChannel){
+            channelService.removeChannel(m.getChannel().getChannelCode());
+        }
+        // 알림, 메니지먼트, 게시글, 좋아요는 링크되어있어서 단순삭제로 가능
+        dao.deleteById(user.getUserEmail());
     }
 }

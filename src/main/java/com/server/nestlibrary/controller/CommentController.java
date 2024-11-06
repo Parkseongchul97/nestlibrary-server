@@ -36,13 +36,9 @@ public class CommentController {
     @PostMapping("/private/comment")
     public ResponseEntity addComment(@RequestBody Comment vo){
         vo.setCommentCreatedAt(LocalDateTime.now());
-        log.info("입력값 " + vo);
         Comment com = commentService.addComment(vo);
-        log.info("결과 " + com);
         if(com.getCommentParentsCode() == 0){ // 게시글 주인에게 알림
-
             Post post = postService.postCodeByPost(com.getPostCode()); // 게시글 주인
-
             if(!userService.getLoginUser().getUserEmail().equals(post.getUserEmail()))// 내글에 내댓글 아니면
             pushService.savePush(Push.builder()
                     .pushCreatedAt(LocalDateTime.now()) // 알림 하루지나면 삭제?
@@ -50,7 +46,6 @@ public class CommentController {
                     .postCode(post.getPostCode()) // 주소링크용 링크용 글코드
                     .channelCode(post.getChannel().getChannelCode())
                     .userEmail(post.getUserEmail()) // 대상유저
-
                     .build()) ;
         }else{ // 부모 댓글 주인에게 알림
             Comment comment = commentService.findComment(com.getCommentParentsCode()); // 상위 댓글 주인

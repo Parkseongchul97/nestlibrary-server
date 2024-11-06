@@ -9,7 +9,6 @@ CREATE TABLE user( -- 유저 테이블
     user_img_url TEXT, -- 유저 프로필 이미지 URL(서버에 저장할)
     user_info TEXT, -- 유저 자기소개란
     user_point INT DEFAULT 0 -- 유저 포인트 (채널 생성 등에 사용)
---  ,user_role VARCHAR(30) -- 유저 권한 (관리자, 일반회원) ? 일단 중요도 낮음
 );
 
 CREATE TABLE channel( --  유저가 생성한 채널
@@ -24,7 +23,6 @@ CREATE TABLE channel( --  유저가 생성한 채널
 CREATE TABLE channel_tag( --  유저가 생성한 채널
 	channel_tag_code INT AUTO_INCREMENT PRIMARY KEY,
     channel_tag_name VARCHAR(50), -- 채널 게시판 이름
-
 	channel_code INT -- 채널 코드
 );
 
@@ -41,15 +39,15 @@ CREATE TABLE management( --  채널 관리
 );
 ALTER TABLE management ADD  FOREIGN KEY (user_email) REFERENCES user(user_email)
  ON DELETE CASCADE
- ON UPDATE CASCADE; -- 채널관리 -> 유저  참조
+ ON UPDATE CASCADE; -- 유저 삭제시 자동삭제
  
  ALTER TABLE management ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code)
  ON DELETE CASCADE
- ON UPDATE CASCADE;
+ ON UPDATE CASCADE; -- 채널 삭제시 자동삭제
  
 ALTER TABLE channel_tag ADD  FOREIGN KEY (channel_code) REFERENCES channel(channel_code)
  ON DELETE CASCADE
- ON UPDATE CASCADE; -- 채널태그 -> 채널 참조
+ ON UPDATE CASCADE; -- 채널 삭제시 자동삭제
 
 CREATE TABLE post( -- 게시글 테이블 
 	post_code INT AUTO_INCREMENT PRIMARY KEY, -- 게시판 코드

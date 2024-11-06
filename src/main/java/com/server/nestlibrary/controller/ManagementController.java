@@ -191,7 +191,7 @@ public class ManagementController {
         // 채널내의 등급
         // 클라이언트에서 채널코드와 등급을 주거나 채널코드와 닉네임을 주거나인데
         // 1. 서비스의 모든 유저중 검색된 유저  리스트
-        log.info("여기까지오나? " + channelCode + userNickname + managementUserStatus);
+
 
           if(userNickname != null){
               List<User> userList = userService.findByNicknameUserList(userNickname);
@@ -222,7 +222,7 @@ public class ManagementController {
 
           }else if(managementUserStatus.equals("admin")){
 
-            log.info("admin으로 오냐?");
+
               List<UserDTO> adminList =    managementService.findAdmin(channelCode);
               List<UserRoleDTO> userRoleDTOList = new ArrayList<>();
 

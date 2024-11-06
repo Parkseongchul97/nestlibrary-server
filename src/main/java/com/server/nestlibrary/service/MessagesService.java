@@ -104,7 +104,7 @@ public class MessagesService {
         Messages vo = messagesDAO.findById(messagesCode).get();
         String email =  userService.getLoginUser().getUserEmail();
         if(vo.getMessagesToUser().equals(email)){ // 수신자 확인이면
-            log.info("읽음 여부 변경");
+
             vo.setMessagesRead(true); // 조회여부 트루로
            Messages reVo = messagesDAO.save(vo);
            return voMessagesDTO(reVo);
@@ -193,14 +193,10 @@ public class MessagesService {
     public MessagesDTO voMessagesDTO(Messages vo){
         User fromUser = userService.findUser(vo.getMessagesFromUser());
         User toUser = userService.findUser(vo.getMessagesToUser());
-
-        if(fromUser != null){
-            fromUser.setUserPassword(null);
-        }
-        if(toUser != null){
-            toUser.setUserPassword(null);
-        }
-
+        if(fromUser != null)
+        fromUser.setUserPassword(null);
+        if(toUser != null)
+        toUser.setUserPassword(null);
         return MessagesDTO.builder()
                 .messagesCode(vo.getMessagesCode())
                 .messagesContent(vo.getMessagesContent())
