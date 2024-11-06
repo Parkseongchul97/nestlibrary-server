@@ -119,7 +119,9 @@ public class PostController {
     public ResponseEntity updatePost(@RequestBody Post vo){
         log.info("게시글 내용 : "  + vo);
         Post post = postService.savePost(vo);
-        return ResponseEntity.ok(vo);
+        log.info("포스트정보" + post);
+
+        return ResponseEntity.ok(post);
     }
     // 게시글 삭제
     @DeleteMapping("/private/post/{postCode}")
