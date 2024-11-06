@@ -203,7 +203,7 @@ public class ChannelController {
                                   @RequestParam(name = "target", defaultValue = "", required = false) String target,
                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
     ) {
-        int totalCount = postService.allPostCount(channelCode, target, keyword);
+        int totalCount = postService.postQuery(channelCode, target, keyword,null,false).fetch().size();
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
@@ -239,7 +239,7 @@ public class ChannelController {
                                   @RequestParam(name = "target", defaultValue = "", required = false) String target,
                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword) {
         // 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
-        int totalCount = postService.tagPostCount(channelTagCode, target, keyword);
+        int totalCount = postService.postQuery(channelCode, target, keyword,null,true).fetch().size();
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));

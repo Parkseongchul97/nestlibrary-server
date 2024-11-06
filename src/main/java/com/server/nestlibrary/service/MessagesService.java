@@ -104,7 +104,7 @@ public class MessagesService {
         Messages vo = messagesDAO.findById(messagesCode).get();
         String email =  userService.getLoginUser().getUserEmail();
         if(vo.getMessagesToUser().equals(email)){ // 수신자 확인이면
-            log.info("읽음 여부 변경");
+
             vo.setMessagesRead(true); // 조회여부 트루로
            Messages reVo = messagesDAO.save(vo);
            return voMessagesDTO(reVo);

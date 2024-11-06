@@ -54,11 +54,17 @@ public class PostService {
     public Post postCodeByPost(int postCode) {
         return postDAO.findById(postCode).orElse(null);
     }
-
-    public int allPostCount(int channelCode, String target, String keyword) {
+    // 해당 채널의 태그 or 모든 게시글 출력, 카운트 쿼리
+    public JPAQuery<Post> postQuery (int code, String target, String keyword, Paging paging, boolean isTag){
         JPAQuery<Post> query = queryFactory.selectFrom(qPost)
-                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channel.channelCode.eq(channelCode));
+                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail));
+        if(isTag){ // 해당 태그 출력
+            query.where(qPost.channelTag.channelTagCode.eq(code));
+
+       }else{ // 채널 게시글 출력
+            query.where(qPost.channel.channelCode.eq(code));
+       }
+
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if (target.equals("title")) { // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -69,26 +75,19 @@ public class PostService {
 
             }
         }
-        return query.fetch().size();
+        if (paging != null) { // 페이징이 있다면 게시글 반환할때
+            query.orderBy(qPost.postCreatedAt.desc()) // 최신순으로
+                    .offset(paging.getOffset()) //
+                    .limit(paging.getLimit()); //10개씩
 
-    }
+        } else { // 없다면 카운트 반환할때?
+            query.orderBy(qPost.postCreatedAt.desc()); // 최신순으로
 
-    public int tagPostCount(int channelTagCode, String target, String keyword) {
-        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
-                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
-        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
-            if (target.equals("title")) { // 제목이 포함된게시글
-                query.where(qPost.postTitle.containsIgnoreCase(keyword));
-            } else if (target.equals("content")) {// 내용이 포함된게시글
-                query.where(qPost.postContent.containsIgnoreCase(keyword));
-            } else if (target.equals("user")) { // 작성자가
-                query.where(qUser.userNickname.containsIgnoreCase(keyword));
-            }
         }
-        return query.fetch().size();
+        return query;
     }
 
+    // 공지 출력
     public List<PostDTO> channelAnnouncement(int channelCode) {
         List<Post> voList = queryFactory.selectFrom(qPost)
                 .join(qChannelTag).on(qPost.channelTag.channelTagCode.eq(qChannelTag.channelTagCode))
@@ -106,30 +105,7 @@ public class PostService {
     // 해당 채널의 전체 글
     public List<PostDTO> channelCodeByAllPost(int channelCode, Paging paging, String target, String keyword) {
         List<PostDTO> dtoList = new ArrayList<>();
-        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
-                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channel.channelCode.eq(channelCode));
-        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
-            if (target.equals("title")) { // 제목이 포함된게시글
-                query.where(qPost.postTitle.containsIgnoreCase(keyword));
-            } else if (target.equals("content")) {// 내용이 포함된게시글
-                query.where(qPost.postContent.containsIgnoreCase(keyword));
-            } else if (target.equals("user")) { // 작성자가
-                query.where(qUser.userNickname.containsIgnoreCase(keyword));
-            }
-        }
-        List<Post> voList = new ArrayList<>();
-        if (paging != null) {
-            voList = query
-                    .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-                    .offset(paging.getOffset()) //
-                    .limit(paging.getLimit()) //10개씩
-                    .fetch();
-        } else {
-            voList = query
-                    .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-                    .fetch();
-        }
+        List<Post> voList = postQuery(channelCode, target, keyword, paging,false).fetch();
         for (Post p : voList) {
             dtoList.add(postVoChangeDTO(p));
         }
@@ -139,11 +115,52 @@ public class PostService {
         return dtoList;
 
     }
+    // 채널 태그별 게시글
+    public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword) {
+        List<PostDTO> dtoList = new ArrayList<>();
+        List<Post> voList = postQuery(channelTagCode, target, keyword, paging,true).fetch();
+        for (Post p : voList) {
+            dtoList.add(postVoChangeDTO(p));
+        }
+        if (dtoList.size() == 0) {
+            return null;
+        }
+        return dtoList;
 
-    // 해당 채널의 인기 글
-    public BoardDTO channelCodeByBestPost(int channelCode, int page, String target, String keyword) {
-        List<Post> voList = bestPostVoList(channelCode, target, keyword);
+    }
+    
+    // 채널 전체 인기글
+    public List<Post> bestPostVoList(int channelCode, String target, String keyword) {
+        // 모든 게시글 다가져옴
+        List<Post> voList = postQuery(channelCode,target,keyword,null,false).fetch();
+        List<Post> bestList = new ArrayList<>();
+        for (Post p : voList) { // 점수 계산
+            int bestPoint = postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode()) * 5) + (postCommentCount(p.getPostCode()) * 2);
+            if (bestPoint > 50) {
+                bestList.add(p);
+            }
+        }
+        return bestList;
+    }
+    // 채널 태그별 인기글
+    public List<Post> bestTagPostVoList(int channelTagCode, String target, String keyword) {
+        // 해당 태그 모든 게시글
+        List<Post> voList = postQuery(channelTagCode,target,keyword,null,true).fetch();
+        List<Post> bestList = new ArrayList<>();
+        for (Post p : voList) { // 점수 계산
+            int bestPoint = postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode()) * 5) + (postCommentCount(p.getPostCode()) * 2);
+            if (bestPoint > 50) {
+                bestList.add(p);
+            }
+        }
+        return bestList;
+    }
+    // 인기글들 출력형식 맞춰주기
+    public BoardDTO bestPostChangBoard(List<Post> voList ,int page){
         int totalCount = voList.size();
+        if(totalCount == 0){
+            return null;
+        }
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
@@ -172,96 +189,18 @@ public class PostService {
         if (dtoList.size() == 0) dtoList = null;
         BoardDTO postBoard = BoardDTO.builder().postList(dtoList).paging(paging).build();
         return postBoard;
+
     }
 
-    public List<Post> bestPostVoList(int channelCode, String target, String keyword) {
-        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
-                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channel.channelCode.eq(channelCode));
-        // 검색 조건 추가
-        if (target != null && !target.isEmpty() && keyword != null && !keyword.isEmpty()) {
-            if (target.equals("title")) {
-                query.where(qPost.postTitle.containsIgnoreCase(keyword));
-            } else if (target.equals("content")) {
-                query.where(qPost.postContent.containsIgnoreCase(keyword));
-            } else if (target.equals("user")) {
-                query.where(qUser.userNickname.containsIgnoreCase(keyword));
-            }
-        }
-        List<Post> voList = query.fetch();
-        List<Post> bestList = new ArrayList<>();
-        for (Post p : voList) { // 점수 계산
-            int bestPoint = postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode()) * 5) + (postCommentCount(p.getPostCode()) * 2);
-            if (bestPoint > 50) {
-                bestList.add(p);
-            }
-        }
-        return bestList;
+    // 해당 채널의 인기 글
+    public BoardDTO channelCodeByBestPost(int channelCode, int page, String target, String keyword) {
+        List<Post> voList = bestPostVoList(channelCode, target, keyword);
+        return bestPostChangBoard(voList, page);
     }
-
     public BoardDTO channelTagByBestPost(int channelTagCode, int page, String target, String keyword) {
         List<Post> voList = bestTagPostVoList(channelTagCode, target, keyword);
-        int totalCount = voList.size();
-        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
-        paging.setTotalPage(totalCount);
-        paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
-
-        int extraCount = paging.getTotalPage() % paging.getPageSize(); // 나머지 숫자
-        List<Post> pagingVoList = new ArrayList<>();
-        if (voList.size() != 0) {
-            if (paging.getPage() == paging.getEndPage()) { // 마지막 페이지이면서
-                if (extraCount != 0) { // 딱떨어지지 않으면 마지막 페이지가
-                    for (int i = paging.getOffset(); i < paging.getOffset() + extraCount; i++) {
-                        pagingVoList.add(voList.get(i));
-                    }
-                } else {
-                    for (int i = paging.getOffset(); i < paging.getOffset() + paging.getPageSize(); i++) {
-                        pagingVoList.add(voList.get(i));
-                    }
-                }
-            } else {
-                for (int i = paging.getOffset(); i < paging.getOffset() + paging.getPageSize(); i++) {
-                    pagingVoList.add(voList.get(i));
-                }
-            }
-        }
-        List<PostDTO> dtoList = new ArrayList<>();
-        for (Post p : pagingVoList) {
-            User userVo = userDAO.findById(p.getUserEmail()).get();
-            dtoList.add(postVoChangeDTO(p));
-        }
-        if (dtoList.size() == 0) dtoList = null;
-        BoardDTO postBoard = BoardDTO.builder().postList(dtoList).paging(paging).build();
-        return postBoard;
+        return bestPostChangBoard(voList, page);
     }
-
-    public List<Post> bestTagPostVoList(int channelTagCode, String target, String keyword) {
-        List<PostDTO> dtoList = new ArrayList<>();
-        BooleanBuilder builder = new BooleanBuilder();
-        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
-                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
-        // 검색 조건 추가
-        if (target != null && !target.isEmpty() && keyword != null && !keyword.isEmpty()) {
-            if (target.equals("title")) {
-                query.where(qPost.postTitle.containsIgnoreCase(keyword));
-            } else if (target.equals("content")) {
-                query.where(qPost.postContent.containsIgnoreCase(keyword));
-            } else if (target.equals("user")) {
-                query.where(qUser.userNickname.containsIgnoreCase(keyword));
-            }
-        }
-        List<Post> voList = query.fetch();
-        List<Post> bestList = new ArrayList<>();
-        for (Post p : voList) { // 점수 계산
-            int bestPoint = postViewCount(p.getPostCode()) + (postLikeCount(p.getPostCode()) * 5) + (postCommentCount(p.getPostCode()) * 2);
-            if (bestPoint > 50) {
-                bestList.add(p);
-            }
-        }
-        return bestList;
-    }
-
 
     // 알림 포스트 페이지 알아내는 메서드
     public int postPage(int postCode) {
@@ -300,38 +239,6 @@ public class PostService {
     }
 
 
-    // 채널 태그별 게시글
-    public List<PostDTO> channelTagCodeByAllPost(int channelTagCode, Paging paging, String target, String keyword) {
-        // 문제 생기면 알려주세요 (2024.10.18)
-        List<PostDTO> dtoList = new ArrayList<>();
-        JPAQuery<Post> query = queryFactory.selectFrom(qPost)
-                .join(qUser).on(qPost.userEmail.eq(qUser.userEmail))
-                .where(qPost.channelTag.channelTagCode.eq(channelTagCode));
-        if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
-            if (target.equals("title")) { // 제목이 포함된게시글
-                query.where(qPost.postTitle.containsIgnoreCase(keyword));
-            } else if (target.equals("content")) {// 내용이 포함된게시글
-                query.where(qPost.postContent.containsIgnoreCase(keyword));
-            } else if (target.equals("user")) { // 작성자가
-                query.where(qUser.userNickname.containsIgnoreCase(keyword));
-            }
-        }
-        List<Post> voList = query
-                .orderBy(qPost.postCreatedAt.desc()) // 최신순으로
-                .offset(paging.getOffset()) //
-                .limit(paging.getLimit())
-                .fetch();
-        // 문제 생기면 알려주세요 (2024.10.18)
-        for (Post p : voList) {
-            User userVo = userDAO.findById(p.getUserEmail()).get();
-            dtoList.add(postVoChangeDTO(p));
-        }
-        if (dtoList.size() == 0) {
-            return null;
-        }
-        return dtoList;
-
-    }
 
     public Post findByPostCode(int postCode) {
 
@@ -353,25 +260,23 @@ public class PostService {
 
     // 게시글 작성,수정
     public Post savePost(Post vo) {
+        // 수정이아니라 작성의 경우에만
         if (vo.getPostCode() == 0) {
-            // 수정이아니라 작성의 경우에만
             vo.setPostCreatedAt(LocalDateTime.now());
-
             // 30분으로 도배글 채크
             if(spamCheck(vo.getChannel().getChannelCode(),vo.getPostTitle())){
-                // 게시글 작성시 50포인트 추가
-                User user = userDAO.findById(getEmail()).get();
+            // 게시글 작성시 50포인트 추가
+            User user = userDAO.findById(getEmail()).get();
             user.setUserPoint(user.getUserPoint() + 50);
             userDAO.save(user);
             return postDAO.save(vo);
             }else{
+                // 도배글 방지! 알림
                 return null;
             }
-        } else {
-            // 수정일땐 시간 원래 시간 다시 넣기
+        } else { // 수정의 경우
             Post post = postDAO.findById(vo.getPostCode()).get();
             post.setPostTitle(vo.getPostTitle());
-            // 문제 생기면 알려주세요 (2024.10.18)
             post.setChannelTag(ChannelTag.builder()
                     .channelTagCode(vo.getChannelTag().getChannelTagCode())
                     .build());
@@ -381,7 +286,7 @@ public class PostService {
         }
 
     }
-
+    // 도배글(해당 채널 30분 제목 같으면)
     public boolean spamCheck(int channelCode, String keyword) {
         List<PostDTO> dtoList = new ArrayList<>();
         LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
@@ -395,31 +300,14 @@ public class PostService {
             return false;
         }return true;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
     // 게시글 삭제
     public void removePost(int postCode) {
-        // 삭제시 포인트감소?
         postDAO.deleteById(postCode);
     }
 
     // 게시글 좋아요
     public PostLike like(PostLike vo) {
-        // 좋아요 숫자가 일정 달성시 해당 post 조회하고 조회수, 좋아요수 조건 충족하면 인기글로 < 추가
         PostLike like = likeDAO.save(vo);
         // 좋아요 받은 게시글 작성자 포인트 + 10
         Post post = postDAO.findById(like.getPostCode()).get();
@@ -431,18 +319,16 @@ public class PostService {
 
     // 좋아요 취소
     public void unLike(int postLikeCode) {
-        // 좋아요 취소되면 다시 포인트 -10
         Post post = postDAO.findById(likeDAO.findById(postLikeCode).get().getPostCode()).get();
         User postAuthor = userDAO.findById(post.getUserEmail()).get();
-        // 작성자의 보유 포인트가 10보다 크면
+        // 작성자의 보유 포인트가 10보다 크면 좋아요 취소되면 다시 포인트 -10
         if (postAuthor.getUserPoint() > 10) {
             postAuthor.setUserPoint(postAuthor.getUserPoint() - 10);
             userDAO.save(postAuthor); // 포인트 감소
         }
         likeDAO.deleteById(postLikeCode); // 좋아요 취소
     }
-
-    // 로그인한 사용자의 좋아요 여부
+    // 로그인한 사용자의 좋아요 여부 (내가 눌럿나 안눌럿나)
     public PostLike findLike(int postCode) {
         List<PostLike> list = queryFactory.selectFrom(qPostLike)
                 .where(qPostLike.postCode.eq(postCode))
@@ -452,7 +338,7 @@ public class PostService {
         }
         return null;
     }
-
+    // 로그인 유저의 email
     private String getEmail() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {
@@ -472,10 +358,8 @@ public class PostService {
 
     //해당 채널 게시글 수
     public int userPostCount(int channelCode, String userEmail) {
-
         return postDAO.postCount(channelCode, userEmail);
     }
-
     //해당 유저의 최신글 10개
     public List<PostDTO> emailByPost(String userEmail) {
         List<Post> postList = postDAO.emailByPost(userEmail);
@@ -492,8 +376,7 @@ public class PostService {
 
 
     }
-
-
+    // Post vo -> Post dto
     public PostDTO postVoChangeDTO(Post p) {
         User userVo = userDAO.findById(p.getUserEmail()).get();
         return PostDTO.builder()
@@ -516,7 +399,7 @@ public class PostService {
 
 
     }
-
+    // ????
     public List<Integer> findChannelCode(String userEmail) {
 
         return postDAO.findChannelCode(userEmail);

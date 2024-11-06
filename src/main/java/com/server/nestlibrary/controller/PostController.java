@@ -117,10 +117,7 @@ public class PostController {
     // 게시글 수정
     @PutMapping("/private/post")
     public ResponseEntity updatePost(@RequestBody Post vo){
-        log.info("게시글 내용 : "  + vo);
         Post post = postService.savePost(vo);
-        log.info("포스트정보" + post);
-
         return ResponseEntity.ok(post);
     }
     // 게시글 삭제
@@ -160,8 +157,6 @@ public class PostController {
 
     @GetMapping("/user/favorite/{userEmail}")
     public ResponseEntity favoriteChannel(@PathVariable(name = "userEmail")String userEmail){
-
-
 
         return  ResponseEntity.ok(channelService.favoriteChannel(userEmail));
 
