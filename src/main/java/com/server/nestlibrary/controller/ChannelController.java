@@ -190,13 +190,13 @@ public class ChannelController {
    
         return ResponseEntity.ok(dto);
     }
-
+    // 채널 공지 가져오기
     @GetMapping("/channel/announcement/{channelCode}")
     public ResponseEntity channelAnnouncement(@PathVariable(name = "channelCode") int channelCode) {
         return ResponseEntity.ok(postService.channelAnnouncement(channelCode));
     }
 
- 
+    // 채널 모든 게시글
     @GetMapping("/{channelCode}")
     public ResponseEntity allPost(@PathVariable(name = "channelCode") int channelCode,
                                   @RequestParam(name = "page", defaultValue = "1") int page,
@@ -220,9 +220,10 @@ public class ChannelController {
                                    @RequestParam(name = "page", defaultValue = "1") int page,
                                    @RequestParam(name = "target", defaultValue = "", required = false) String target,
                                    @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
-    ) {// 페이징도 같이 담긴걸로?
+    ) {
         return ResponseEntity.ok(postService.channelCodeByBestPost(channelCode,page,target,keyword));
     }
+    // 채널 태그 인기 게시글
     @GetMapping("/{channelCode}/{channelTagCode}/best")
     public ResponseEntity bestTagPost(@PathVariable(name = "channelCode") int channelCode,
                                       @PathVariable(name = "channelTagCode") int channelTagCode,
@@ -279,7 +280,7 @@ public class ChannelController {
     public ResponseEntity createChannelTag(@RequestBody ChannelTag vo) throws Exception {
         ChannelTag tag = channelService.createTag(vo);
         log.info("생성된 새부 게시판 : " + tag);
-        // 태그 추가시 포인트 감소
+
         return ResponseEntity.ok(tag);
     }
 
@@ -288,7 +289,7 @@ public class ChannelController {
     public ResponseEntity createChannelTag(@PathVariable(name = "channelTagCode") int channelTagCode) throws Exception {
         channelService.removeTag(channelTagCode);
         log.info("생성된 새부 게시판 삭제");
-        // 해당 태그 밑에 있던 게시글들 처리? 일반탭으로? 아님 삭제
+        // 해당 태그 밑에 있던 게시글들 처리? 일반탭으로
         return ResponseEntity.ok(null);
     }
 

@@ -50,7 +50,6 @@ public class UserController {
 
         if(user != null){ // 회원이 있을시
             String token = tokenProvider.create(user); // 토큰 발행
-            user.setUserPassword(null);
             LoginUserDTO loginUser =  LoginUserDTO.builder()
                     .token(token)
                     .userEmail(user.getUserEmail())
@@ -124,10 +123,7 @@ public class UserController {
         if(vo.getUserPoint() >= 0){ // 포인트 차감후 포인트가 -로 안내려갈때
             userService.registerUser(vo);
             vo.setUserPassword(null);
-            // 토큰생성 하려면 id 비번 넣어야하는데 비번을 안받아옴
-//            String token = tokenProvider.create(vo);
             LoginUserDTO loginUser =  LoginUserDTO.builder()
-//                    .token(token)
                     .userEmail(vo.getUserEmail())
                     .userNickname(vo.getUserNickname())
                     .userImgUrl(vo.getUserImgUrl())
@@ -142,7 +138,6 @@ public class UserController {
 
     @GetMapping("/user/nickname")
     public ResponseEntity nicknameCheck(@RequestParam(name = "nickname") String nickname ,@RequestParam(name = "userEmail" ,required = false)String userEmail) {
-        log.info("내 입력값 : " + nickname);
         User user = userService.findByNickname(nickname); // 있으면 중복 닉네임
         try {
         if (user == null) {
@@ -190,31 +185,32 @@ public class UserController {
        return ResponseEntity.ok(kakaoService.getUserInfo(kakaoToken));
     }
 
+    // 비밀번호 변경
     @PutMapping("/private/user/password")
    public ResponseEntity passwordUpdate (@RequestParam(name = "userEmail") String userEmail, @RequestParam(name = "userPassword") String userPassword){
-
-        log.info("아이디" + userEmail);
-        log.info("비밀번호" + userPassword);
         User vo = userService.findUser(userEmail);
         vo.setUserPassword(userPassword);
-
         userService.decodingPassword(vo);
-
         return ResponseEntity.ok(null);
 
     }
 
-    //
+    // 유저 페이지
     @GetMapping("/user/userInfo/{userEmail}")
     public  ResponseEntity userPage(@PathVariable(name = "userEmail")String userEmail){
         User user = userService.findUser(userEmail);
         user.setUserPassword(null);
-
-
         return ResponseEntity.ok(user);
 
 
     }
+    @DeleteMapping("/private/user/remove")
+    public ResponseEntity removeUser (){
+        userService.removeUser();
+        return ResponseEntity.ok(null);
+
+    }
+
 
 
 
