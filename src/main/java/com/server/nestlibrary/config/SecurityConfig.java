@@ -22,8 +22,7 @@ public class SecurityConfig {
     @Autowired
     private  JwtFilter jwtFilter;
 
-    @Autowired
-    private  OAuth2SuccessHandler handler;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -34,7 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/private/*").authenticated()
                         .anyRequest().permitAll())
-                .oauth2Login(oauth2 -> oauth2.successHandler(handler))
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
