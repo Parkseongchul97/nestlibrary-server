@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/private/*").authenticated()
                         .anyRequest().permitAll())
-                .oauth2Login(oauth2 -> oauth2.successHandler(handler))
+             //   .oauth2Login(oauth2 -> oauth2.successHandler(handler))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

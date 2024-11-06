@@ -20,7 +20,7 @@ public class TokenProvider {
     private SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     public  String create(User user){
-        System.out.println("create");
+
         return Jwts.builder()
                 .signWith(secretKey)
                 .setClaims(Map.of(  // 토큰에 넣으려고하는거
