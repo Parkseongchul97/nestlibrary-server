@@ -193,10 +193,12 @@ public class MessagesService {
     public MessagesDTO voMessagesDTO(Messages vo){
         User fromUser = userService.findUser(vo.getMessagesFromUser());
         User toUser = userService.findUser(vo.getMessagesToUser());
+
         if(fromUser != null)
         fromUser.setUserPassword(null);
         if(toUser != null)
         toUser.setUserPassword(null);
+
         return MessagesDTO.builder()
                 .messagesCode(vo.getMessagesCode())
                 .messagesContent(vo.getMessagesContent())
