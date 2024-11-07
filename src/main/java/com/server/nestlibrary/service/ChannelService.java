@@ -1,6 +1,7 @@
 package com.server.nestlibrary.service;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.QueryFactory;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.server.nestlibrary.model.dto.*;
 import com.server.nestlibrary.model.vo.*;
@@ -10,11 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,12 +46,15 @@ public class ChannelService {
     @Lazy
     @Autowired
     private  PostService postService;
+    @Lazy
+    @Autowired
+    private  CommentService commentService;
 
     @Autowired
     private JPAQueryFactory queryFactory;
     private final QPost qPost = QPost.post;
     private final QChannel qChannel = QChannel.channel;
-
+    private final QComment qComment = QComment.comment;
     public List<Channel> allChannel(){
 
         return channelDAO.findAll();
@@ -311,12 +319,8 @@ public class ChannelService {
             }
 
             List<MostChannelDTO> mostList = new ArrayList<>();
-
-            for(int i=0; i<favoriteCode.size(); i++){
-
-                if( i < 3) {
-
-
+            LocalDateTime today = LocalDateTime.now().minusDays(6);
+            for(int i=0; i< favoriteCode.size(); i++){
                     MostChannelDTO dto = MostChannelDTO
 
                             .builder()
@@ -326,17 +330,51 @@ public class ChannelService {
                             .commentCount(commentDAO.commentCount(userEmail, favoriteCode.get(i)))
                             .build();
 
-                    mostList.add(dto);
-                }
 
+                    List<ChartDTO> chartList= new ArrayList<>();
+                for(int j=0; j< 7; j++){
+
+                    chartList.add(ChartDTO.builder()
+                            .date(today.plusDays(j))
+                            .postCount(channelPostCountQuery(userEmail,favoriteCode.get(i), today.plusDays(j)))
+                            .CommentCount(channelCommentCountQuery(userEmail, favoriteCode.get(i),today.plusDays(j)))
+                            .build());
+                    log.info("날짜라인"  + today.minusDays(j));
+                }
+                dto.setChartDTO(chartList);
+                mostList.add(dto);
+                if(i >= 3)break;
             }
+
 
 
         return mostList;
         }
 
-
         return null;
+    }
+    public int channelPostCountQuery(String userEmail, int channelCode, LocalDateTime time){
+        String dateStr = time.toLocalDate().toString();
+        log.info("날짜 : "  + time);
+        log.info(dateStr);
+        if(userEmail != null){ // 채널 포스트 카운트 조회라면
+            return  queryFactory.selectFrom(qPost)
+                    .where(qPost.userEmail.eq(userEmail))
+                    .where(qPost.channel.channelCode.eq(channelCode))
+                    .where(qPost.postCreatedAt.stringValue().like(dateStr + "%"))
+                    .fetch().size();
+        }
+            return  queryFactory.selectFrom(qPost)
+                    .where(qPost.channel.channelCode.eq(channelCode))
+                    .where(qPost.postCreatedAt.stringValue().like(dateStr + "%"))
+                    .fetch().size();
+    }
+    public int channelCommentCountQuery(String userEmail, int channelCode, LocalDateTime time){
+        String dateStr = time.toLocalDate().toString();
+        if(userEmail != null){ // 채널 포스트 카운트 조회라면
+            return commentDAO.commentUserCount(userEmail,channelCode,dateStr)  ;
+        }
+        return  commentDAO.commentChannelCount(channelCode,dateStr);
     }
 
 
