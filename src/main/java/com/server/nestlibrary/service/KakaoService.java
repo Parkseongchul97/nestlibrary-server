@@ -134,17 +134,21 @@ public class KakaoService {
 
             } else {
 
-                String JwtToken = tokenProvider.create(user);
-                // 빌드빌더로 변경만
-                LoginUserDTO dto = LoginUserDTO.builder()
-                        .token(JwtToken)
-                        .userEmail(user.getUserEmail())
-                        .userNickname(user.getUserNickname())
-                        .userInfo(user.getUserInfo())
-                        .userImgUrl(user.getUserImgUrl())
-                        .userPoint(user.getUserPoint()).build();
-                log.info("재 로그인 : " + dto);
-                return dto;
+              if(user.getUserPassword() == null) {
+                  String JwtToken = tokenProvider.create(user);
+                  // 빌드빌더로 변경만
+                  LoginUserDTO dto = LoginUserDTO.builder()
+                          .token(JwtToken)
+                          .userEmail(user.getUserEmail())
+                          .userNickname(user.getUserNickname())
+                          .userInfo(user.getUserInfo())
+                          .userImgUrl(user.getUserImgUrl())
+                          .userPoint(user.getUserPoint()).build();
+                  log.info("재 로그인 : " + dto);
+                  return dto;
+              }else {
+                  return null;
+              }
             }
 
 
