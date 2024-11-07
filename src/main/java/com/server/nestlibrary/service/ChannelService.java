@@ -343,7 +343,7 @@ public class ChannelService {
                 }
                 dto.setChartDTO(chartList);
                 mostList.add(dto);
-                if(i >= 3)break;
+                if(i == 2)break;
             }
 
 
