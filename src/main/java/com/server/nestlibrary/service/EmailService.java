@@ -1,6 +1,7 @@
 package com.server.nestlibrary.service;
 
 import com.server.nestlibrary.model.vo.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 
+@Slf4j
 @Service
 public class EmailService {
     @Autowired
@@ -40,6 +42,7 @@ public class EmailService {
         message.setSubject(subject); // 제목
         message.setText(body); // 이메일 내용
         message.setFrom("dol9991@naver.com"); // 발신자 이메일 주소 설정
+        log.info("코등 : " + code);
         try {
             mailSender.send(message);  // 발송
             return code;
