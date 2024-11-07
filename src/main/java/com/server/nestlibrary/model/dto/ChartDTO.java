@@ -12,6 +12,6 @@ import java.time.LocalDateTime;
 public class ChartDTO {
     private int postCount;
     private int CommentCount;
-    private LocalDateTime date;
+    private String date;
 
 }

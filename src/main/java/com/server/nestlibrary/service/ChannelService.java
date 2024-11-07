@@ -333,13 +333,13 @@ public class ChannelService {
 
                     List<ChartDTO> chartList= new ArrayList<>();
                 for(int j=0; j< 7; j++){
-
+                    String dateStr = today.plusDays(j).toLocalDate().toString();
                     chartList.add(ChartDTO.builder()
-                            .date(today.plusDays(j))
+                            .date(dateStr)
                             .postCount(channelPostCountQuery(userEmail,favoriteCode.get(i), today.plusDays(j)))
                             .CommentCount(channelCommentCountQuery(userEmail, favoriteCode.get(i),today.plusDays(j)))
                             .build());
-                    log.info("날짜라인"  + today.minusDays(j));
+
                 }
                 dto.setChartDTO(chartList);
                 mostList.add(dto);
