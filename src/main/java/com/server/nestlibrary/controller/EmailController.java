@@ -70,11 +70,11 @@ public class EmailController {
 
 
     @PostMapping("/code")
-    public ResponseEntity<Boolean> codeCheck(@RequestParam(name="code") int code) {
+    public ResponseEntity<Boolean> codeCheck(@RequestParam(name="code") String code) {
 
         log.info("code : " + code);
 
-        if (emailService.code == code) {
+        if (String.valueOf(emailService.code).equals(code)) {
             return ResponseEntity.ok(true);
         } else {
             return ResponseEntity.ok(false);
