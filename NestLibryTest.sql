@@ -28,7 +28,10 @@ select *
 from post 
 where channel_code = 6; -- 22개
 
-
+-- 33 78
+update messages
+set messages_title = "숭배하라"
+where messages_code = 55;
 SELECT 
 	post_title
     post_views, 
@@ -123,8 +126,11 @@ GROUP BY p.post_code, p.post_title, p.post_views
 HAVING best_score > 50
 ORDER BY post_created_at DESC
 limit 1 ;
+
  
- 
+ select * from user;
+ update user 
+ set user_point = user_point + 5000;
  
  
  
