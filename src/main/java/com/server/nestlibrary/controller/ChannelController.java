@@ -311,6 +311,14 @@ public class ChannelController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("채널을 찾을 수 없습니다.");
     }
 
+    @GetMapping("/private/channel/chart/{channelCode}")
+    public ResponseEntity channelChart(@PathVariable(name = "channelCode") int channelCode) {
+        MostChannelDTO dto =  channelService.channelChart(channelCode);
+         List<MostChannelDTO>  list = new ArrayList<>();
+         list.add(dto);
+       
+        return ResponseEntity.ok(list);
+    }
 
     // 채널 소개 수정
     @PutMapping("/private/channel/update")

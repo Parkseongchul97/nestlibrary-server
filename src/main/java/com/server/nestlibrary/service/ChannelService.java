@@ -13,10 +13,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -353,10 +355,31 @@ public class ChannelService {
 
         return null;
     }
+    public MostChannelDTO channelChart(int channelCode){
+
+            List<ChartDTO> chartList= new ArrayList<>();
+            LocalDateTime today = LocalDateTime.now().minusDays(6);
+            for(int j=0; j< 7; j++){
+                String dateStr = today.plusDays(j).toLocalDate().toString();
+                chartList.add(ChartDTO.builder()
+                        .date(dateStr)
+                        .postCount(channelPostCountQuery(null,channelCode, today.plusDays(j)))
+                        .CommentCount(channelCommentCountQuery(null, channelCode,today.plusDays(j)))
+                        .build());
+
+            }
+            Channel channel = channelDAO.findById(channelCode).get();
+            MostChannelDTO dto= MostChannelDTO.builder()
+                    .chartDTO(chartList)
+                    .channelCode(channelCode)
+                    .channelName(channel.getChannelName())
+                    .build();
+            return dto;
+
+    }
+
     public int channelPostCountQuery(String userEmail, int channelCode, LocalDateTime time){
         String dateStr = time.toLocalDate().toString();
-        log.info("날짜 : "  + time);
-        log.info(dateStr);
         if(userEmail != null){ // 채널 포스트 카운트 조회라면
             return  queryFactory.selectFrom(qPost)
                     .where(qPost.userEmail.eq(userEmail))
