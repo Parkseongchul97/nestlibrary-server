@@ -26,7 +26,6 @@ public class EmailController {
     @GetMapping("/code")
     public ResponseEntity sendEmail(@RequestParam("userEmail") String userEmail) {
         User user =  userService.findUser(userEmail);
-        log.info("유저정보 " + user);
             if (user == null)  // 해당 이메일로 가입된 유저가 없으면
                 return ResponseEntity.status(HttpStatus.OK).body(emailService.sendEmailCode(userEmail));
         // 이미 가입한 유저면 -1 리턴

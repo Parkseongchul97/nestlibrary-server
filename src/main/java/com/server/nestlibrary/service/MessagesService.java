@@ -173,8 +173,6 @@ public class MessagesService {
         return search(target,keyword).orderBy(qMessages.messagesSentAt.desc())
                 .offset(paging.getOffset())
                 .limit(paging.getLimit());
-
-
     }
     // 검색 여부까지 확인
     public JPAQuery<Messages> search(String target, String keyword){

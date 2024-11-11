@@ -187,7 +187,6 @@ public class ChannelController {
                 .host(managementService.findAdmin(channelCode).get(0))
                 .favoriteCount(managementService.count(channelCode))
                 .build();
-   
         return ResponseEntity.ok(dto);
     }
     // 채널 공지 가져오기
@@ -204,13 +203,11 @@ public class ChannelController {
                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
     ) {
         int totalCount = postService.postQuery(channelCode, target, keyword,null,false).fetch().size();
-        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        Paging paging = new Paging(page, totalCount);
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
-        // 전체 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
         List<PostDTO> postList = postService.channelCodeByAllPost(channelCode, paging, target, keyword);
         BoardDTO postBoard = BoardDTO.builder().postList(postList).paging(paging).build();
-        // 페이징도 같이 담긴걸로?
         return ResponseEntity.ok(postBoard);
     }
 
@@ -239,14 +236,13 @@ public class ChannelController {
                                   @RequestParam(name = "page", defaultValue = "1") int page,
                                   @RequestParam(name = "target", defaultValue = "", required = false) String target,
                                   @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword) {
-        // 게시글 파라미터로 ?p=1~10%target=유저or제목,내용%search=검색어
-        int totalCount = postService.postQuery(channelCode, target, keyword,null,true).fetch().size();
-        Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
+        int totalCount = postService.postQuery(channelTagCode, target, keyword,null,true).fetch().size(); // 해당하는 총 게시글 숫자
+        Paging paging = new Paging(page, totalCount); // 맞춰서 생성하는 페이징 객체
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
         List<PostDTO> postList = postService.channelTagCodeByAllPost(channelTagCode, paging, target, keyword);
         BoardDTO postBoard = BoardDTO.builder().postList(postList).paging(paging).build();
-        return ResponseEntity.ok(postBoard);
+        return ResponseEntity.ok(postBoard);// 화면단에서 사용할 형태로 맞춘 DTO
     }
 
     // 채널 이름 중복 확인

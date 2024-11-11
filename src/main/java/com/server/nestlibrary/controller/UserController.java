@@ -141,24 +141,22 @@ public class UserController {
         User user = userService.findByNickname(nickname); // 있으면 중복 닉네임
         try {
         if (user == null) {
-
             return ResponseEntity.ok(true); // 중복이 아님
         } else{
             User auth = userService.findUser(userEmail); // 로그인 유저 정보
-
         if (auth != null) {  // 중복이지만 업데이트 상황 (로그인 유저가 있음)
                 if (auth.getUserNickname().equals(nickname)) {// 로그인한 기존 회원의 닉네임과 변경사항이 같으면
 
                     return ResponseEntity.ok(true); // 기존 닉네임과 동일함
                 }
             }
-
         return ResponseEntity.ok(false); // 닉네임이 중복임
             }
         } catch (Exception e) {
             return ResponseEntity.ok(false); // 닉네임이 중복임
         }
     }
+
     public String fileUpload(MultipartFile file, String email) throws IllegalStateException, Exception {
         if (file == null || file.getOriginalFilename() == "") {
             return null;
@@ -224,12 +222,9 @@ public class UserController {
                 for (File file : listFiles) { // 폴더 내 파일을 반복시켜서 삭제
                     file.delete();
                 }
-
                 if (listFiles.length == 0 && folder.isDirectory()) { // 하위 파일이 없는지와 폴더인지 확인 후 폴더 삭제
                     folder.delete();
                 }
-
-
             }
         }
         catch (Exception e) {

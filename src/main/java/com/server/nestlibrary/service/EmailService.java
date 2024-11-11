@@ -42,7 +42,6 @@ public class EmailService {
         message.setSubject(subject); // 제목
         message.setText(body); // 이메일 내용
         message.setFrom("dol9991@naver.com"); // 발신자 이메일 주소 설정
-        log.info("코드는 이거여 : " + code);
         try {
             mailSender.send(message);  // 발송
             return code;

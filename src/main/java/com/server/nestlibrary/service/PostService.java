@@ -64,7 +64,6 @@ public class PostService {
        }else{ // 채널 게시글 출력
             query.where(qPost.channel.channelCode.eq(code));
        }
-
         if (target != null && !target.equals("") && keyword != null && !keyword.equals("")) {
             if (target.equals("title")) { // 제목이 포함된게시글
                 query.where(qPost.postTitle.containsIgnoreCase(keyword));
@@ -72,18 +71,16 @@ public class PostService {
                 query.where(qPost.postContent.containsIgnoreCase(keyword));
             } else if (target.equals("user")) { // 작성자가
                 query.where(qUser.userNickname.containsIgnoreCase(keyword));
-
             }
         }
         if (paging != null) { // 페이징이 있다면 게시글 반환할때
             query.orderBy(qPost.postCreatedAt.desc()) // 최신순으로
                     .offset(paging.getOffset()) //
                     .limit(paging.getLimit()); //10개씩
-
         } else { // 없다면 카운트 반환할때?
             query.orderBy(qPost.postCreatedAt.desc()); // 최신순으로
-
         }
+        log.info( "태그인지 아닌지" + isTag +"해당 쿼리 : " + query);
         return query;
     }
 
@@ -164,7 +161,6 @@ public class PostService {
         Paging paging = new Paging(page, totalCount); // 포스트 총숫자 0에 넣기
         paging.setTotalPage(totalCount);
         paging.setOffset(paging.getLimit() * (paging.getPage() - 1));
-
         int extraCount = paging.getTotalPage() % paging.getPageSize(); // 나머지 숫자
         List<Post> pagingVoList = new ArrayList<>();
         if (paging.getPage() == paging.getEndPage()) { // 마지막 페이지이면서

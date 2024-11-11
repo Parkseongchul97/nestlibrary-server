@@ -49,8 +49,6 @@ public class UserService {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if(auth!= null && auth.isAuthenticated()){
-
-
                 User user = (User) auth.getPrincipal();
                 User result = dao.findById(user.getUserEmail()).get();
 
@@ -66,10 +64,8 @@ public class UserService {
 
     @Transactional
     public void registerUser(User vo){
-        // 비밀번호 암호화
         if(getLoginUser()== null)
         vo.setUserPassword(bcpe.encode(vo.getUserPassword()));
-
         dao.save(vo);
     }
 
