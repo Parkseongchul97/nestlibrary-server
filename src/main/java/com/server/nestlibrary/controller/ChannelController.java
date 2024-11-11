@@ -316,7 +316,7 @@ public class ChannelController {
         MostChannelDTO dto =  channelService.channelChart(channelCode);
          List<MostChannelDTO>  list = new ArrayList<>();
          list.add(dto);
-       
+
         return ResponseEntity.ok(list);
     }
 
@@ -385,7 +385,7 @@ public class ChannelController {
 
     // 파일 업로드
     public String fileUpload(MultipartFile file, int channelCode) throws IllegalStateException, Exception {
-        if (file == null || file.getOriginalFilename() == "") {
+        if (file == null || file.getOriginalFilename().equals("")) {
             return null;
         }
         UUID uuid = UUID.randomUUID(); // 랜덤 파일명 부여
